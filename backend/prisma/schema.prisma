@@ -11,3 +11,354 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  emailVerified DateTime?
+  name          String
+  avatarUrl     String?
+  bio           String?
+
+  isActive    Boolean   @default(true)
+  lastLoginAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  accounts         Account[]
+  sessions         Session[]
+  workspaceMembers WorkspaceMember[]
+  projectMembers   ProjectMember[]
+  ownedWorkspaces  Workspace[]       @relation("WorkspaceOwner")
+
+  assignedIssues Issue[]      @relation("IssueAssignee")
+  reportedIssues Issue[]      @relation("IssueReporter")
+  comments       Comment[]
+  attachments    Attachment[]
+  activities     Activity[]
+
+  @@map("users")
+}
+
+model Account {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  type     String
+  provider String
+
+  passwordHash String?
+
+  providerAccountId String?
+  accessToken       String? @db.Text
+  refreshToken      String? @db.Text
+  expiresAt         Int?
+  tokenType         String?
+  scope             String?
+  idToken           String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+enum WorkspaceRole {
+  OWNER
+  ADMIN
+  MEMBER
+  GUEST
+}
+
+model Workspace {
+  id          String  @id @default(cuid())
+  name        String
+  slug        String  @unique
+  description String?
+  logoUrl     String?
+
+  ownerId String
+  owner   User   @relation("WorkspaceOwner", fields: [ownerId], references: [id])
+
+  isArchived Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  members  WorkspaceMember[]
+  projects Project[]
+  labels   Label[]
+  invites  WorkspaceInvite[]
+
+  @@map("workspaces")
+}
+
+model WorkspaceMember {
+  id          String    @id @default(cuid())
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  role   WorkspaceRole @default(MEMBER)
+  status String        @default("active")
+
+  joinedAt DateTime @default(now())
+
+  @@unique([workspaceId, userId])
+  @@map("workspace_members")
+}
+
+model WorkspaceInvite {
+  id          String    @id @default(cuid())
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  email       String
+  role        WorkspaceRole @default(MEMBER)
+  token       String        @unique
+  invitedById String
+
+  expiresAt  DateTime
+  acceptedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@map("workspace_invites")
+}
+
+enum ProjectRole {
+  ADMIN
+  MEMBER
+  VIEWER
+}
+
+model Project {
+  id          String    @id @default(cuid())
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  name        String
+  key         String
+  description String?
+
+  isArchived Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  members    ProjectMember[]
+  board      Board?
+  issues     Issue[]
+  labels     Label[]
+  activities Activity[]
+
+  @@unique([workspaceId, key])
+  @@map("projects")
+}
+
+model ProjectMember {
+  id        String  @id @default(cuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  role     ProjectRole @default(MEMBER)
+  joinedAt DateTime    @default(now())
+
+  @@unique([projectId, userId])
+  @@map("project_members")
+}
+
+model Board {
+  id        String  @id @default(cuid())
+  projectId String  @unique
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  name      String   @default("Main Board")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  columns Column[]
+
+  @@map("boards")
+}
+
+model Column {
+  id      String @id @default(cuid())
+  boardId String
+  board   Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+
+  title    String
+  order    Int
+  wipLimit Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  issues Issue[]
+
+  @@index([boardId])
+  @@map("columns")
+}
+
+enum IssuePriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum IssueStatus {
+  TODO
+  IN_PROGRESS
+  IN_REVIEW
+  DONE
+}
+
+model Issue {
+  id        String  @id @default(cuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  columnId String
+  column   Column @relation(fields: [columnId], references: [id])
+
+  code        String
+  title       String
+  description String? @db.Text
+
+  status   IssueStatus   @default(TODO)
+  priority IssuePriority @default(MEDIUM)
+
+  assigneeId String?
+  assignee   User?   @relation("IssueAssignee", fields: [assigneeId], references: [id])
+  reporterId String
+  reporter   User    @relation("IssueReporter", fields: [reporterId], references: [id])
+
+  dueDate DateTime?
+  order   Int
+
+  isArchived Boolean   @default(false)
+  deletedAt  DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  comments    Comment[]
+  labels      IssueLabel[]
+  attachments Attachment[]
+  activities  Activity[]
+
+  @@unique([projectId, code])
+  @@index([columnId])
+  @@index([assigneeId])
+  @@map("issues")
+}
+
+model Comment {
+  id       String @id @default(cuid())
+  issueId  String
+  issue    Issue  @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id])
+
+  content  String  @db.Text
+  isEdited Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([issueId])
+  @@map("comments")
+}
+
+model Label {
+  id    String @id @default(cuid())
+  name  String
+  color String
+
+  workspaceId String?
+  workspace   Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  projectId   String?
+  project     Project?   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  issues IssueLabel[]
+
+  @@map("labels")
+}
+
+model IssueLabel {
+  issueId String
+  issue   Issue  @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  labelId String
+  label   Label  @relation(fields: [labelId], references: [id], onDelete: Cascade)
+
+  @@id([issueId, labelId])
+  @@map("issue_labels")
+}
+
+model Attachment {
+  id         String @id @default(cuid())
+  issueId    String
+  issue      Issue  @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  uploaderId String
+  uploader   User   @relation(fields: [uploaderId], references: [id])
+
+  fileName String
+  fileUrl  String
+  fileSize Int
+  mimeType String
+
+  createdAt DateTime @default(now())
+
+  @@index([issueId])
+  @@map("attachments")
+}
+
+enum ActivityAction {
+  CREATE
+  UPDATE
+  MOVE
+  COMMENT
+  ASSIGN
+  ARCHIVE
+  DELETE
+}
+
+model Activity {
+  id        String  @id @default(cuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  issueId   String?
+  issue     Issue?  @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  actorId   String
+  actor     User    @relation(fields: [actorId], references: [id])
+
+  action  ActivityAction
+  payload Json?
+
+  createdAt DateTime @default(now())
+
+  @@index([projectId])
+  @@index([issueId])
+  @@map("activities")
+}
