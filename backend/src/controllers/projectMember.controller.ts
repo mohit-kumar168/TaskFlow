@@ -92,7 +92,6 @@ export const addMember = asyncHandler(async (req: Request, res: Response) => {
 });
 
 export const fetchAllProjectMembers = asyncHandler(async (req: Request, res: Response) => {
-	const workspaceId = req.params.workspaceId as string;
 	const projectId = req.params.projectId as string;
 
 	const projectMember = await prisma.projectMember.findFirst({
@@ -254,7 +253,6 @@ export const removeProjectMember = asyncHandler(async (req: Request, res: Respon
 		throw new apiError(404, "Member not found");
 	}
 
-	// Prevent removing the last admin
 	if (member.role === "ADMIN") {
 		const adminCount = await prisma.projectMember.count({
 			where: {
