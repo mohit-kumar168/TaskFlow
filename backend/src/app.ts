@@ -4,6 +4,7 @@ import cookieParser from "cookie-parser";
 
 import errorMiddleware from "./middleware/error.middleware";
 import authRouter from "./routes/auth.routes";
+import workspaceRoutes from "./routes/workspace.routes";
 
 const app = express();
 
@@ -12,6 +13,7 @@ app.use(cors());
 app.use(cookieParser());
 
 app.use("/api/auth", authRouter);
+app.use("/workspace", workspaceRoutes);
 
 
 app.use(errorMiddleware);

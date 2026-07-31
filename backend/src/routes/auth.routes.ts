@@ -2,12 +2,12 @@ import { getCurrentUser, loginUser, logoutUser, refreshAccessToken, registerUser
 import { protect } from "@/middleware/auth.middleware";
 import { Router } from "express";
 
-const authRouter = Router();
+const router = Router();
 
-authRouter.post("/register", registerUser);
-authRouter.post("/login", loginUser);
-authRouter.post("/refresh-token", refreshAccessToken);
-authRouter.post("/logout", protect, logoutUser);
-authRouter.get("/me", getCurrentUser);
+router.post("/register", registerUser);
+router.post("/login", loginUser);
+router.post("/refresh-token", refreshAccessToken);
+router.post("/logout", protect, logoutUser);
+router.get("/me", getCurrentUser);
 
-export default authRouter;
+export default router;
