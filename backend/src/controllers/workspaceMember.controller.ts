@@ -8,6 +8,10 @@ export const addMember = asyncHandler(async (req: Request, res: Response) => {
 	const workspaceId = req.params.workspaceId as string;
 	const { email, role } = req.body;
 
+	const newRole = role.trim().toUpperCase();
+	if (!["OWNER", "ADMIN", "MEMBER"].includes(newRole)) {
+		throw new apiError(400, "Invalid role");
+	}
 	const membership = await prisma.workspaceMember.findUnique({
 		where: {
 			workspaceId_userId: {
