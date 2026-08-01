@@ -7,7 +7,7 @@ import logger from "@/config/logger";
 
 export const createProject = asyncHandler(async (req: Request, res: Response) => {
 	const workspaceId = req.params.workspaceId as string;
-	const { name, key, description } = req.body;
+	const { name, key, description, boardName } = req.body;
 
 	const normalizeKey = key.trim().toUpperCase();
 
@@ -45,27 +45,72 @@ export const createProject = asyncHandler(async (req: Request, res: Response) =>
 		throw new apiError(400, "Project already exist");
 	}
 
-	const project = await prisma.project.create({
-		data: {
-			workspaceId,
-			name,
-			key: normalizeKey,
-			description,
-		}
-	});
+	const result = await prisma.$transaction(async (tx) => {
+		const project = await tx.project.create({
+			data: {
+				workspaceId,
+				name,
+				key: normalizeKey,
+				description,
+			},
+			include: {
+				board: true,
+			}
+		});
 
-	await prisma.projectMember.create({
-		data: {
-			projectId: project.id,
-			userId: req.user!.id,
-			role: "ADMIN"
-		}
+		await tx.projectMember.create({
+			data: {
+				projectId: project.id,
+				userId: req.user!.id,
+				role: "ADMIN"
+			}
+		});
+
+		const board = await tx.board.create({
+			data: {
+				projectId: project.id,
+				name: boardName ?? "Main Board"
+			},
+			include: {
+				columns: true
+			}
+		});
+
+		await tx.column.createMany({
+			data: [
+				{
+					boardId: board.id,
+					title: "Todo",
+					order: 1
+				},
+				{
+					boardId: board.id,
+					title: "In Progress",
+					order: 2
+				},
+				{
+					boardId: board.id,
+					title: "In Review",
+					order: 3
+				},
+				{
+					boardId: board.id,
+					title: "Done",
+					order: 4
+				}
+			]
+		});
+
+		return { project, board };
 	})
 
 	return res.status(201).json(
 		new apiResponse(
 			"Project created successfully",
-			project
+			{
+				project: result.project,
+				board: result.board
+			}
 		)
 	);
 });
