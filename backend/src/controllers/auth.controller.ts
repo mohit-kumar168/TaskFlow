@@ -206,8 +206,20 @@ export const logoutUser = asyncHandler(async (req: Request, res: Response) => {
 })
 
 export const getCurrentUser = asyncHandler(async (req: Request, res: Response) => {
+
+	const user = await prisma.user.findUnique({
+		where: {
+			id: req.user!.id
+		},
+		select: {
+			id: true,
+			name: true,
+			email: true
+		}
+	});
+
 	return res.status(200).json(
-		new apiResponse("User fetched successfully", req.user)
+		new apiResponse("User fetched successfully", user)
 	);
 })
 
