@@ -1,7 +1,14 @@
-const DashboardRoutes = () => {
-	return (
-		<div></div>
-	)
-}
+import Dashboard from "@/pages/Dashboard";
+import ProtectedRoute from "./ProtectedRoute";
 
-export default DashboardRoutes
+export const DashboardRoutes = [
+	{
+		element: <ProtectedRoute />,
+		children: [
+			{
+				path: "/dashboard",
+				element: <Dashboard />,
+			},
+		],
+	},
+];

@@ -2,6 +2,7 @@ import { loginUser, type LoginUserProps } from "@/api/auth.api"
 import OrangePanel from "@/components/auth/OrangePanel"
 import Button from "@/components/ui/Button"
 import Input from "@/components/ui/Input"
+import { useAuthStore } from "@/store/auth.store"
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { useNavigate } from "react-router-dom"
@@ -9,11 +10,12 @@ import { useNavigate } from "react-router-dom"
 const Login = () => {
 	const { register, handleSubmit, formState: { errors } } = useForm<LoginUserProps>();
 	const navigate = useNavigate();
+	const { setUser } = useAuthStore();
 
 	const onSubmit = async (data: LoginUserProps) => {
 		try {
 			const response = await loginUser(data);
-			console.log(response.data);
+			setUser(response.data.data.user);
 			navigate("/dashboard");
 
 		} catch (error) {
