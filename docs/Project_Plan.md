@@ -1,3 +1,7 @@
+# Project Planning Notes
+
+This document contains the initial architecture and implementation plan that I used while building the project. It serves as a roadmap and has been updated as development progressed.
+
 # TaskFlow Architecture Blueprint
 
 TaskFlow should be planned as a greenfield SaaS-style project management platform with multiple workspaces per user, a kanban board plus list/detail views, and a backend that can later support realtime collaboration and granular permissions without needing a rewrite. The right approach is to define a clean MVP now, establish the tenancy and data model early, and keep the system modular so the REST API, Prisma schema, and React feature structure can scale with future roadmap items.
