@@ -1,7 +1,9 @@
 const Dashboard = () => {
 	console.log("Dashboard rendered successfully");
 	return (
-		<div>Dashboard</div>
+		<>
+			<p>Dashboard</p>
+		</>
 	)
 }
 

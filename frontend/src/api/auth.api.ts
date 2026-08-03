@@ -19,8 +19,12 @@ export const loginUser = (data: LoginUserProps) => {
 	return api.post("/api/auth/login", data);
 };
 
+export const refreshAccessToken = () => {
+	return api.post("/api/auth/refresh-token");
+};
+
 export const logoutUser = () => {
-	return api.post("/api/auth/login");
+	return api.post("/api/auth/logout");
 };
 
 export const getCurrentUser = () => {

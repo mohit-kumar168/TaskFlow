@@ -1,13 +1,19 @@
-import Dashboard from "@/pages/Dashboard";
+import DashboardLayout from "@/layouts/DashboardLayout";
 import ProtectedRoute from "./ProtectedRoute";
+import Dashboard from "@/pages/Dashboard";
 
 export const DashboardRoutes = [
 	{
 		element: <ProtectedRoute />,
 		children: [
 			{
-				path: "/dashboard",
-				element: <Dashboard />,
+				element: <DashboardLayout />,
+				children: [
+					{
+						path: "/dashboard",
+						element: <Dashboard />
+					},
+				]
 			},
 		],
 	},
