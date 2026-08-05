@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ChevronRight, Folder, FolderKanban, LayoutDashboard, ListTodo, X, type LucideIcon } from "lucide-react";
+import { ChevronRight, Folder, FolderKanban, LayoutDashboard, ListTodo, Plus, X, type LucideIcon } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { getWorkspaces, type WorkspaceMemberProps } from "@/api/workspace.api";
 import Button from "../ui/Button";
@@ -86,7 +86,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
 				<button
 					type="button"
 					onClick={() => setIsWorkspacesOpen((open) => !open)}
-					className="flex w-full items-center justify-between rounded-lg px-4 py-3 text-sm font-medium text-gray-600 transition-all duration-200 hover:bg-gray-100 hover:text-orange-500"
+					className="group flex w-full items-center justify-between rounded-lg px-4 py-3 text-sm font-medium text-gray-600 transition-all duration-200 hover:bg-gray-100 hover:text-orange-500"
 				>
 					<span className="flex items-center gap-3 whitespace-nowrap">
 						<FolderKanban size={20} />
@@ -100,15 +100,26 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
 
 				{isWorkspacesOpen && (
 					<div className="mt-1 flex flex-col gap-1">
+						<button
+							type="button"
+							onClick={() => navigate("/workspaces/create")}
+							className="flex items-center gap-2 rounded-lg py-2 pl-10 pr-4 text-sm text-orange-500 transition hover:bg-orange-50"
+						>
+							<Plus size={15} />
+							<span>Create Workspace</span>
+						</button>
 						{workspaces.map((workspaceMember) => {
 							const workspace = workspaceMember.workspace;
 							const isWorkspaceOpen = openWorkspaces.has(workspace.name);
 
 							return (
-								<div key={workspace.name}>
+								<div key={workspace.id}>
 									<button
 										type="button"
-										onClick={() => toggleWorkspace(workspace.name)}
+										onClick={() => {
+											toggleWorkspace(workspace.name);
+											navigate(`/workspaces/${workspace.slug}`);
+										}}
 										className="flex w-full items-center justify-between rounded-lg py-2 pl-10 pr-4 text-sm text-gray-600 transition-all duration-200 hover:bg-gray-100 hover:text-orange-500"
 									>
 
@@ -125,23 +136,6 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
 										/>
 									</button>
 
-									{/* isWorkspaceOpen && (
-												<div className="flex flex-col gap-1">
-													{workspace.projects.map((project) => (
-														<NavLink
-															key={project}
-															to={`/workspaces/${slugify(workspace.name)}/projects/${slugify(project)}`}
-															className={({ isActive }) =>
-																`flex items-center gap-2 rounded-lg py-2 pl-16 pr-4 text-sm whitespace-nowrap transition-all duration-200
-																${isActive ? "bg-orange-100 text-orange-600" : "text-gray-500 hover:bg-gray-100 hover:text-orange-500"}`
-															}
-														>
-															<span className="h-1.5 w-1.5 shrink-0 rounded-full bg-gray-300" />
-															{project}
-														</NavLink>
-													))}
-												</div>
-											) */}
 								</div>
 							);
 						})}

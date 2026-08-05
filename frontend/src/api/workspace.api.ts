@@ -22,6 +22,15 @@ export interface WorkspaceMemberProps {
 	workspace: WorkspaceProps;
 }
 
+export interface CreateWorkshopProps {
+	name: string;
+	description: string;
+}
+
+export const createWorkspace = (data: CreateWorkshopProps) => {
+	return api.post("/workspace", data);
+}
+
 export const getWorkspaces = () => {
 	return api.get("/workspace");
 }
