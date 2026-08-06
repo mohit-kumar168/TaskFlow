@@ -1,21 +1,24 @@
-import { CalendarDays, FolderKanban, MoreVertical, Settings, Users } from "lucide-react";
+import { FolderKanban, MoreVertical, Settings, Users } from "lucide-react";
 import Button from "../ui/Button";
+import { useWorkspaceStore } from "../../store/workspace.store";
+import WorkspacePageSkeleton from "../skeleton/workspacePage";
+import { NavLink, useNavigate } from "react-router-dom";
 
-interface WorkspaceHeaderProps {
-	name: string;
-	description: string;
-	projectCount: number;
-	memberCount: number;
-	createdAt: string;
-}
 
-const WorkspaceHeader = ({
-	name,
-	description,
-	projectCount,
-	memberCount,
-	createdAt,
-}: WorkspaceHeaderProps) => {
+
+const WorkspaceHeader = () => {
+	const { currentWorkspace, isLoading } = useWorkspaceStore();
+	const navigate = useNavigate();
+
+	if (isLoading && !currentWorkspace) {
+		return <WorkspacePageSkeleton variant="header" />;
+	}
+
+	if (!currentWorkspace) return null;
+
+	const linkClass = ({ isActive }: { isActive: boolean }) =>
+		`pb-2 ${isActive ? "text-orange-500" : "text-gray-500 hover:text-orange-500"}`;
+
 	return (
 		<header className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
 			<div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
@@ -25,11 +28,11 @@ const WorkspaceHeader = ({
 					</p>
 
 					<h1 className="mt-1 text-3xl font-bold text-gray-900">
-						{name}
+						{currentWorkspace.workspace.name}
 					</h1>
 
 					<p className="mt-2 max-w-2xl text-gray-600">
-						{description || "No description provided."}
+						{currentWorkspace.workspace.description || "No description provided."}
 					</p>
 				</div>
 
@@ -54,35 +57,29 @@ const WorkspaceHeader = ({
 
 				<div className="flex items-center gap-2">
 					<FolderKanban size={18} className="text-orange-500" />
-					<span>{projectCount} Projects</span>
+					<span>{currentWorkspace.workspace._count?.projects ?? 0} Projects</span>
 				</div>
 
 				<div className="flex items-center gap-2">
 					<Users size={18} className="text-orange-500" />
-					<span>{memberCount} Members</span>
+					<span>{currentWorkspace.workspace._count?.members ?? 0} Members</span>
 				</div>
-
-				<div className="flex items-center gap-2">
-					<CalendarDays size={18} className="text-orange-500" />
-					<span>{createdAt}</span>
-				</div>
-
 			</div>
 
 
 			<nav className="mt-4 flex gap-6 text-sm font-medium">
 
-				<button className="border-b-2 border-orange-500 pb-2 text-orange-500">
+				<NavLink end to={`/workspaces/${currentWorkspace.workspaceId}`} className={linkClass}>
 					Overview
-				</button>
+				</NavLink>
 
-				<button className="pb-2 text-gray-500 hover:text-orange-500">
+				<NavLink end to={`/workspaces/${currentWorkspace.workspaceId}/members`} className={linkClass}>
 					Members
-				</button>
+				</NavLink>
 
-				<button className="pb-2 text-gray-500 hover:text-orange-500">
+				<NavLink end to={`/workspaces/${currentWorkspace.workspaceId}/settings`} className={linkClass}>
 					Settings
-				</button>
+				</NavLink>
 
 			</nav>
 		</header>
