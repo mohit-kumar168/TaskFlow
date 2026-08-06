@@ -1,10 +1,9 @@
-import { useEffect, useState } from "react";
-import { ChevronRight, Folder, FolderKanban, LayoutDashboard, ListTodo, Plus, X, type LucideIcon } from "lucide-react";
-import { NavLink, useNavigate } from "react-router-dom";
-import { getWorkspaces, type WorkspaceMemberProps } from "@/api/workspace.api";
+import { LayoutDashboard, ListTodo, X, type LucideIcon } from "lucide-react";
 import Button from "../ui/Button";
 import { logoutUser } from "@/api/auth.api";
-
+import { useNavigate } from "react-router-dom";
+import SidebarNav from "./sidebar/SidebarNav";
+import WorkspaceSection from "./sidebar/WorkspaceSection";
 
 type SidebarProps = {
 	isOpen: boolean;
@@ -30,119 +29,13 @@ const sidebarItems: SidebarItem[] = [
 	},
 ];
 
-const slugify = (value: string) => value.toLowerCase().trim().replace(/\s+/g, "-");
-
-const linkClasses = ({ isActive }: { isActive: boolean }) =>
-	`flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-all duration-200 whitespace-nowrap
-	${isActive ? "bg-orange-100 text-orange-600" : "text-gray-600 hover:bg-gray-100 hover:text-orange-500"}`;
-
 const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
-	const [workspaces, setWorkspaces] = useState<WorkspaceMemberProps[]>([]);
-	const [isWorkspacesOpen, setIsWorkspacesOpen] = useState(false);
-
-	const [openWorkspaces, setOpenWorkspaces] = useState<Set<string>>(new Set());
-
 	const navigate = useNavigate();
-
-	useEffect(() => {
-		const loadWorkspaces = async () => {
-			try {
-				const response = await getWorkspaces();
-				setWorkspaces(response.data.data);
-			} catch (error) {
-				console.error(error);
-			}
-		}
-		loadWorkspaces();
-	}, [])
-
-	const toggleWorkspace = (name: string) => {
-		setOpenWorkspaces((prev) => {
-			const next = new Set(prev);
-			if (next.has(name)) {
-				next.delete(name);
-			} else {
-				next.add(name);
-			}
-			return next;
-		});
-	};
-
 	const navContent = (
-		<nav className="flex flex-1 flex-col gap-2 p-4">
-			{sidebarItems.map((item) => {
-				const Icon = item.icon;
-
-				if (item.name !== "Workspaces") {
-					return (
-						<NavLink key={item.name} to={item.to ?? "/"} className={linkClasses}>
-							<Icon size={20} />
-							<span>{item.name}</span>
-						</NavLink>
-					);
-				}
-			})}
-			<div>
-				<button
-					type="button"
-					onClick={() => setIsWorkspacesOpen((open) => !open)}
-					className="group flex w-full items-center justify-between rounded-lg px-4 py-3 text-sm font-medium text-gray-600 transition-all duration-200 hover:bg-gray-100 hover:text-orange-500"
-				>
-					<span className="flex items-center gap-3 whitespace-nowrap">
-						<FolderKanban size={20} />
-						Workspaces
-					</span>
-					<ChevronRight
-						size={16}
-						className={`shrink-0 transition-transform duration-200 ${isWorkspacesOpen ? "rotate-90" : ""}`}
-					/>
-				</button>
-
-				{isWorkspacesOpen && (
-					<div className="mt-1 flex flex-col gap-1">
-						<button
-							type="button"
-							onClick={() => navigate("/workspaces/create")}
-							className="flex items-center gap-2 rounded-lg py-2 pl-10 pr-4 text-sm text-orange-500 transition hover:bg-orange-50"
-						>
-							<Plus size={15} />
-							<span>Create Workspace</span>
-						</button>
-						{workspaces.map((workspaceMember) => {
-							const workspace = workspaceMember.workspace;
-							const isWorkspaceOpen = openWorkspaces.has(workspace.name);
-
-							return (
-								<div key={workspace.id}>
-									<button
-										type="button"
-										onClick={() => {
-											toggleWorkspace(workspace.name);
-											navigate(`/workspaces/${workspace.slug}`);
-										}}
-										className="flex w-full items-center justify-between rounded-lg py-2 pl-10 pr-4 text-sm text-gray-600 transition-all duration-200 hover:bg-gray-100 hover:text-orange-500"
-									>
-
-										<div className="flex min-w-0 items-center gap-2">
-											<Folder size={15} className="shrink-0" />
-
-											<span className="truncate">
-												{workspace.name}
-											</span>
-										</div>
-										<ChevronRight
-											size={14}
-											className={`shrink-0 transition-transform duration-200 ${isWorkspaceOpen ? "rotate-90" : ""}`}
-										/>
-									</button>
-
-								</div>
-							);
-						})}
-					</div>
-				)}
-			</div>
-			<div className="mt-auto pt-4 border-t border-gray-200">
+		<nav className="flex flex-1 flex-col gap-2">
+			<SidebarNav items={sidebarItems} />
+			<WorkspaceSection />
+			<div className="mt-auto p-2 border-t border-gray-200">
 				<Button onClick={async () => {
 					await logoutUser();
 					navigate("/login");

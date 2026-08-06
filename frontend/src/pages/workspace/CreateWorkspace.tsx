@@ -25,7 +25,7 @@ const CreateWorkspace = () => {
 		try {
 			setIsSubmitting(true);
 			const response = await createWorkspace(data);
-			navigate(`/workspace/${response.data.data.slug}`);
+			navigate(`/workspaces/${response.data.data.workspace.id}`);
 
 		} catch (error) {
 			console.log(error)
