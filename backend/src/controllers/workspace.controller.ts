@@ -58,7 +58,17 @@ export const fetchAllWorkspaces = asyncHandler(async (req: Request, res: Respons
 			}
 		},
 		include: {
-			workspace: true
+			workspace: {
+				include: {
+					_count: {
+						select: {
+							members: true,
+							projects: true
+						}
+					}
+				}
+			}
+
 		}
 	});
 
@@ -77,19 +87,26 @@ export const fetchAllWorkspaces = asyncHandler(async (req: Request, res: Respons
 export const fetchWorkspace = asyncHandler(async (req: Request, res: Response) => {
 	const workspaceId = req.params.workspaceId as string;
 
-	const workspace = await prisma.workspaceMember.findUnique({
+	const workspace = await prisma.workspaceMember.findFirst({
 		where: {
-			workspaceId_userId: {
-				workspaceId,
-				userId: req.user!.id
-			},
+			workspaceId,
+			userId: req.user!.id,
 			status: "active",
 			workspace: {
 				isArchived: false
 			}
 		},
 		include: {
-			workspace: true
+			workspace: {
+				include: {
+					_count: {
+						select: {
+							members: true,
+							projects: true
+						}
+					}
+				}
+			}
 		}
 	});
 

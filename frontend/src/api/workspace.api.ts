@@ -10,6 +10,11 @@ export interface WorkspaceProps {
 	isArchived: boolean;
 	createdAt: string;
 	updatedAt: string;
+
+	_count?: {
+		members: number;
+		projects: number;
+	}
 }
 
 export interface WorkspaceMemberProps {
@@ -33,4 +38,12 @@ export const createWorkspace = (data: CreateWorkshopProps) => {
 
 export const getWorkspaces = () => {
 	return api.get("/workspace");
+}
+
+export const getWorkspace = (workspaceId: string) => {
+	return api.get(`/workspace/${workspaceId}`);
+}
+
+export const getWorkspaceMembers = (workspaceId: string) => {
+	return api.get(`/workspace/${workspaceId}/members`);
 }
