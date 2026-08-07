@@ -7,6 +7,9 @@ import ProjectPage from "@/pages/project/ProjectPage";
 import WorkspaceOverview from "../pages/workspace/WorkspaceOverview";
 import WorkspaceLayout from "../layouts/WorkspaceLayout";
 import WorkspaceMembers from "@/pages/workspace/WorkspaceMembers";
+import ProjectLayout from "@/layouts/ProjectLayout";
+import ProjectBoard from "@/components/project/ProjectBoard";
+import ProjectMembers from "@/components/project/ProjectMembers";
 
 export const DashboardRoutes = [
 	{
@@ -38,15 +41,21 @@ export const DashboardRoutes = [
 										path: "members",
 										element: <WorkspaceMembers />,
 									},
-									{
-										path: "projects/create",
-										element: <CreateProject />,
-									},
-									{
-										path: "projects/:projectKey",
-										element: <ProjectPage />,
-									},
 								],
+							},
+							{
+								path: ":workspaceId/projects/:projectId",
+								element: <ProjectLayout />,
+								children: [
+									{
+										index: true,
+										element: <ProjectBoard />
+									},
+									{
+										path: "members",
+										element: <ProjectMembers />
+									},
+								]
 							}
 						]
 					}
