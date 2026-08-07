@@ -1,8 +1,8 @@
 import type { Request, Response } from "express";
-import asyncHandler from "../utils/asyncHandler";
-import prisma from "../prisma/client";
-import apiError from "../utils/apiError";
-import apiResponse from "../utils/apiResponse";
+import asyncHandler from "@/utils/asyncHandler";
+import prisma from "@/prisma/client";
+import apiError from "@/utils/apiError";
+import apiResponse from "@/utils/apiResponse";
 import logger from "@/config/logger";
 
 export const createProject = asyncHandler(async (req: Request, res: Response) => {
@@ -127,6 +127,14 @@ export const fetchAllProjects = asyncHandler(async (req: Request, res: Response)
 					userId: req.user?.id
 				}
 			}
+		},
+		include: {
+			_count: {
+				select: {
+					members: true,
+					issues: true,
+				},
+			},
 		},
 	});
 

@@ -223,3 +223,7 @@ export const getCurrentUser = asyncHandler(async (req: Request, res: Response) =
 	);
 })
 
+
+export const changePassword = asyncHandler(async (req: Request, res: Response) => {
+	return true;
+})

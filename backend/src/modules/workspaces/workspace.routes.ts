@@ -1,5 +1,5 @@
-import { createWorkspace, deleteWorkspace, fetchAllWorkspaces, fetchWorkspace } from "@/controllers/workspace.controller";
-import { addMember, fetchAllMembers, removeMember, updateMemberRole } from "@/controllers/workspaceMember.controller";
+import { createWorkspace, deleteWorkspace, fetchAllWorkspaces, fetchWorkspace } from "./workspace.controller";
+import { addMember, fetchAllMembers, removeMember, updateMemberRole } from "./workspaceMember.controller";
 import { protect } from "@/middleware/auth.middleware";
 import { Router } from "express";
 

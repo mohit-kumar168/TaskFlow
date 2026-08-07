@@ -1,8 +1,8 @@
 import type { Request, Response } from "express";
-import asyncHandler from "../utils/asyncHandler";
-import prisma from "../prisma/client";
-import apiError from "../utils/apiError";
-import apiResponse from "../utils/apiResponse";
+import asyncHandler from "@/utils/asyncHandler";
+import prisma from "@/prisma/client";
+import apiError from "@/utils/apiError";
+import apiResponse from "@/utils/apiResponse";
 
 export const addMember = asyncHandler(async (req: Request, res: Response) => {
 	const workspaceId = req.params.workspaceId as string;

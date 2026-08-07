@@ -1,7 +1,7 @@
 import { Router } from "express";
-import { protect } from "../middleware/auth.middleware"
-import { fetchAllProjects, fetchProject, removeProject, updateProject, createProject } from "@/controllers/project.controller";
-import { addMember, fetchAllProjectMembers, fetchProjectMember, removeProjectMember, updateProjectMember } from "@/controllers/projectMember.controller";
+import { protect } from "@/middleware/auth.middleware"
+import { fetchAllProjects, fetchProject, removeProject, updateProject, createProject } from "./project.controller";
+import { addMember, fetchAllProjectMembers, fetchProjectMember, removeProjectMember, updateProjectMember } from "./projectMember.controller";
 
 const router = Router();
 

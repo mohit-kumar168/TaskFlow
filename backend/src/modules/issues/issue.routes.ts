@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { protect } from "../middleware/auth.middleware";
-import { fetchAllIssues, fetchIssue, createIssue, updateIssue, removeIssue } from "@/controllers/issue.controller";
+import { protect } from "@/middleware/auth.middleware";
+import { fetchAllIssues, fetchIssue, createIssue, updateIssue, removeIssue } from "./issue.controller";
 
 const router = Router();
 

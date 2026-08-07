@@ -1,6 +1,6 @@
 import type { Request, Response } from "express"
-import asyncHandler from "../utils/asyncHandler"
-import prisma from "../prisma/client"
+import asyncHandler from "@/utils/asyncHandler"
+import prisma from "@/prisma/client"
 import apiError from "@/utils/apiError";
 import apiResponse from "@/utils/apiResponse";
 

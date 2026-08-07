@@ -1,16 +1,42 @@
 import type { SignOptions } from "jsonwebtoken";
+import z from "zod";
 
-const env = {
-	NODE_ENV: process.env.NODE_ENV ?? "development",
-	PORT: Number(process.env.PORT) || 8000,
+const envSchema = z.object({
+	NODE_ENV: z
+		.enum(["development", "production", "test"])
+		.default("development"),
 
-	DATABASE_URL: process.env.DATABASE_URL!,
-	BCRYPT_SALT_ROUNDS: Number(process.env.BCRYPT_SALT_ROUNDS) || 10,
+	PORT: z.coerce.number().default(8000),
 
-	ACCESS_TOKEN_SECRET: process.env.ACCESS_TOKEN_SECRET!,
-	ACCESS_TOKEN_EXPIRES_IN: process.env.ACCESS_TOKEN_EXPIRES_IN as SignOptions["expiresIn"],
-	REFRESH_TOKEN_SECRET: process.env.REFRESH_TOKEN_SECRET!,
-	REFRESH_TOKEN_EXPIRES_IN: process.env.REFRESH_TOKEN_EXPIRES_IN as SignOptions["expiresIn"],
+	DATABASE_URL: z.string().min(1, "Database URL is required"),
+
+	BCRYPT_SALT_ROUNDS: z.coerce.number().default(10),
+
+	ACCESS_TOKEN_SECRET: z
+		.string()
+		.min(1, "ACCESS_TOKEN_SECRET is required"),
+
+	ACCESS_TOKEN_EXPIRES_IN: z.custom<SignOptions["expiresIn"]>(),
+
+	REFRESH_TOKEN_SECRET: z
+		.string()
+		.min(1, "REFRESH_TOKEN_SECRET is required"),
+});
+
+const parsedEnv = envSchema.safeParse(process.env);
+
+if (!parsedEnv.success) {
+	console.error("Invalid environment variables");
+
+	console.table(
+		parsedEnv.error.issues.map((issue) => ({
+			variable: issue.path.join("."),
+			Error: issue.message
+		}))
+	);
+	process.exit(1);
 }
+
+const env = parsedEnv.data;
 
 export default env;

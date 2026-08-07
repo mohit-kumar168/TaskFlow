@@ -3,10 +3,10 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 
 import errorMiddleware from "./middleware/error.middleware";
-import authRouter from "./routes/auth.routes";
-import workspaceRoutes from "./routes/workspace.routes";
-import projectRoutes from "./routes/project.routes";
-import issueRoutes from "./routes/issue.routes";
+import authRouter from "./modules/auth/auth.routes";
+import workspaceRoutes from "./modules/workspaces/workspace.routes";
+import projectRoutes from "./modules/projects/project.routes";
+import issueRoutes from "./modules/issues/issue.routes";
 
 const app = express();
 
