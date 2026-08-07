@@ -1,7 +1,7 @@
 import { FolderKanban, MoreVertical, Settings, Users } from "lucide-react";
 import Button from "../ui/Button";
 import { useWorkspaceStore } from "../../store/workspace.store";
-import WorkspacePageSkeleton from "../skeleton/workspacePage";
+import WorkspacePageSkeleton from "../skeleton/WorkspacePage";
 import { NavLink, useNavigate } from "react-router-dom";
 
 
@@ -23,11 +23,7 @@ const WorkspaceHeader = () => {
 		<header className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
 			<div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
 				<div>
-					<p className="text-sm text-gray-500">
-						Workspaces
-					</p>
-
-					<h1 className="mt-1 text-3xl font-bold text-gray-900">
+					<h1 className="mt-1 text-2xl font-bold text-gray-900">
 						{currentWorkspace.workspace.name}
 					</h1>
 
