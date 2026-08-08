@@ -14,11 +14,3 @@ export const REFRESH_TOKEN_COOKIE_OPTIONS: CookieOptions = {
 	sameSite: "strict",
 	maxAge: 7 * 24 * 60 * 60 * 1000,
 }
-
-export const AUTH_PROVIDER = {
-	CREDENTIALS: "CREDENTIALS",
-}
-
-export const ACCOUNT_TYPE = {
-	CREDENTIALS: "CREDENTIALS",
-}

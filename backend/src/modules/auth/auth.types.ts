@@ -15,3 +15,8 @@ export interface ChangePasswordInput {
 	currentPassword: string;
 	newPassword: string;
 }
+
+export interface updateProfileInput {
+	name?: string;
+	bio?: string;
+}

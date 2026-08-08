@@ -1,5 +1,6 @@
 import { AuthProvider, type Prisma } from "@/generated/prisma/client";
 import prisma from "../../prisma/client";
+import type { updateProfileInput } from "./auth.types";
 
 export const findUserByEmail = async (email: string) => {
 	return prisma.user.findUnique({
@@ -38,6 +39,7 @@ export const createUserWithCredentials = async (data: Prisma.UserCreateInput, pa
 			data: {
 				userId: user.id,
 				provider: AuthProvider.CREDENTIALS,
+				providerAccountId: user.email,
 				passwordHash,
 			},
 		});
@@ -49,11 +51,28 @@ export const createUserWithCredentials = async (data: Prisma.UserCreateInput, pa
 export const updateRefreshToken = async (userId: string, hashedRefreshToken: string | null) => {
 	return prisma.account.update({
 		where: {
-
+			userId_provider: {
+				userId,
+				provider: AuthProvider.CREDENTIALS,
+			}
 		},
 		data: {
 			hashedRefreshToken,
 		},
+	});
+};
+
+export const findCredentialsAccount = async (userId: string) => {
+	return prisma.account.findUnique({
+		where: {
+			userId_provider: {
+				userId,
+				provider: AuthProvider.CREDENTIALS,
+			},
+		},
+		include: {
+			user: true,
+		}
 	});
 };
 
@@ -64,6 +83,29 @@ export const updatePassword = async (accountId: string, passwordHash: string) =>
 		},
 		data: {
 			passwordHash,
+		},
+	});
+};
+
+export const updateProfile = async (userId: string, data: updateProfileInput) => {
+	return await prisma.user.update({
+		where: {
+			id: userId,
+		},
+		data: {
+			name: data.name,
+			bio: data.bio,
+		},
+	});
+};
+
+export const removeUser = async (userId: string) => {
+	return await prisma.user.update({
+		where: {
+			id: userId,
+		},
+		data: {
+			isActive: false,
 		},
 	});
 };

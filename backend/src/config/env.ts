@@ -21,6 +21,8 @@ const envSchema = z.object({
 	REFRESH_TOKEN_SECRET: z
 		.string()
 		.min(1, "REFRESH_TOKEN_SECRET is required"),
+
+	REFRESH_TOKEN_EXPIRES_IN: z.custom<SignOptions["expiresIn"]>(),
 });
 
 const parsedEnv = envSchema.safeParse(process.env);
