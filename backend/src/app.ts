@@ -3,7 +3,8 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 
 import errorMiddleware from "./middleware/error.middleware";
-import authRouter from "./modules/auth/auth.routes";
+import authRoutes from "./modules/auth/auth.routes";
+import organizationRoutes from "./modules/organization/organization.routes";
 import workspaceRoutes from "./modules/workspaces/workspace.routes";
 import projectRoutes from "./modules/projects/project.routes";
 import issueRoutes from "./modules/issues/issue.routes";
@@ -17,10 +18,11 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParser());
 
-app.use("/api/auth", authRouter);
-app.use("/workspace", workspaceRoutes);
-app.use("/workspaces", projectRoutes);
-app.use("/projects", issueRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/organizations", organizationRoutes);
+app.use("/api/workspace", workspaceRoutes);
+app.use("/api/workspaces", projectRoutes);
+app.use("/api/projects", issueRoutes);
 
 
 app.use(errorMiddleware);
