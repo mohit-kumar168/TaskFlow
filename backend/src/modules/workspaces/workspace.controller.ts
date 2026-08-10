@@ -1,175 +1,187 @@
-import type { Request, Response } from "express"
-import asyncHandler from "@/utils/asyncHandler"
-import prisma from "@/prisma/client"
-import apiError from "@/utils/apiError";
+import type { Request, Response } from "express";
+import asyncHandler from "@/utils/asyncHandler";
 import apiResponse from "@/utils/apiResponse";
+import * as workspaceService from "./workspace.service";
 
-export const createWorkspace = asyncHandler(async (req: Request, res: Response) => {
-	const { name, description } = req.body;
-	const slug = name.trim().toLowerCase().replace(/\s+/g, "-");
+export const createWorkspace = asyncHandler(
+	async (req: Request, res: Response) => {
+		const workspace = await workspaceService.createWorkspace(
+			req.body.organizationSlug,
+			req.user!.id,
+			req.body,
+		);
 
-	const isWorkspaceExist = await prisma.workspace.findUnique({
-		where: {
-			slug
-		}
-	})
+		return res.status(201).json(
+			new apiResponse(
+				"Workspace created successfully.",
+				workspace,
+			),
+		);
+	},
+);
 
-	if (isWorkspaceExist) {
-		throw new apiError(400, "Workspace already exists");
-	}
+export const updateWorkspace = asyncHandler(
+	async (req: Request, res: Response) => {
+		const workspace = await workspaceService.updateWorkspace(
+			req.body.organizationSlug,
+			req.params.slug as string,
+			req.user!.id,
+			req.body,
+		);
 
-	const result = await prisma.$transaction(async (tx) => {
-		const workspace = await tx.workspace.create({
-			data: {
-				name,
-				description,
-				slug,
-				ownerId: req.user!.id
-			}
-		})
+		return res.status(200).json(
+			new apiResponse(
+				"Workspace updated successfully.",
+				workspace,
+			),
+		);
+	},
+);
 
-		await tx.workspaceMember.create({
-			data: {
-				workspaceId: workspace.id,
-				userId: req.user!.id,
-				role: "OWNER",
-				status: "active"
-			}
-		})
-		return workspace;
-	})
+export const archiveWorkspace = asyncHandler(
+	async (req: Request, res: Response) => {
+		const workspace = await workspaceService.archiveWorkspace(
+			req.params.organizationSlug as string,
+			req.params.slug as string,
+			req.user!.id,
+		);
 
-	return res.status(201).json(
-		new apiResponse(
-			"Workspace created successfully",
-			{
-				workspace: result
-			}
-		)
-	);
-});
+		return res.status(200).json(
+			new apiResponse(
+				"Workspace archived successfully.",
+				workspace,
+			),
+		);
+	},
+);
 
-export const fetchAllWorkspaces = asyncHandler(async (req: Request, res: Response) => {
-	const workspaces = await prisma.workspaceMember.findMany({
-		where: {
-			userId: req.user!.id,
-			workspace: {
-				isArchived: false
-			}
-		},
-		include: {
-			workspace: {
-				include: {
-					_count: {
-						select: {
-							members: true,
-							projects: true
-						}
-					}
-				}
-			}
+export const fetchAllWorkspaces = asyncHandler(
+	async (req: Request, res: Response) => {
+		const workspaces =
+			await workspaceService.fetchAllWorkspaces(
+				req.params.organizationSlug as string,
+				req.user!.id,
+			);
 
-		}
-	});
+		return res.status(200).json(
+			new apiResponse(
+				"Workspaces fetched successfully.",
+				workspaces,
+			),
+		);
+	},
+);
 
-	if (!workspaces) {
-		throw new apiError(404, "Workspaces not found");
-	}
+export const fetchWorkspace = asyncHandler(
+	async (req: Request, res: Response) => {
+		const workspace =
+			await workspaceService.fetchWorkspace(
+				req.params.organizationSlug as string,
+				req.params.slug as string,
+				req.user!.id,
+			);
 
-	return res.status(200).json(
-		new apiResponse(
-			"Workspaces fetched successfully",
-			workspaces
-		)
-	);
-});
+		return res.status(200).json(
+			new apiResponse(
+				"Workspace fetched successfully.",
+				workspace,
+			),
+		);
+	},
+);
 
-export const fetchWorkspace = asyncHandler(async (req: Request, res: Response) => {
-	const workspaceId = req.params.workspaceId as string;
 
-	const workspace = await prisma.workspaceMember.findFirst({
-		where: {
-			workspaceId,
-			userId: req.user!.id,
-			status: "active",
-			workspace: {
-				isArchived: false
-			}
-		},
-		include: {
-			workspace: {
-				include: {
-					_count: {
-						select: {
-							members: true,
-							projects: true
-						}
-					}
-				}
-			}
-		}
-	});
+export const addWorkspaceMember = asyncHandler(
+	async (req: Request, res: Response) => {
+		const member =
+			await workspaceService.addWorkspaceMember(
+				req.params.organizationSlug as string,
+				req.params.slug as string,
+				req.user!.id,
+				req.body,
+			);
 
-	if (!workspace) {
-		throw new apiError(404, "Workspace not found");
-	}
+		return res.status(201).json(
+			new apiResponse(
+				"Member added to workspace successfully.",
+				member,
+			),
+		);
+	},
+);
 
-	return res.status(200).json(
-		new apiResponse(
-			"Workspace fetched successfully",
-			workspace
-		)
-	);
-});
+export const fetchAllWorkspaceMembers = asyncHandler(
+	async (req: Request, res: Response) => {
+		const members =
+			await workspaceService.fetchAllWorkspaceMembers(
+				req.params.organizationSlug as string,
+				req.params.slug as string,
+				req.user!.id,
+			);
 
-export const deleteWorkspace = asyncHandler(async (req: Request, res: Response) => {
-	const workspaceId = req.params.workspaceId as string;
+		return res.status(200).json(
+			new apiResponse(
+				"Workspace members fetched successfully.",
+				members,
+			),
+		);
+	},
+);
 
-	const membership = await prisma.workspaceMember.findUnique({
-		where: {
-			workspaceId_userId: {
-				workspaceId,
-				userId: req.user!.id
-			}
-		},
-	});
-	if (!membership) {
-		throw new apiError(404, "Workspace not found");
-	}
+export const fetchWorkspaceMember = asyncHandler(
+	async (req: Request, res: Response) => {
+		const member =
+			await workspaceService.fetchWorkspaceMember(
+				req.params.organizationSlug as string,
+				req.params.slug as string,
+				req.user!.id,
+				req.params.memberId as string,
+			);
 
-	if (membership.role !== "OWNER") {
-		throw new apiError(403, "Only owner can delete the workspace");
-	}
+		return res.status(200).json(
+			new apiResponse(
+				"Workspace member fetched successfully.",
+				member,
+			),
+		);
+	},
+);
 
-	const workspace = await prisma.workspace.update({
-		where: {
-			id: workspaceId
-		},
-		data: {
-			isArchived: true
-		}
-	})
+export const updateWorkspaceMemberRole = asyncHandler(
+	async (req: Request, res: Response) => {
+		const member =
+			await workspaceService.updateWorkspaceMemberRole(
+				req.params.organizationSlug as string,
+				req.params.slug as string,
+				req.user!.id,
+				req.params.memberId as string,
+				req.body.role,
+			);
 
-	if (!workspace) {
-		throw new apiError(404, "Workspace not found");
-	}
+		return res.status(200).json(
+			new apiResponse(
+				"Workspace member role updated successfully.",
+				member,
+			),
+		);
+	},
+);
 
-	await prisma.workspaceMember.update({
-		where: {
-			workspaceId_userId: {
-				workspaceId,
-				userId: req.user!.id
-			}
-		},
-		data: {
-			status: "inactive"
-		}
-	})
+export const removeWorkspaceMember = asyncHandler(
+	async (req: Request, res: Response) => {
+		const member =
+			await workspaceService.removeWorkspaceMember(
+				req.params.organizationSlug as string,
+				req.params.slug as string,
+				req.user!.id,
+				req.params.memberId as string,
+			);
 
-	return res.status(200).json(
-		new apiResponse(
-			"Workspace deleted successfully",
-			workspace
-		)
-	);
-});
+		return res.status(200).json(
+			new apiResponse(
+				"Workspace member removed successfully.",
+				member,
+			),
+		);
+	},
+);

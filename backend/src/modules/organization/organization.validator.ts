@@ -16,7 +16,6 @@ export const createOrganizationSchema = z.object({
 			.optional(),
 
 		logoUrl: z
-			.string()
 			.url("Logo URL must be a valid URL.")
 			.optional(),
 	}),
@@ -39,7 +38,6 @@ export const updateOrganizationSchema = z.object({
 				.optional(),
 
 			logoUrl: z
-				.string()
 				.url("Logo URL must be a valid URL.")
 				.optional(),
 		})
