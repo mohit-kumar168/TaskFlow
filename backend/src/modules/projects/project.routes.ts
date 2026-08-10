@@ -1,22 +1,81 @@
 import { Router } from "express";
-import { protect } from "@/middleware/auth.middleware"
-import { fetchAllProjects, fetchProject, removeProject, updateProject, createProject } from "./project.controller";
-import { addMember, fetchAllProjectMembers, fetchProjectMember, removeProjectMember, updateProjectMember } from "./projectMember.controller";
+import { protect } from "@/middleware/auth.middleware";
+import validateRequest from "@/middleware/validateRequest.middleware";
+import {
+  createProjectSchema,
+  updateProjectSchema,
+  addProjectMemberSchema,
+  updateProjectMemberSchema,
+} from "./project.validator";
+
+import {
+  createProject,
+  fetchAllProjects,
+  fetchProject,
+  updateProject,
+  removeProject,
+  addMember,
+  fetchAllProjectMembers,
+  fetchProjectMember,
+  updateProjectMember,
+  removeProjectMember,
+} from "./project.controller";
 
 const router = Router();
 
 router.use(protect);
 
-router.post("/:workspaceId/projects", createProject);
-router.get("/:workspaceId/projects", fetchAllProjects);
-router.get("/:workspaceId/projects/:projectId", fetchProject);
-router.patch("/:workspaceId/projects/:projectId", updateProject);
-router.delete("/:workspaceId/projects/:projectId", removeProject);
+// Project
+router.post(
+    "/", 
+    validateRequest(createProjectSchema), 
+    createProject
+);
 
-router.post("/:workspaceId/projects/:projectId/members", addMember);
-router.get("/:workspaceId/projects/:projectId/members", fetchAllProjectMembers);
-router.get("/:workspaceId/projects/:projectId/members/:memberId", fetchProjectMember);
-router.patch("/:workspaceId/projects/:projectId/members/:memberId", updateProjectMember);
-router.delete("/:workspaceId/projects/:projectId/members/:memberId", removeProjectMember);
+router.get(
+    "/", 
+    fetchAllProjects
+);
+
+router.get(
+    "/:projectSlug", 
+    fetchProject
+);
+
+router.patch(
+  "/:projectSlug",
+  validateRequest(updateProjectSchema),
+  updateProject,
+);
+
+router.delete(
+    "/:projectSlug", 
+    removeProject
+);
+
+router.post(
+  "/:projectSlug/members",
+  validateRequest(addProjectMemberSchema),
+  addMember,
+);
+
+router.get(
+    "/:projectSlug/members", 
+    fetchAllProjectMembers
+);
+router.get(
+    "/:projectSlug/members/:memberId", 
+    fetchProjectMember
+);
+router.patch(
+  "/:projectSlug/members/:memberId",
+  validateRequest(updateProjectMemberSchema),
+  updateProjectMember,
+);
+
+router.delete(
+    "/:projectSlug/members/:memberId", 
+    removeProjectMember
+);
 
 export default router;
