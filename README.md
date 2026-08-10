@@ -1,173 +1,117 @@
-# TaskFlow
+# TaskFlow (Repository)
 
-TaskFlow is a Jira/Asana-inspired project management application designed to manage workspaces, projects, and issue tracking. The backend for the current MVP has been implemented, while the frontend is under active development.
+This repository currently focuses on the backend implementation of TaskFlow. The backend is a modular Express + TypeScript API that uses Prisma with PostgreSQL. The frontend lives in `frontend/` but is actively being reworked; this top-level README now documents the backend-first architecture and usage.
 
-## Architecture Overview
+## What this README covers
 
-- Multi-workspace architecture
-- RESTful API
-- JWT-based authentication
-- Prisma ORM with PostgreSQL
+- Backend architecture and modules
+- Installation and run instructions for the backend
+- Environment variables required by the backend
+- Concise API overview (implemented endpoints)
 
-## Implemented Features
+If you need a combined frontend + backend README, tell me once the frontend is stable and I will update this file accordingly.
 
-- Credential-based authentication with register, login, logout, token refresh, and current-user endpoints.
-- JWT authentication using access and refresh tokens stored in cookies.
-- Workspace creation, listing, retrieval, archiving, and member management.
-- Project creation, listing, retrieval, update, archiving, and member management.
-- Automatic board creation when a project is created.
-- Automatic default column creation for new boards: Todo, In Progress, In Review, and Done.
-- Issue creation, listing, retrieval, update, and archiving.
-- Basic issue assignment validation against project membership.
-- Protected backend routes for authenticated users.
-- Frontend auth pages, auth state bootstrap, and a protected dashboard route.
+## Architecture (backend-focused)
 
+- Modular service layer: `src/modules/*` contains self-contained modules (auth, organization, workspaces, projects, issues).
+- Repository layer for database access (Prisma) per module.
+- Zod validators and request validation middleware.
+- Cookie-based JWT authentication (access + refresh tokens).
+- Prisma client with `@prisma/adapter-pg` and a PostgreSQL connection pool.
 
-## Tech Stack
+## Implemented backend modules
 
-| Area | Stack |
-| --- | --- |
-| Frontend | React, TypeScript, React Router, Zustand, React Hook Form, Tailwind CSS |
-| Backend | Node.js, Express, TypeScript, Prisma ORM, PostgreSQL |
-| Authentication | JWT, bcrypt, cookie-based session tokens |
-| Tooling | Bun, Biome |
+- `auth` — credential auth, token refresh, profile, change password, delete user
+- `organization` — org create/update/archive, invites, members
+- `workspaces` — workspace CRUD under organizations, member management
+- `projects` — project CRUD, automatic board and default columns bootstrap, project members
+- `issues` — issue CRUD, priority/status validation, assignment checks, ordering within columns
 
-## Project Structure
+Other folders exist for attachments, comments, notifications, reports and sprints; some are in-progress. Inspect `src/modules/*` to see current implementation status for each.
 
-| Path | Purpose |
-| --- | --- |
-| [backend/](backend) | Express API, Prisma schema, controllers, routes, middleware, and generated Prisma client |
-| [frontend/](frontend) | React application, auth flow, route protection, and UI scaffolding |
-| [docs/Project_Plan.md](docs/Project_Plan.md) | Project planning notes |
+## Tech stack
 
-### Backend Layout
-
-| Path | Purpose |
-| --- | --- |
-| [backend/src/app.ts](backend/src/app.ts) | Express app setup and route registration |
-| [backend/src/server.ts](backend/src/server.ts) | Server entry point |
-| [backend/src/config/](backend/src/config) | Database, environment, and logger setup |
-| [backend/src/controllers/](backend/src/controllers) | Request handlers for auth, workspaces, projects, and issues |
-| [backend/src/routes/](backend/src/routes) | API route definitions |
-| [backend/src/middleware/](backend/src/middleware) | Auth and error handling middleware |
-| [backend/prisma/schema.prisma](backend/prisma/schema.prisma) | Database schema |
-
-### Frontend Layout
-
-| Path | Purpose |
-| --- | --- |
-| [frontend/src/App.tsx](frontend/src/App.tsx) | Application root |
-| [frontend/src/routes/](frontend/src/routes) | Route configuration and protection |
-| [frontend/src/pages/](frontend/src/pages) | Login, register, and dashboard screens |
-| [frontend/src/api/](frontend/src/api) | Axios client and auth API helpers |
-| [frontend/src/store/auth.store.ts](frontend/src/store/auth.store.ts) | Authentication state |
-
-## Installation
-
-### Prerequisites
-
-- Bun
+- Bun (runtime) — used in `package.json` scripts
+- Node.js + TypeScript
+- Express
+- Prisma + `@prisma/adapter-pg`
 - PostgreSQL
+- Zod, bcrypt, jsonwebtoken
 
-### Backend
+## Quick start (backend)
+
+1. Install dependencies
 
 ```bash
 cd backend
 bun install
 ```
 
-### Frontend
+2. Configure environment variables (see next section)
+
+3. Generate Prisma client and apply migrations (if needed)
 
 ```bash
-cd frontend
-bun install
+npx prisma generate
+npx prisma migrate deploy
 ```
 
-## Environment Variables
-
-### Backend
-
-Create a `backend/.env` file with the values your local environment needs.
-
-| Variable | Purpose | Example |
-| --- | --- | --- |
-| `DATABASE_URL` | PostgreSQL connection string used by Prisma | `postgresql://user:password@localhost:5432/taskflow` |
-| `FRONTEND_URL` | Allowed frontend origin for CORS | `http://localhost:3000` |
-| `PORT` | API port | `8000` |
-| `BCRYPT_SALT_ROUNDS` | Password hashing cost | `10` |
-| `ACCESS_TOKEN_SECRET` | Secret for access tokens | `TODO` |
-| `ACCESS_TOKEN_EXPIRES_IN` | Access token lifetime | `15m` |
-| `REFRESH_TOKEN_SECRET` | Secret for refresh tokens | `TODO` |
-| `REFRESH_TOKEN_EXPIRES_IN` | Refresh token lifetime | `7d` |
-
-### Frontend
-
-Create a `frontend/.env` file.
-
-| Variable | Purpose | Example |
-| --- | --- | --- |
-| `BUN_PUBLIC_BASE_URL` | Base URL for API requests | `http://localhost:8000` |
-
-## Running the Project
-
-### Backend
+4. Run development server (watch)
 
 ```bash
-cd backend
 bun run dev
 ```
 
-To start without watch mode:
+Run production start:
 
 ```bash
-cd backend
 bun run start
 ```
 
-### Frontend
+Notes: If `bun` does not provide Prisma CLI on your system, use `npx`/`npm` as shown above.
 
-```bash
-cd frontend
-bun run dev
+## Environment variables (backend)
+
+Create `backend/.env`. Key variables used by the backend code:
+
+```
+DATABASE_URL            # required, Postgres connection string
+DIRECT_URL              # optional, used for migrations
+NODE_ENV                # development | production
+PORT                    # server port (default 8000)
+FRONTEND_URL            # CORS origin
+BCRYPT_SALT_ROUNDS      # bcrypt cost (default 10)
+ACCESS_TOKEN_SECRET     # JWT access secret (required)
+ACCESS_TOKEN_EXPIRES_IN # e.g. 15m or 1d
+REFRESH_TOKEN_SECRET    # JWT refresh secret (required)
+REFRESH_TOKEN_EXPIRES_IN# e.g. 7d
 ```
 
-To build the frontend:
+There is a `backend/.env` in the repo with example values. Verify and replace secrets before deploying.
 
-```bash
-cd frontend
-bun run build
-```
+## Routes / API (concise)
 
-## API Modules
+Base routes are registered in `src/app.ts` under `/api`.
 
-- Authentication
-- Workspace Management
-- Project Management
-- Issue Management
+Implemented resource groups (examples):
 
-Notes:
+- `/api/auth` — register, login, refresh-token, logout, me, change-password, update-profile, delete-user
+- `/api/organizations` — create, list, fetch, update, archive, invite, accept-invite, members
+- `/api/organizations/:organizationSlug/workspaces` — create/list workspaces under an organization
+- `/api/workspaces/:workspaceSlug` — workspace fetch/update/archive and member management
+- `/api/workspaces/:workspaceId/projects` — create/list projects (project creation bootstraps a board and default columns)
+- `/api/workspaces/:workspaceId/projects/:projectId` — project fetch/update/archive and project member management
+- `/api/projects/:projectId/issues` — create/list issues (issues are placed in `Todo` column by default)
+- `/api/projects/:projectId/issues/:issueId` — issue fetch/update/archive
 
-- Project creation automatically creates a board and four default columns.
-- Issue creation assigns new issues to the `Todo` column by default.
-- Workspace and project access are enforced through membership checks.
+See `src/modules/*/*.routes.ts` for exact endpoints and expected payloads.
 
-## Current Progress
+## Development notes & suggestions
 
-- Backend implementation is complete for the features listed above.
-- Frontend work is in progress.
-- The current frontend includes auth screens, auth bootstrapping, and a protected dashboard route, but the dashboard itself is still a placeholder.
+- Add `backend/.env.example` to the repo with non-sensitive example values.
+- Add integration tests for auth and membership flows.
+- Document CI steps for `prisma migrate deploy` to keep DB migrations repeatable.
 
-## Roadmap
+## Backend README
 
-- Add board and column management APIs.
-- Add comments and activity tracking.
-- Build the dashboard and project views in the frontend.
-- Add issue detail and board UI.
-
-## Planned Features
-
-- Kanban Board UI
-- Comments
-- Activity Timeline
-- Dashboard
-- Search & Filters
+There is a more detailed backend README at `backend/README.md` which documents environment variables, API overview, and a small AI-authorship heuristic scan.
