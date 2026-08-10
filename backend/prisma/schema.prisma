@@ -151,7 +151,7 @@ model Workspace {
   ownerId        String
 
   name String
-  slug String @unique
+  slug String
 
   description String?
   logoUrl     String?

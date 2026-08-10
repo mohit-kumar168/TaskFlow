@@ -1,20 +1,85 @@
-import { createWorkspace, deleteWorkspace, fetchAllWorkspaces, fetchWorkspace } from "./workspace.controller";
-import { addMember, fetchAllMembers, removeMember, updateMemberRole } from "./workspaceMember.controller";
-import { protect } from "@/middleware/auth.middleware";
 import { Router } from "express";
+import { protect } from "@/middleware/auth.middleware";
+import validateRequest from "@/middleware/validateRequest.middleware";
+
+import {
+	createWorkspace,
+	fetchAllWorkspaces,
+	fetchWorkspace,
+	updateWorkspace,
+	archiveWorkspace,
+	addWorkspaceMember,
+	fetchAllWorkspaceMembers,
+	fetchWorkspaceMember,
+	updateWorkspaceMemberRole,
+	removeWorkspaceMember,
+} from "./workspace.controller";
+
+import {
+	createWorkspaceSchema,
+	updateWorkspaceSchema,
+	addWorkspaceMemberSchema,
+	updateWorkspaceMemberRoleSchema,
+} from "./workspace.validator";
 
 const router = Router();
 
+
 router.use(protect);
 
-router.post("/", createWorkspace);
-router.get("/", fetchAllWorkspaces);
-router.get("/:workspaceId", fetchWorkspace);
-router.delete("/:workspaceId", deleteWorkspace);
+router.post(
+	"/",
+	validateRequest(createWorkspaceSchema),
+	createWorkspace,
+);
 
-router.post("/:workspaceId/members", addMember);
-router.get("/:workspaceId/members", fetchAllMembers);
-router.patch("/:workspaceId/members/:memberId", updateMemberRole);
-router.delete("/:workspaceId/members/:memberId", removeMember);
+router.get(
+	"/",
+	fetchAllWorkspaces,
+);
+
+router.get(
+	"/:workspaceSlug",
+	fetchWorkspace,
+);
+
+router.patch(
+	"/:workspaceSlug",
+	validateRequest(updateWorkspaceSchema),
+	updateWorkspace,
+);
+
+router.delete(
+	"/:workspaceSlug",
+	archiveWorkspace,
+);
+
+
+router.post(
+	"/:workspaceSlug/members",
+	validateRequest(addWorkspaceMemberSchema),
+	addWorkspaceMember,
+);
+
+router.get(
+	"/:workspaceSlug/members",
+	fetchAllWorkspaceMembers,
+);
+
+router.get(
+	"/:workspaceSlug/members/:memberId",
+	fetchWorkspaceMember,
+);
+
+router.patch(
+	"/:workspaceSlug/members/:memberId",
+	validateRequest(updateWorkspaceMemberRoleSchema),
+	updateWorkspaceMemberRole,
+);
+
+router.delete(
+	"/:workspaceSlug/members/:memberId",
+	removeWorkspaceMember,
+);
 
 export default router;

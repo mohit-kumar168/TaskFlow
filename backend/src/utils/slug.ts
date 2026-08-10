@@ -12,3 +12,12 @@ export const generateSlug = (value: string) => {
 
 	return `${baseSlug}-${randomSuffix}`;
 }
+
+export const createSlug = (value: string) => {
+	return value
+		.toLowerCase()
+		.trim()
+		.replace(/[^a-z0-9\s-]/g, "")
+		.replace(/\s+/g, "-")
+		.replace(/-+/g, "-");
+}
