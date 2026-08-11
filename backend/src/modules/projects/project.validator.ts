@@ -7,7 +7,7 @@ export const createProjectSchema = z.object({
 			.string()
 			.trim()
 			.min(2, "Project name must be at least 2 characters.")
-			.max(100, "Project name cannot exceed 100 characters."),
+			.max(20, "Project name cannot exceed 20 characters."),
 
 		key: z
 			.string()
@@ -33,7 +33,7 @@ export const createProjectSchema = z.object({
 			.string()
 			.trim()
 			.min(2, "Board name must be at least 2 characters.")
-			.max(100, "Board name cannot exceed 100 characters."),
+			.max(20, "Board name cannot exceed 20 characters."),
 	}),
 });
 
@@ -43,7 +43,7 @@ export const updateProjectSchema = z.object({
 			.string()
 			.trim()
 			.min(2, "Project name must be at least 2 characters.")
-			.max(100, "Project name cannot exceed 100 characters.")
+			.max(20, "Project name cannot exceed 20 characters.")
 			.optional(),
 
 		description: z
@@ -73,5 +73,47 @@ export const addProjectMemberSchema = z.object({
 export const updateProjectMemberSchema = z.object({
 	body: z.object({
 		role: z.enum(ProjectRole),
+	}),
+});
+
+
+export const updateBoardSchema = z.object({
+	body: z.object({
+		name: z
+			.string()
+			.trim()
+			.min(2, "Board name must be at least 2 characters.")
+			.max(20, "Board name cannot exceed 20 characters."),
+	}),
+});
+
+export const createColumnSchema = z.object({
+	body: z.object({
+		name: z
+			.string()
+			.trim()
+			.min(2, "Column name must be at least 2 characters.")
+			.max(20, "Column name cannot exceed 20 characters."),
+
+		color: z
+			.string()
+			.trim()
+			.optional(),
+	}),
+});
+
+export const updateColumnSchema = z.object({
+	body: z.object({
+		name: z
+			.string()
+			.trim()
+			.min(2, "Column name must be at least 2 characters.")
+			.max(20, "Column name cannot exceed 20 characters.")
+			.optional(),
+
+		color: z
+			.string()
+			.trim()
+			.optional(),
 	}),
 });
