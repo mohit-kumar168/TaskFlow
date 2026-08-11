@@ -1,7 +1,7 @@
 import "./index.css";
 import { RouterProvider } from "react-router-dom";
 import { router } from "./routes";
-import AuthInitializer from "./components/auth/AuthInitializer";
+import AuthInitializer from "./modules/auth/components/AuthInitializer";
 
 const App = () => {
 	return (

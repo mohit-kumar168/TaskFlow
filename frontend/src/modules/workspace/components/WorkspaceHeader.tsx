@@ -1,7 +1,7 @@
 import { FolderKanban, MoreVertical, Settings, Users } from "lucide-react";
-import Button from "../ui/Button";
-import { useWorkspaceStore } from "../../store/workspace.store";
-import WorkspacePageSkeleton from "../skeleton/WorkspacePage";
+import Button from "@/components/ui/Button";
+import { useWorkspaceStore } from "@/store/workspace.store";
+import WorkspacePageSkeleton from "@/components/skeleton/WorkspacePage";
 import { NavLink, useNavigate } from "react-router-dom";
 
 

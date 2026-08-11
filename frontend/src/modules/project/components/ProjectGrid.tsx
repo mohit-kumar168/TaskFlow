@@ -1,5 +1,5 @@
-import { useProjectStore } from "../../store/project.store";
-import Button from "../ui/Button";
+import { useProjectStore } from "../../../store/project.store";
+import Button from "../../../components/ui/Button";
 import ProjectCard from "./ProjectCard";
 
 

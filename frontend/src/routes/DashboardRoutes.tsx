@@ -1,15 +1,15 @@
 import DashboardLayout from "@/layouts/DashboardLayout";
 import ProtectedRoute from "./ProtectedRoute";
-import Dashboard from "@/pages/dashboard/Dashboard";
-import CreateWorkspace from "@/pages/workspace/CreateWorkspace";
-import CreateProject from "@/pages/project/CreateProject";
-import ProjectPage from "@/pages/project/ProjectPage";
-import WorkspaceOverview from "../pages/workspace/WorkspaceOverview";
+import Dashboard from "@/modules/dashboard/pages/Dashboard";
+import CreateWorkspace from "@/modules/workspace/pages/CreateWorkspace";
+import CreateProject from "@/modules/project/pages/CreateProject";
+import ProjectPage from "@/modules/project/pages/ProjectPage";
+import WorkspaceOverview from "../modules/workspace/pages/WorkspaceOverview";
 import WorkspaceLayout from "../layouts/WorkspaceLayout";
-import WorkspaceMembers from "@/pages/workspace/WorkspaceMembers";
+import WorkspaceMembers from "@/modules/workspace/pages/WorkspaceMembers";
 import ProjectLayout from "@/layouts/ProjectLayout";
-import ProjectBoard from "@/components/project/ProjectBoard";
-import ProjectMembers from "@/components/project/ProjectMembers";
+import ProjectBoard from "@/modules/project/components/ProjectBoard";
+import ProjectMembers from "@/modules/project/components/ProjectMembers";
 
 export const DashboardRoutes = [
 	{

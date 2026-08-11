@@ -1,5 +1,5 @@
 import { registerUser, type RegisterUserProps } from "@/api/auth.api"
-import OrangePanel from "@/components/auth/OrangePanel"
+import OrangePanel from "@/modules/auth/components/OrangePanel"
 import Button from "@/components/ui/Button"
 import Input from "@/components/ui/Input"
 import { useForm } from "react-hook-form"
@@ -21,7 +21,7 @@ const Register = () => {
 
 	return (
 		<div>
-			<main className="min-h-screen bg-gradient-to-br from-slate-200 to-slate-300 flex items-center justify-center p-4">
+			<main className="min-h-screen bg-linear-to-br from-slate-200 to-slate-300 flex items-center justify-center p-4">
 				<div className="min-h-5xl lg:h-[60vh] lg:w-[70vw] md:grid md:grid-cols-2 bg-white rounded-3xl shadow-md overflow-hidden">
 					<OrangePanel title="Welcome Back!" subtitle="Already have an account? Login and continue managing your projects." navigateTo="/login" buttonText="Sign In" />
 					<section className="flex flex-col justify-center p-8">

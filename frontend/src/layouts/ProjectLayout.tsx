@@ -1,4 +1,4 @@
-import ProjectHeader from "@/components/project/ProjectHeader"
+import ProjectHeader from "@/modules/project/components/ProjectHeader"
 
 const ProjectLayout = () => {
 	return (

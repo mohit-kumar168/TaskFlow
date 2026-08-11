@@ -1,9 +1,9 @@
 import { LayoutDashboard, ListTodo, X, type LucideIcon } from "lucide-react";
-import Button from "../ui/Button";
+import Button from "../../../components/ui/Button";
 import { logoutUser } from "@/api/auth.api";
 import { useNavigate } from "react-router-dom";
-import SidebarNav from "./sidebar/SidebarNav";
-import WorkspaceSection from "./sidebar/WorkspaceSection";
+import SidebarNav from "./SidebarNav";
+import WorkspaceSection from "./WorkspaceSection";
 
 type SidebarProps = {
 	isOpen: boolean;

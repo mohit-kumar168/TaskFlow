@@ -1,70 +1,109 @@
 import { create } from "zustand";
 import {
-	getWorkspace,
-	getWorkspaceMembers,
-	getWorkspaces,
-	type WorkspaceMemberProps,
+  getWorkspace,
+  getWorkspaceMembers,
+  getWorkspaces,
+  type WorkspaceProps,
 } from "@/api/workspace.api";
 
 interface WorkspaceStore {
-	workspaces: WorkspaceMemberProps[];
-	currentWorkspace: WorkspaceMemberProps | null;
-	isLoading: boolean;
+  workspaces: WorkspaceProps[];
+  currentWorkspace: WorkspaceProps | null;
+  isLoading: boolean;
 
-	fetchWorkspaces: () => Promise<void>;
-	fetchWorkspace: (workspaceId: string) => Promise<void>;
-	fetchWorkspaceMembers: (workspaceId: string) => Promise<void>;
+  fetchWorkspaces: (organizationSlug: string) => Promise<void>;
+
+  fetchWorkspace: (
+    organizationSlug: string,
+    workspaceSlug: string,
+  ) => Promise<void>;
+
+  fetchWorkspaceMembers: (
+    organizationSlug: string,
+    workspaceSlug: string,
+  ) => Promise<void>;
 }
 
+let workspaceRequestId = 0;
+
 export const useWorkspaceStore = create<WorkspaceStore>((set) => ({
-	workspaces: [],
-	currentWorkspace: null,
-	isLoading: false,
+  workspaces: [],
+  currentWorkspace: null,
+  isLoading: false,
 
-	fetchWorkspaces: async () => {
-		try {
-			set({ isLoading: true });
+  fetchWorkspaces: async (organizationSlug) => {
+    const requestId = ++workspaceRequestId;
 
-			const response = await getWorkspaces();
+    try {
+      set({
+        isLoading: true,
+        workspaces: [],
+        currentWorkspace: null,
+      });
 
-			set({
-				workspaces: response.data.data,
-				isLoading: false,
-			});
-		} catch (err) {
-			console.error(err);
-			set({ isLoading: false });
-		}
-	},
+      const response = await getWorkspaces(organizationSlug);
 
-	fetchWorkspace: async (workspaceId: string) => {
-		try {
-			set({ isLoading: true, currentWorkspace: null });
+      if (requestId !== workspaceRequestId) {
+        return;
+      }
 
-			const response = await getWorkspace(workspaceId);
+      set({
+        workspaces: response.data.data,
+        isLoading: false,
+      });
+    } catch (error) {
+      if (requestId !== workspaceRequestId) {
+        return;
+      }
 
-			set({
-				currentWorkspace: response.data.data,
-				isLoading: false,
-			});
-		} catch (err) {
-			console.error(err);
-			set({ isLoading: false, currentWorkspace: null });
-		}
-	},
-	fetchWorkspaceMembers: async (workspaceId: string) => {
-		try {
-			set({ isLoading: true });
+      console.error("Failed to fetch workspaces:", error);
 
-			const response = await getWorkspaceMembers(workspaceId);
+      set({
+        workspaces: [],
+        currentWorkspace: null,
+        isLoading: false,
+      });
+    }
+  },
 
-			set({
-				currentWorkspace: response.data.data,
-				isLoading: false,
-			});
-		} catch (err) {
-			console.error(err);
-			set({ isLoading: false });
-		}
-	},
+  fetchWorkspace: async (organizationSlug, workspaceSlug) => {
+    try {
+      set({
+        isLoading: true,
+        currentWorkspace: null,
+      });
+
+      const response = await getWorkspace(organizationSlug, workspaceSlug);
+
+      set({
+        currentWorkspace: response.data.data,
+        isLoading: false,
+      });
+    } catch (error) {
+      console.error(error);
+
+      set({
+        currentWorkspace: null,
+        isLoading: false,
+      });
+    }
+  },
+
+  fetchWorkspaceMembers: async (organizationSlug, workspaceSlug) => {
+    try {
+      set({ isLoading: true });
+
+      const response = await getWorkspaceMembers(
+        organizationSlug,
+        workspaceSlug,
+      );
+
+      console.log(response.data.data);
+
+      set({ isLoading: false });
+    } catch (error) {
+      console.error(error);
+      set({ isLoading: false });
+    }
+  },
 }));

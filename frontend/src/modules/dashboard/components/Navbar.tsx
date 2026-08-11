@@ -1,8 +1,9 @@
 import { PanelRightOpen, Plus, Settings } from "lucide-react";
 import { Link } from "react-router-dom";
 import TFlogo from "@/assets/taskflow-logo.png";
-import SearchInput from "../ui/SearchInput";
-import Button from "../ui/Button";
+import SearchInput from "@/components/ui/SearchInput";
+import Button from "@/components/ui/Button";
+import OrganizationSelector from "@/modules/organization/components/OrganizationSelector";
 
 type NavbarProps = {
 	isSidebarOpen: boolean;
@@ -30,6 +31,7 @@ const Navbar = ({ isSidebarOpen, onToggleSidebar }: NavbarProps) => {
 						className="h-11 w-11 object-contain transition-transform hover:scale-105"
 					/>
 				</Link>
+				<OrganizationSelector />
 			</div>
 			<div className="flex items-center gap-4">
 				<div className="hidden w-56 md:block lg:w-72">

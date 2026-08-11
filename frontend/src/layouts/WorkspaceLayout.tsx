@@ -1,6 +1,6 @@
-import ProjectList from "@/components/workspace/ProjectList"
-import WorkspaceHeader from "../components/workspace/WorkspaceHeader"
-import WorkspaceToolbar from "@/components/workspace/WorkspaceToolbar"
+import ProjectList from "@/modules/workspace/components/ProjectList"
+import WorkspaceHeader from "@/modules/workspace/components/WorkspaceHeader"
+import WorkspaceToolbar from "@/modules/workspace/components/WorkspaceToolbar"
 import { Outlet } from "react-router-dom"
 
 const WorkspaceLayout = () => {

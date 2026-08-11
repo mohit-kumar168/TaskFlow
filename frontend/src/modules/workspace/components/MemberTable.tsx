@@ -1,5 +1,5 @@
 import React from "react";
-import { type WorkspaceMemberWithUser } from "@/pages/workspace/WorkspaceMembers";
+import { type WorkspaceMemberWithUser } from "@/modules/workspace/pages/WorkspaceMembers";
 import { MoreVertical } from "lucide-react";
 
 const MemberTable = ({ members }: { members: WorkspaceMemberWithUser[] }) => {

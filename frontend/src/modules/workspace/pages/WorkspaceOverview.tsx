@@ -2,8 +2,8 @@ import { useWorkspaceStore } from "@/store/workspace.store";
 import { useEffect } from "react";
 import { useParams } from "react-router-dom";
 import WorkspacePageSkeleton from "@/components/skeleton/WorkspacePage";
-import WorkspaceToolbar from "@/components/workspace/WorkspaceToolbar";
-import ProjectGrid from "@/components/project/ProjectGrid";
+import WorkspaceToolbar from "@/modules/workspace/components/WorkspaceToolbar";
+import ProjectGrid from "@/modules/project/components/ProjectGrid";
 import { useProjectStore } from "@/store/project.store";
 
 const WorkspaceOverview = () => {

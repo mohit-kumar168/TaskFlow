@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { getWorkspaceMembers } from "@/api/workspace.api";
-import Membertoolbar from "@/components/workspace/Membertoolbar";
-import MemberTable from "@/components/workspace/MemberTable";
+import Membertoolbar from "@/modules/workspace/components/Membertoolbar";
+import MemberTable from "@/modules/workspace/components/MemberTable";
 
 export interface WorkspaceMemberWithUser {
 	id: string;
