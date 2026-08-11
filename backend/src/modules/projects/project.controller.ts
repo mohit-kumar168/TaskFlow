@@ -1,276 +1,303 @@
 import type { Request, Response } from "express";
 import asyncHandler from "@/utils/asyncHandler";
-import prisma from "@/prisma/client";
-import apiError from "@/utils/apiError";
 import apiResponse from "@/utils/apiResponse";
-import logger from "@/config/logger";
+import * as projectService from "./project.service";
 
-export const createProject = asyncHandler(async (req: Request, res: Response) => {
-	const workspaceId = req.params.workspaceId as string;
-	const { name, key, description, boardName } = req.body;
+export const createProject = asyncHandler(
+	async (req: Request, res: Response) => {
+		const project = await projectService.createProject(
+			req.params.organizationSlug as string,
+			req.params.workspaceSlug as string,
+			req.user!.id,
+			req.body,
+		);
 
-	const normalizeKey = key.trim().toUpperCase();
+		return res
+			.status(201)
+			.json(new apiResponse("Project created successfully.", project));
+	},
+);
 
-	if (!name || !key) {
-		throw new apiError(400, "Name and key are required");
-	}
+export const fetchAllProjects = asyncHandler(
+	async (req: Request, res: Response) => {
+		const projects = await projectService.fetchAllProjects(
+			req.params.organizationSlug as string,
+			req.params.workspaceSlug as string,
+			req.user!.id,
+		);
 
-	const membership = await prisma.workspaceMember.findFirst({
-		where: {
-			workspaceId,
-			userId: req.user!.id,
-			status: "active"
-		}
-	});
+		return res
+			.status(200)
+			.json(new apiResponse("Projects fetched successfully.", projects));
+	},
+);
 
-	if (!membership) {
-		throw new apiError(404, "Workspace membership not found");
-	}
+export const fetchProject = asyncHandler(
+	async (req: Request, res: Response) => {
+		const project = await projectService.fetchProject(
+			req.params.organizationSlug as string,
+			req.params.workspaceSlug as string,
+			req.params.projectSlug as string,
+			req.user!.id,
+		);
 
-	if (membership?.role !== "OWNER" && membership?.role !== "ADMIN") {
-		throw new apiError(403, "Unauthorized");
-	}
+		return res
+			.status(200)
+			.json(new apiResponse("Project fetched successfully.", project));
+	},
+);
 
+export const updateProject = asyncHandler(
+	async (req: Request, res: Response) => {
+		const project = await projectService.updateProject(
+			req.params.organizationSlug as string,
+			req.params.workspaceSlug as string,
+			req.params.projectSlug as string,
+			req.user!.id,
+			req.body,
+		);
 
-	const isProjectExist = await prisma.project.findUnique({
-		where: {
-			workspaceId_key: {
-				workspaceId,
-				key: normalizeKey
-			}
-		}
-	});
+		return res
+			.status(200)
+			.json(new apiResponse("Project updated successfully.", project));
+	},
+);
 
-	if (isProjectExist) {
-		throw new apiError(400, "Project already exist");
-	}
+export const removeProject = asyncHandler(
+	async (req: Request, res: Response) => {
+		const project = await projectService.archiveProject(
+			req.params.organizationSlug as string,
+			req.params.workspaceSlug as string,
+			req.params.projectSlug as string,
+			req.user!.id,
+		);
 
-	const result = await prisma.$transaction(async (tx) => {
-		const project = await tx.project.create({
-			data: {
-				workspaceId,
-				name,
-				key: normalizeKey,
-				description,
-			},
-			include: {
-				board: true,
-			}
-		});
+		return res
+			.status(200)
+			.json(new apiResponse("Project removed successfully.", project));
+	},
+);
 
-		await tx.projectMember.create({
-			data: {
-				projectId: project.id,
-				userId: req.user!.id,
-				role: "ADMIN"
-			}
-		});
-
-		const board = await tx.board.create({
-			data: {
-				projectId: project.id,
-				name: boardName ?? "Main Board"
-			},
-			include: {
-				columns: true
-			}
-		});
-
-		await tx.column.createMany({
-			data: [
-				{
-					boardId: board.id,
-					title: "Todo",
-					order: 1
-				},
-				{
-					boardId: board.id,
-					title: "In Progress",
-					order: 2
-				},
-				{
-					boardId: board.id,
-					title: "In Review",
-					order: 3
-				},
-				{
-					boardId: board.id,
-					title: "Done",
-					order: 4
-				}
-			]
-		});
-
-		return { project, board };
-	})
-
-	return res.status(201).json(
-		new apiResponse(
-			"Project created successfully",
-			{
-				project: result.project,
-				board: result.board
-			}
-		)
+export const addMember = asyncHandler(async (req: Request, res: Response) => {
+	const member = await projectService.addProjectMember(
+		req.params.organizationSlug as string,
+		req.params.workspaceSlug as string,
+		req.params.projectSlug as string,
+		req.user!.id,
+		req.body,
 	);
+
+	return res
+		.status(201)
+		.json(new apiResponse("Member added to project successfully.", member));
 });
 
-export const fetchAllProjects = asyncHandler(async (req: Request, res: Response) => {
-	const workspaceId = req.params.workspaceId as string;
+export const fetchAllProjectMembers = asyncHandler(
+	async (req: Request, res: Response) => {
+		const members = await projectService.fetchAllProjectMembers(
+			req.params.organizationSlug as string,
+			req.params.workspaceSlug as string,
+			req.params.projectSlug as string,
+			req.user!.id,
+		);
 
-	const projects = await prisma.project.findMany({
-		where: {
-			workspaceId,
-			isArchived: false,
-			members: {
-				some: {
-					userId: req.user?.id
-				}
-			}
-		},
-		include: {
-			_count: {
-				select: {
-					members: true,
-					issues: true,
-				},
-			},
-		},
-	});
+		return res
+			.status(200)
+			.json(new apiResponse("All members fetched successfully.", members));
+	},
+);
 
-	return res.status(200).json(
-		new apiResponse(
-			"Projects fetched successfully",
-			projects
-		)
-	);
-});
+export const fetchProjectMember = asyncHandler(
+	async (req: Request, res: Response) => {
+		const member = await projectService.fetchProjectMember(
+			req.params.organizationSlug as string,
+			req.params.workspaceSlug as string,
+			req.params.projectSlug as string,
+			req.user!.id,
+			req.params.memberId as string,
+		);
 
-export const fetchProject = asyncHandler(async (req: Request, res: Response) => {
-	const workspaceId = req.params.workspaceId as string;
-	const projectId = req.params.projectId as string;
+		return res
+			.status(200)
+			.json(new apiResponse("Project member fetched successfully.", member));
+	},
+);
 
-	const project = await prisma.project.findFirst({
-		where: {
-			workspaceId,
-			id: projectId,
-			members: {
-				some: {
-					userId: req.user!.id
-				}
-			}
-		}
-	});
+export const updateProjectMember = asyncHandler(
+	async (req: Request, res: Response) => {
+		const member = await projectService.updateProjectMember(
+			req.params.organizationSlug as string,
+			req.params.workspaceSlug as string,
+			req.params.projectSlug as string,
+			req.user!.id,
+			req.params.memberId as string,
+			req.body.role,
+		);
 
-	if (!project) {
-		throw new apiError(404, "Project not found or you don't have access");
-	}
+		return res
+			.status(200)
+			.json(new apiResponse("Project member updated successfully.", member));
+	},
+);
 
-	return res.status(200).json(
-		new apiResponse(
-			"Project fetched successfully",
-			project
-		)
-	);
-});
+export const removeProjectMember = asyncHandler(
+	async (req: Request, res: Response) => {
+		await projectService.removeProjectMember(
+			req.params.organizationSlug as string,
+			req.params.workspaceSlug as string,
+			req.params.projectSlug as string,
+			req.user!.id,
+			req.params.memberId as string,
+		);
 
-export const updateProject = asyncHandler(async (req: Request, res: Response) => {
-	const workspaceId = req.params.workspaceId as string;
-	const projectId = req.params.projectId as string;
-	const { name, key, description } = req.body;
+		return res
+			.status(200)
+			.json(new apiResponse("Project member removed successfully.", null));
+	},
+);
 
-	if (!name || !key || !description) {
-		throw new apiError(400, "All fields are required");
-	}
+export const fetchBoard = asyncHandler(
+	async (req: Request, res: Response) => {
+		const board = await projectService.fetchBoard(
+			req.params.organizationSlug as string,
+			req.params.workspaceSlug as string,
+			req.params.projectSlug as string,
+			req.user!.id,
+		);
 
-	const normalizeKey = key.trim().toUpperCase();
+		return res
+			.status(200)
+			.json(
+				new apiResponse(
+					"Board fetched successfully.",
+					board,
+				),
+			);
+	},
+);
 
-	const existingProject = await prisma.project.findFirst({
-		where: {
-			workspaceId,
-			key: normalizeKey,
-			NOT: {
-				id: projectId
-			}
-		}
-	});
+export const updateBoard = asyncHandler(
+	async (req: Request, res: Response) => {
+		const board = await projectService.updateBoard(
+			req.params.organizationSlug as string,
+			req.params.workspaceSlug as string,
+			req.params.projectSlug as string,
+			req.user!.id,
+			req.body.name,
+		);
 
-	if (existingProject) {
-		throw new apiError(400, "Project with this key already exists");
-	}
+		return res
+			.status(200)
+			.json(
+				new apiResponse(
+					"Board updated successfully.",
+					board,
+				),
+			);
+	},
+);
 
-	const projectMembership = await prisma.project.findFirst({
-		where: {
-			workspaceId,
-			id: projectId,
-			members: {
-				some: {
-					userId: req.user!.id,
-					role: "ADMIN"
-				}
-			}
-		},
+export const createBoardColumn = asyncHandler(
+	async (req: Request, res: Response) => {
+		const column = await projectService.createBoardColumn(
+			req.params.organizationSlug as string,
+			req.params.workspaceSlug as string,
+			req.params.projectSlug as string,
+			req.user!.id,
+			req.body,
+		);
 
-	});
+		return res
+			.status(201)
+			.json(
+				new apiResponse(
+					"Board column created successfully.",
+					column,
+				),
+			);
+	},
+);
 
-	if (!projectMembership) {
-		throw new apiError(404, "Project not found or you don't have access");
-	}
+export const fetchBoardColumns = asyncHandler(
+	async (req: Request, res: Response) => {
+		const columns = await projectService.fetchBoardColumns(
+			req.params.organizationSlug as string,
+			req.params.workspaceSlug as string,
+			req.params.projectSlug as string,
+			req.user!.id,
+		);
 
-	const project = await prisma.project.update({
-		where: {
-			id: projectId
-		},
-		data: {
-			name,
-			key: normalizeKey,
-			description,
-		}
-	})
+		return res
+			.status(200)
+			.json(
+				new apiResponse(
+					"Board columns fetched successfully.",
+					columns,
+				),
+			);
+	},
+);
 
-	return res.status(200).json(
-		new apiResponse(
-			"Project details updated successfully",
-			project
-		)
-	)
-});
+export const fetchBoardColumn = asyncHandler(
+	async (req: Request, res: Response) => {
+		const column = await projectService.fetchBoardColumn(
+			req.params.organizationSlug as string,
+			req.params.workspaceSlug as string,
+			req.params.projectSlug as string,
+			req.user!.id,
+			req.params.columnId as string,
+		);
 
-export const removeProject = asyncHandler(async (req: Request, res: Response) => {
-	const workspaceId = req.params.workspaceId as string;
-	const projectId = req.params.projectId as string;
+		return res
+			.status(200)
+			.json(
+				new apiResponse(
+					"Board column fetched successfully.",
+					column,
+				),
+			);
+	},
+);
 
-	const project = await prisma.project.findFirst({
-		where: {
-			workspaceId,
-			id: projectId,
-			isArchived: false,
-			members: {
-				some: {
-					userId: req.user!.id,
-					role: "ADMIN"
-				}
-			}
-		}
-	});
+export const updateBoardColumn = asyncHandler(
+	async (req: Request, res: Response) => {
+		const column = await projectService.updateBoardColumn(
+			req.params.organizationSlug as string,
+			req.params.workspaceSlug as string,
+			req.params.projectSlug as string,
+			req.user!.id,
+			req.params.columnId as string,
+			req.body,
+		);
 
-	if (!project) {
-		throw new apiError(404, "Project not found or you don't have access");
-	}
+		return res
+			.status(200)
+			.json(
+				new apiResponse(
+					"Board column updated successfully.",
+					column,
+				),
+			);
+	},
+);
 
-	const projectToDelete = await prisma.project.update({
-		where: {
-			id: projectId
-		},
-		data: {
-			isArchived: true
-		}
-	})
+export const deleteBoardColumn = asyncHandler(
+	async (req: Request, res: Response) => {
+		await projectService.deleteBoardColumn(
+			req.params.organizationSlug as string,
+			req.params.workspaceSlug as string,
+			req.params.projectSlug as string,
+			req.user!.id,
+			req.params.columnId as string,
+		);
 
-	return res.status(200).json(
-		new apiResponse(
-			"Project removed successfully",
-			projectToDelete
-		)
-	)
-})
+		return res
+			.status(200)
+			.json(
+				new apiResponse(
+					"Board column deleted successfully.",
+					null,
+				),
+			);
+	},
+);

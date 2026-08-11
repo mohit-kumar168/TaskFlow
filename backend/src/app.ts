@@ -21,7 +21,7 @@ app.use(cookieParser());
 app.use("/api/auth", authRoutes);
 app.use("/api/organizations", organizationRoutes);
 app.use("/api/organizations/:organizationSlug/workspaces", workspaceRoutes);
-app.use("/api/workspaces", projectRoutes);
+app.use("/api/organizations/:organizationSlug/:workspaceSlug/projects", projectRoutes);
 app.use("/api/projects", issueRoutes);
 
 
