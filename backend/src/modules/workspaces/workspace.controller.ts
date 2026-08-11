@@ -6,7 +6,7 @@ import * as workspaceService from "./workspace.service";
 export const createWorkspace = asyncHandler(
 	async (req: Request, res: Response) => {
 		const workspace = await workspaceService.createWorkspace(
-			req.body.organizationSlug,
+			req.params.organizationSlug as string,
 			req.user!.id,
 			req.body,
 		);
@@ -23,8 +23,8 @@ export const createWorkspace = asyncHandler(
 export const updateWorkspace = asyncHandler(
 	async (req: Request, res: Response) => {
 		const workspace = await workspaceService.updateWorkspace(
-			req.body.organizationSlug,
-			req.params.slug as string,
+			req.params.organizationSlug as string,
+			req.params.workspaceSlug as string,
 			req.user!.id,
 			req.body,
 		);
@@ -42,7 +42,7 @@ export const archiveWorkspace = asyncHandler(
 	async (req: Request, res: Response) => {
 		const workspace = await workspaceService.archiveWorkspace(
 			req.params.organizationSlug as string,
-			req.params.slug as string,
+			req.params.workspaceSlug as string,
 			req.user!.id,
 		);
 
@@ -77,7 +77,7 @@ export const fetchWorkspace = asyncHandler(
 		const workspace =
 			await workspaceService.fetchWorkspace(
 				req.params.organizationSlug as string,
-				req.params.slug as string,
+				req.params.workspaceSlug as string,
 				req.user!.id,
 			);
 
@@ -96,7 +96,7 @@ export const addWorkspaceMember = asyncHandler(
 		const member =
 			await workspaceService.addWorkspaceMember(
 				req.params.organizationSlug as string,
-				req.params.slug as string,
+				req.params.workspaceSlug as string,
 				req.user!.id,
 				req.body,
 			);
@@ -115,7 +115,7 @@ export const fetchAllWorkspaceMembers = asyncHandler(
 		const members =
 			await workspaceService.fetchAllWorkspaceMembers(
 				req.params.organizationSlug as string,
-				req.params.slug as string,
+				req.params.workspaceSlug as string,
 				req.user!.id,
 			);
 
@@ -133,7 +133,7 @@ export const fetchWorkspaceMember = asyncHandler(
 		const member =
 			await workspaceService.fetchWorkspaceMember(
 				req.params.organizationSlug as string,
-				req.params.slug as string,
+				req.params.workspaceSlug as string,
 				req.user!.id,
 				req.params.memberId as string,
 			);
@@ -152,7 +152,7 @@ export const updateWorkspaceMemberRole = asyncHandler(
 		const member =
 			await workspaceService.updateWorkspaceMemberRole(
 				req.params.organizationSlug as string,
-				req.params.slug as string,
+				req.params.workspaceSlug as string,
 				req.user!.id,
 				req.params.memberId as string,
 				req.body.role,
@@ -172,7 +172,7 @@ export const removeWorkspaceMember = asyncHandler(
 		const member =
 			await workspaceService.removeWorkspaceMember(
 				req.params.organizationSlug as string,
-				req.params.slug as string,
+				req.params.workspaceSlug as string,
 				req.user!.id,
 				req.params.memberId as string,
 			);

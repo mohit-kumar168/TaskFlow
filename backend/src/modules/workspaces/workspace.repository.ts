@@ -2,13 +2,13 @@ import prisma from "@/prisma/client";
 import type { CreateWorkspaceInput, UpdateWorkspaceInput } from "./workspace.types";
 import { MembershipStatus, WorkspaceRole } from "@/generated/prisma/enums";
 
-export const createWorkspace = async (organizationId: string, ownerId: string, slug: string, data: CreateWorkspaceInput) => {
+export const createWorkspace = async (organizationId: string, ownerId: string, workspaceSlug: string, data: CreateWorkspaceInput) => {
 	return await prisma.$transaction(async (tx) => {
 		const workspace = await tx.workspace.create({
 			data: {
 				organizationId,
 				ownerId,
-				slug,
+				slug: workspaceSlug,
 				name: data.name,
 				description: data.description,
 				logoUrl: data.logoUrl,
@@ -35,11 +35,11 @@ export const findWorkspaceById = async (workspaceId: string) => {
 	});
 };
 
-export const findWorkspaceBySlug = async (organizationId: string, slug: string, userId: string) => {
+export const findWorkspaceBySlug = async (organizationId: string, workspaceSlug: string, userId: string) => {
 	return await prisma.workspace.findFirst({
 		where: {
 			organizationId,
-			slug,
+			slug: workspaceSlug,
 			isArchived: false,
 			members: {
 				some: {
@@ -83,11 +83,11 @@ export const fetchAllWorkspaces = async (organizationId: string) => {
 	});
 };
 
-export const fetchWorkspace = async (organizationId: string, slug: string, userId: string) => {
+export const fetchWorkspace = async (organizationId: string, workspaceSlug: string, userId: string) => {
 	return await prisma.workspace.findFirst({
 		where: {
 			organizationId,
-			slug,
+			slug: workspaceSlug,
 			isArchived: false,
 			members: {
 				some: {
