@@ -22,7 +22,7 @@ import {
 	updateWorkspaceMemberRoleSchema,
 } from "./workspace.validator";
 
-const router = Router();
+const router = Router({mergeParams: true});
 
 
 router.use(protect);

@@ -4,7 +4,7 @@ import { Router } from "express";
 import { createOrganizationInviteSchema, createOrganizationSchema, updateOrganizationMemberRoleSchema, updateOrganizationSchema } from "./organization.validator";
 import { acceptInvite, archiveOrganization, createOrganization, fetchAllOrganizationMembers, fetchAllOrganizations, fetchOrganization, fetchOrganizationMember, inviteMember, removeOrganizationMember, updateOrganization, updateOrganizationMemberRole } from "./organization.controller";
 
-const router = Router();
+const router = Router({mergeParams: true});
 
 router.use(protect);
 

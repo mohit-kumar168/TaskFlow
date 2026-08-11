@@ -17,7 +17,7 @@ import {
 } from "./issue.controller";
 import validateRequest from "@/middleware/validateRequest.middleware";
 
-const router = Router();
+const router = Router({mergeParams: true});
 
 router.post(
 	"/",

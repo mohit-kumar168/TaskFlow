@@ -31,7 +31,7 @@ import {
 	deleteBoardColumn,
 } from "./project.controller";
 
-const router = Router();
+const router = Router({mergeParams: true});
 
 router.use(protect);
 
