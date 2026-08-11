@@ -1,15 +1,55 @@
 import { Router } from "express";
-import { protect } from "@/middleware/auth.middleware";
-import { fetchAllIssues, fetchIssue, createIssue, updateIssue, removeIssue } from "./issue.controller";
+
+
+import {
+	createIssueSchema,
+	updateIssueSchema,
+	moveIssueSchema,
+} from "./issue.validator";
+
+import {
+	createIssue,
+	fetchAllIssues,
+	fetchIssue,
+	updateIssue,
+	moveIssue,
+	archiveIssue,
+} from "./issue.controller";
+import validateRequest from "@/middleware/validateRequest.middleware";
 
 const router = Router();
 
-router.use(protect)
+router.post(
+	"/",
+	validateRequest(createIssueSchema),
+	createIssue,
+);
 
-router.post("/:projectId/issues", createIssue);
-router.get("/:projectId/issues", fetchAllIssues);
-router.get("/:projectId/issues/:issueId", fetchIssue);
-router.patch("/:projectId/issues/:issueId", updateIssue);
-router.delete("/:projectId/issues/:issueId", removeIssue);
+router.get(
+	"/",
+	fetchAllIssues,
+);
+
+router.get(
+	"/:issueId",
+	fetchIssue,
+);
+
+router.patch(
+	"/:issueId",
+	validateRequest(updateIssueSchema),
+	updateIssue,
+);
+
+router.patch(
+	"/:issueId/move",
+	validateRequest(moveIssueSchema),
+	moveIssue,
+);
+
+router.delete(
+	"/:issueId",
+	archiveIssue,
+);
 
 export default router;
