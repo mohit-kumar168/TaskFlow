@@ -34,12 +34,12 @@ app.use(
 );
 
 app.use(
-	"/api/organizations/:organizationSlug/:workspaceSlug/projects",
+	"/api/organizations/:organizationSlug/workspaces/:workspaceSlug/projects",
 	projectRoutes
 );
 
 app.use(
-	"/api/organizations/:organizationSlug/:workspaceSlug/projects/:projectSlug/issues",
+	"/api/organizations/:organizationSlug/workspaces/:workspaceSlug/projects/:projectSlug/issues",
 	issueRoutes
 );
 
