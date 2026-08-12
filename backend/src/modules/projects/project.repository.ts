@@ -84,6 +84,14 @@ export const findProjectBySlug = async (
 				},
 			},
 		},
+		include: {
+			_count: {
+				select: {
+					members: true,
+					issues: true,
+				},
+			},
+		},
 	});
 };
 
@@ -91,6 +99,14 @@ export const findProjectById = async (projectId: string) => {
 	return await prisma.project.findUnique({
 		where: {
 			id: projectId,
+		},
+		include: {
+			_count: {
+				select: {
+					members: true,
+					issues: true,
+				},
+			},
 		},
 	});
 };
@@ -100,6 +116,14 @@ export const fetchAllProjects = async (workspaceId: string) => {
 		where: {
 			workspaceId,
 			isArchived: false,
+		},
+		include: {
+			_count: {
+				select: {
+					members: true,
+					issues: true,
+				},
+			},
 		},
 	});
 };

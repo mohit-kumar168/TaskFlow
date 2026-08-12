@@ -27,23 +27,24 @@ export interface WorkspaceMemberProps {
 	workspace: WorkspaceProps;
 }
 
-export interface CreateWorkshopProps {
+export interface CreateWorkspaceProps {
 	name: string;
 	description: string;
+	logoUrl?: string;
 }
 
-export const createWorkspace = (data: CreateWorkshopProps) => {
-	return api.post("/workspace", data);
+export const createWorkspace = (organizationSlug: string, data: CreateWorkspaceProps) => {
+	return api.post(`/organizations/${organizationSlug}/workspaces`, data);
 }
 
-export const getWorkspaces = () => {
-	return api.get("/workspace");
+export const getWorkspaces = (organizationSlug: string) => {
+	return api.get(`/organizations/${organizationSlug}/workspaces`);
 }
 
-export const getWorkspace = (workspaceId: string) => {
-	return api.get(`/workspace/${workspaceId}`);
+export const getWorkspace = (organizationSlug: string, workspaceId: string) => {
+	return api.get(`/organizations/${organizationSlug}/workspaces/${workspaceId}`);
 }
 
-export const getWorkspaceMembers = (workspaceId: string) => {
-	return api.get(`/workspace/${workspaceId}/members`);
+export const getWorkspaceMembers = (organizationSlug: string, workspaceId: string) => {
+	return api.get(`/organizations/${organizationSlug}/workspaces/${workspaceId}/members`);
 }

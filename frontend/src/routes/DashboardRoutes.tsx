@@ -1,15 +1,21 @@
 import DashboardLayout from "@/layouts/DashboardLayout";
 import ProtectedRoute from "./ProtectedRoute";
-import Dashboard from "@/pages/dashboard/Dashboard";
-import CreateWorkspace from "@/pages/workspace/CreateWorkspace";
-import CreateProject from "@/pages/project/CreateProject";
-import ProjectPage from "@/pages/project/ProjectPage";
-import WorkspaceOverview from "../pages/workspace/WorkspaceOverview";
-import WorkspaceLayout from "../layouts/WorkspaceLayout";
-import WorkspaceMembers from "@/pages/workspace/WorkspaceMembers";
+
+import Dashboard from "@/modules/dashboard/pages/Dashboard";
+
+import CreateOrganization from "@/modules/organization/pages/CreateOrganization";
+
+import CreateWorkspace from "@/modules/workspace/pages/CreateWorkspace";
+import WorkspaceLayout from "@/layouts/WorkspaceLayout";
+import WorkspaceOverview from "@/modules/workspace/pages/WorkspaceOverview";
+import WorkspaceMembers from "@/modules/workspace/pages/WorkspaceMembers";
+import WorkspaceSettings from "@/modules/workspace/pages/WorkspaceSettings";
+
+import CreateProject from "@/modules/project/pages/CreateProject";
 import ProjectLayout from "@/layouts/ProjectLayout";
-import ProjectBoard from "@/components/project/ProjectBoard";
-import ProjectMembers from "@/components/project/ProjectMembers";
+import ProjectBoard from "@/modules/project/pages/ProjectBoard";
+import ProjectMembers from "@/modules/project/components/ProjectMembers";
+import ProjectPage from "@/modules/project/pages/ProjectPage";
 
 export const DashboardRoutes = [
 	{
@@ -20,46 +26,69 @@ export const DashboardRoutes = [
 				children: [
 					{
 						path: "/dashboard",
-						element: <Dashboard />
+						element: <Dashboard />,
+					},
+
+					{
+						path: "/organizations/create",
+						element: <CreateOrganization />,
 					},
 					{
-						path: "/workspaces",
+						path: "/organizations/:organizationSlug/workspaces",
 						children: [
 							{
 								path: "create",
-								element: <CreateWorkspace />
+								element: <CreateWorkspace />,
 							},
+
 							{
-								path: ":workspaceId",
+								path: ":workspaceSlug",
 								element: <WorkspaceLayout />,
 								children: [
 									{
 										index: true,
 										element: <WorkspaceOverview />,
 									},
+
 									{
 										path: "members",
 										element: <WorkspaceMembers />,
 									},
+
+									{
+										path: "settings",
+										element: <WorkspaceSettings />,
+									},
+
+									{
+										path: "projects/create",
+										element: <CreateProject />,
+									},
 								],
 							},
+						],
+					},
+					{
+						path: "/organizations/:organizationSlug/workspaces/:workspaceSlug/projects/:projectSlug",
+						element: <ProjectLayout />,
+						children: [
 							{
-								path: ":workspaceId/projects/:projectId",
-								element: <ProjectLayout />,
-								children: [
-									{
-										index: true,
-										element: <ProjectBoard />
-									},
-									{
-										path: "members",
-										element: <ProjectMembers />
-									},
-								]
-							}
-						]
-					}
-				]
+								index: true,
+								element: <ProjectPage />,
+							},
+
+							{
+								path: "board",
+								element: <ProjectBoard />,
+							},
+
+							{
+								path: "members",
+								element: <ProjectMembers />,
+							},
+						],
+					},
+				],
 			},
 		],
 	},

@@ -1,5 +1,5 @@
-import Login from "@/pages/auth/Login";
-import Register from "@/pages/auth/Register";
+import Login from "@/modules/auth/pages/Login";
+import Register from "@/modules/auth/pages/Register";
 import { Navigate } from "react-router-dom";
 
 export const AuthRoutes = [

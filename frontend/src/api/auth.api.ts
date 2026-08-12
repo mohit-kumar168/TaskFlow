@@ -12,21 +12,21 @@ export interface LoginUserProps {
 }
 
 export const registerUser = (data: RegisterUserProps) => {
-	return api.post("/api/auth/register", data);
+	return api.post("/auth/register", data);
 };
 
 export const loginUser = (data: LoginUserProps) => {
-	return api.post("/api/auth/login", data);
+	return api.post("/auth/login", data);
 };
 
 export const refreshAccessToken = () => {
-	return api.post("/api/auth/refresh-token");
+	return api.post("/auth/refresh-token");
 };
 
 export const logoutUser = () => {
-	return api.post("/api/auth/logout");
+	return api.post("/auth/logout");
 };
 
 export const getCurrentUser = () => {
-	return api.get("/api/auth/me");
+	return api.get("/auth/me");
 };
