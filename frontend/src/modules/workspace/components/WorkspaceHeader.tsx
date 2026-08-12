@@ -1,83 +1,141 @@
-import { FolderKanban, MoreVertical, Settings, Users } from "lucide-react";
-import Button from "@/components/ui/Button";
+import { Ellipsis, Users } from "lucide-react";
+import { useState } from "react";
+import { NavLink, useNavigate, useParams } from "react-router-dom";
+
 import { useWorkspaceStore } from "@/store/workspace.store";
-import WorkspacePageSkeleton from "@/components/skeleton/WorkspacePage";
-import { NavLink, useNavigate } from "react-router-dom";
-
-
 
 const WorkspaceHeader = () => {
-	const { currentWorkspace, isLoading } = useWorkspaceStore();
+	const [isMenuOpen, setIsMenuOpen] = useState(false);
+
 	const navigate = useNavigate();
 
-	if (isLoading && !currentWorkspace) {
-		return <WorkspacePageSkeleton variant="header" />;
+	const { organizationSlug, workspaceSlug } = useParams<{
+		organizationSlug: string;
+		workspaceSlug: string;
+	}>();
+
+	const { currentWorkspace } = useWorkspaceStore();
+
+	if (!currentWorkspace || !organizationSlug || !workspaceSlug) {
+		return null;
 	}
 
-	if (!currentWorkspace) return null;
-
-	const linkClass = ({ isActive }: { isActive: boolean }) =>
-		`pb-2 ${isActive ? "text-orange-500" : "text-gray-500 hover:text-orange-500"}`;
+	const workspaceBasePath = `/organizations/${organizationSlug}/workspaces/${workspaceSlug}`;
 
 	return (
-		<header className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-			<div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-				<div>
-					<h1 className="mt-1 text-2xl font-bold text-gray-900">
-						{currentWorkspace.workspace.name}
-					</h1>
+		<header className="border-b border-gray-200 bg-white">
+			<div className="px-5 pt-4 sm:px-6">
+				{/* Workspace information */}
+				<div className="flex items-start justify-between gap-4">
+					<div className="flex min-w-0 items-center gap-3">
+						{/* Workspace icon */}
+						<div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-orange-500 text-sm font-semibold text-white">
+							{currentWorkspace.name
+								.charAt(0)
+								.toUpperCase()}
+						</div>
 
-					<p className="mt-2 max-w-2xl text-gray-600">
-						{currentWorkspace.workspace.description || "No description provided."}
-					</p>
+						<div className="min-w-0">
+							<h1 className="truncate text-lg font-semibold text-gray-900">
+								{currentWorkspace.name}
+							</h1>
+
+							{currentWorkspace.description && (
+								<p className="mt-0.5 truncate text-sm text-gray-500">
+									{currentWorkspace.description}
+								</p>
+							)}
+						</div>
+					</div>
+
+					{/* Right side actions */}
+					<div className="relative flex shrink-0 items-center gap-2">
+						<button
+							type="button"
+							onClick={() =>
+								setIsMenuOpen((open) => !open)
+							}
+							className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-500 transition hover:bg-gray-100 hover:text-gray-900 cursor-pointer"
+						>
+							<Ellipsis size={19} />
+						</button>
+
+						{/* Dropdown */}
+						{isMenuOpen && (
+							<>
+								<button
+									type="button"
+									aria-label="Close menu"
+									className="fixed inset-0 z-10 cursor-pointer"
+									onClick={() =>
+										setIsMenuOpen(false)
+									}
+								/>
+
+								<div className="absolute right-0 top-10 z-20 w-48 overflow-hidden rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
+									<button
+										type="button"
+										onClick={() => {
+											setIsMenuOpen(false);
+
+											navigate(
+												`${workspaceBasePath}/projects/create`,
+											);
+										}}
+										className="flex w-full items-center px-3 py-2.5 text-left text-sm text-gray-700 transition hover:bg-gray-100 cursor-pointer"
+									>
+										Create Project
+									</button>
+									<button
+										type="button"
+										onClick={() => {
+											setIsMenuOpen(false);
+
+											navigate(
+												`${workspaceBasePath}/members`,
+											);
+										}}
+										className="flex w-full items-center px-3 py-2.5 text-left text-sm text-gray-700 transition hover:bg-gray-100 cursor-pointer"
+									>
+										Members
+									</button>
+
+									<button
+										type="button"
+										onClick={() => {
+											setIsMenuOpen(false);
+
+											navigate(
+												`${workspaceBasePath}/settings`,
+											);
+										}}
+										className="flex w-full items-center px-3 py-2.5 text-left text-sm text-gray-700 transition hover:bg-gray-100 cursor-pointer"
+									>
+										Settings
+									</button>
+								</div>
+							</>
+						)}
+					</div>
 				</div>
 
-				<div className="flex items-center gap-2">
-					<Button
-						variant="outline"
-						className="w-auto border-gray-300 px-4 py-2 text-gray-700"
+				{/* Workspace navigation */}
+				<nav className="mt-4 flex items-center gap-6">
+					<NavLink
+						end
+						to={workspaceBasePath}
+						className={({ isActive }) =>
+							`relative py-3 text-sm font-medium transition-colors ${
+								isActive
+									? "text-gray-900 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-orange-500"
+									: "text-gray-500 hover:text-gray-900"
+							}`
+						}
 					>
-						<Settings size={16} />
-					</Button>
-
-					<Button
-						variant="outline"
-						className="w-auto border-gray-300 px-4 py-2 text-gray-700"
-					>
-						<MoreVertical size={16} />
-					</Button>
-				</div>
+						Overview
+					</NavLink>
+				</nav>
 			</div>
-
-			<div className="mt-6 flex flex-wrap gap-6 border-y border-gray-200 py-4 text-sm text-gray-600">
-
-				<div className="flex items-center gap-2">
-					<FolderKanban size={18} className="text-orange-500" />
-					<span>{currentWorkspace.workspace._count?.projects ?? 0} Projects</span>
-				</div>
-
-				<div className="flex items-center gap-2">
-					<Users size={18} className="text-orange-500" />
-					<span>{currentWorkspace.workspace._count?.members ?? 0} Members</span>
-				</div>
-			</div>
-
-
-			<nav className="mt-4 flex gap-6 text-sm font-medium">
-
-				<NavLink end to={`/workspaces/${currentWorkspace.workspaceId}`} className={linkClass}>
-					Overview
-				</NavLink>
-
-				<NavLink end to={`/workspaces/${currentWorkspace.workspaceId}/members`} className={linkClass}>
-					Members
-				</NavLink>
-
-				<NavLink end to={`/workspaces/${currentWorkspace.workspaceId}/settings`} className={linkClass}>
-					Settings
-				</NavLink>
-
-			</nav>
 		</header>
 	);
 };

@@ -1,68 +1,47 @@
-import { ArrowLeft, FolderKanban, Loader2 } from "lucide-react";
+import { ArrowLeft, Building2, Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
-import { useProjectStore } from "@/store/project.store";
+import { useOrganizationStore } from "@/store/organization.store";
 
-interface CreateProjectForm {
+interface CreateOrganizationForm {
 	name: string;
-	key: string;
 	description: string;
-	iconUrl: string;
-	boardName: string;
+	logoUrl: string;
 }
 
-const CreateProject = () => {
+const CreateOrganization = () => {
 	const navigate = useNavigate();
 
-	const { organizationSlug, workspaceSlug } = useParams<{
-		organizationSlug: string;
-		workspaceSlug: string;
-	}>();
-
-	const { createProject, isLoading } = useProjectStore();
+	const { createOrganization, isLoading } =
+		useOrganizationStore();
 
 	const {
 		register,
 		handleSubmit,
 		formState: { errors },
-	} = useForm<CreateProjectForm>({
+	} = useForm<CreateOrganizationForm>({
 		defaultValues: {
 			name: "",
-			key: "",
 			description: "",
-			iconUrl: "",
-			boardName: "",
+			logoUrl: "",
 		},
 	});
 
-	const onSubmit = async (data: CreateProjectForm) => {
-		if (!organizationSlug || !workspaceSlug) {
+	const onSubmit = async (data: CreateOrganizationForm) => {
+		const organization = await createOrganization({
+			name: data.name.trim(),
+			description: data.description.trim() || undefined,
+			logoUrl: data.logoUrl.trim() || undefined,
+		});
+
+		if (!organization) {
 			return;
 		}
 
-		const project = await createProject(
-			organizationSlug,
-			workspaceSlug,
-			{
-				name: data.name.trim(),
-				key: data.key.trim().toUpperCase(),
-				description: data.description.trim() || undefined,
-				iconUrl: data.iconUrl.trim() || undefined,
-				boardName: data.boardName.trim(),
-			},
-		);
-		console.log("Created project:", project);
-
-		if (!project) {
-			return;
-		}
-
-		navigate(
-			`/organizations/${organizationSlug}/workspaces/${workspaceSlug}/projects/${project.slug}`,
-		);
+		navigate("/dashboard");
 	};
 
 	return (
@@ -79,11 +58,12 @@ const CreateProject = () => {
 
 				<div className="mb-8">
 					<h1 className="text-2xl font-semibold text-gray-900">
-						Create Project
+						Create Organization
 					</h1>
 
 					<p className="mt-2 text-sm text-gray-500">
-						Create a project inside this workspace.
+						Create an organization to manage your workspaces
+						and projects.
 					</p>
 				</div>
 
@@ -93,50 +73,18 @@ const CreateProject = () => {
 				>
 					<Input
 						id="name"
-						label="Project Name"
-						placeholder="e.g. TaskFlow"
+						label="Organization Name"
+						placeholder="e.g. TaskFlow Team"
 						maxLength={20}
 						{...register("name", {
-							required: "Project name is required.",
+							required: "Organization name is required.",
 							maxLength: {
 								value: 20,
 								message:
-									"Project name cannot exceed 20 characters.",
+									"Organization name cannot exceed 20 characters.",
 							},
 						})}
 						error={errors.name?.message}
-					/>
-
-					<Input
-						id="key"
-						label="Project Key"
-						placeholder="e.g. TF"
-						maxLength={10}
-						{...register("key", {
-							required: "Project key is required.",
-							maxLength: {
-								value: 10,
-								message:
-									"Project key cannot exceed 10 characters.",
-							},
-						})}
-						error={errors.key?.message}
-					/>
-
-					<Input
-						id="boardName"
-						label="Board Name"
-						placeholder="e.g. Task Board"
-						maxLength={20}
-						{...register("boardName", {
-							required: "Board name is required.",
-							maxLength: {
-								value: 20,
-								message:
-									"Board name cannot exceed 20 characters.",
-							},
-						})}
-						error={errors.boardName?.message}
 					/>
 
 					<div className="flex flex-col gap-2">
@@ -149,7 +97,7 @@ const CreateProject = () => {
 
 						<textarea
 							id="description"
-							placeholder="Describe your project"
+							placeholder="What is this organization about?"
 							rows={4}
 							maxLength={500}
 							className="w-full resize-none rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none transition-all focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
@@ -170,18 +118,18 @@ const CreateProject = () => {
 					</div>
 
 					<Input
-						id="iconUrl"
-						label="Icon URL"
+						id="logoUrl"
+						label="Logo URL"
 						type="url"
-						placeholder="https://example.com/icon.png"
-						{...register("iconUrl", {
+						placeholder="https://example.com/logo.png"
+						{...register("logoUrl", {
 							pattern: {
 								value:
 									/^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/,
 								message: "Enter a valid URL.",
 							},
 						})}
-						error={errors.iconUrl?.message}
+						error={errors.logoUrl?.message}
 					/>
 
 					<div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-end">
@@ -208,7 +156,7 @@ const CreateProject = () => {
 
 							{isLoading
 								? "Creating..."
-								: "Create Project"}
+								: "Create Organization"}
 						</Button>
 					</div>
 				</form>
@@ -217,4 +165,4 @@ const CreateProject = () => {
 	);
 };
 
-export default CreateProject;
+export default CreateOrganization;

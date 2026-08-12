@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 
 interface ProjectCardProps {
 	id: string;
+	projectSlug: string;
 	name: string;
 	key: string;
 	description: string;
@@ -13,6 +14,7 @@ interface ProjectCardProps {
 
 const ProjectCard = ({
 	id,
+	projectSlug,
 	name,
 	key,
 	description,
@@ -21,12 +23,12 @@ const ProjectCard = ({
 	updatedAt,
 }: ProjectCardProps) => {
 	const navigate = useNavigate();
-	const { workspaceId } = useParams();
+	const { organizationSlug, workspaceSlug } = useParams();
 
 	return (
 		<div
 			onClick={() =>
-				navigate(`/workspaces/${workspaceId}/projects/${id}`)
+				navigate(`/organizations/${organizationSlug}/workspaces/${workspaceSlug}/projects/${projectSlug}`)
 			}
 			className="cursor-pointer rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-orange-300 hover:shadow-lg"
 		>
@@ -49,7 +51,7 @@ const ProjectCard = ({
 				</button>
 			</div>
 
-			<p className="mt-4 line-clamp-2 min-h-[48px] text-sm text-gray-600">
+			<p className="mt-4 line-clamp-2 min-h-12 text-sm text-gray-600">
 				{description || "No description provided."}
 			</p>
 

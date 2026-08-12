@@ -3,7 +3,9 @@ import {
   getWorkspace,
   getWorkspaceMembers,
   getWorkspaces,
+  createWorkspace,
   type WorkspaceProps,
+  type CreateWorkspaceProps,
 } from "@/api/workspace.api";
 
 interface WorkspaceStore {
@@ -22,6 +24,8 @@ interface WorkspaceStore {
     organizationSlug: string,
     workspaceSlug: string,
   ) => Promise<void>;
+
+  createWorkspace: (organizationSlug: string, data: CreateWorkspaceProps) => Promise<WorkspaceProps | null>;
 }
 
 let workspaceRequestId = 0;
@@ -104,6 +108,26 @@ export const useWorkspaceStore = create<WorkspaceStore>((set) => ({
     } catch (error) {
       console.error(error);
       set({ isLoading: false });
+    }
+  },
+
+  createWorkspace: async (organizationSlug: string, data: CreateWorkspaceProps) => {
+    try {
+      set({ isLoading: true });
+
+      const response = await createWorkspace(organizationSlug, data);
+      const workspace = response.data.data;
+
+      set((state) => ({
+        workspaces: [...state.workspaces, workspace],
+        currentWorkspace: workspace,
+        isLoading: false,
+      }));
+      return workspace;
+    } catch (error) {
+      console.error(error);
+      set({ isLoading: false });
+      return null;
     }
   },
 }));

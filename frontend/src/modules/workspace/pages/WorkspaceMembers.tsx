@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+
 import { getWorkspaceMembers } from "@/api/workspace.api";
+
 import Membertoolbar from "@/modules/workspace/components/Membertoolbar";
 import MemberTable from "@/modules/workspace/components/MemberTable";
 
@@ -14,30 +16,56 @@ export interface WorkspaceMemberWithUser {
 		name: string;
 		email: string;
 	};
-};
+}
 
 const WorkspaceMembers = () => {
-	const { workspaceId } = useParams();
-	const [members, setMembers] = useState<WorkspaceMemberWithUser[]>([]);
+	const {
+		organizationSlug,
+		workspaceSlug,
+	} = useParams<{
+		organizationSlug: string;
+		workspaceSlug: string;
+	}>();
+
+	const [members, setMembers] = useState<
+		WorkspaceMemberWithUser[]
+	>([]);
+
 	const [isLoading, setIsLoading] = useState(false);
 
 	useEffect(() => {
-		if (!workspaceId) return;
+		if (!organizationSlug || !workspaceSlug) {
+			return;
+		}
 
 		const loadMembers = async () => {
 			try {
 				setIsLoading(true);
-				const response = await getWorkspaceMembers(workspaceId);
+
+				const response = await getWorkspaceMembers(
+					organizationSlug,
+					workspaceSlug,
+				);
+
 				setMembers(response.data.data);
+			} catch (error) {
+				console.error(
+					"Failed to fetch workspace members:",
+					error,
+				);
+
+				setMembers([]);
 			} finally {
 				setIsLoading(false);
 			}
 		};
 
 		loadMembers();
-	}, [workspaceId]);
+	}, [organizationSlug, workspaceSlug]);
 
-	if (isLoading) return <div>Loading members...</div>;
+	if (isLoading) {
+		return <div>Loading members...</div>;
+	}
 
 	return (
 		<div className="space-y-6">
@@ -47,4 +75,4 @@ const WorkspaceMembers = () => {
 	);
 };
 
-export default WorkspaceMembers;   
+export default WorkspaceMembers;

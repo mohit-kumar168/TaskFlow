@@ -1,11 +1,16 @@
 import { useProjectStore } from "../../../store/project.store";
 import Button from "../../../components/ui/Button";
 import ProjectCard from "./ProjectCard";
+import { useNavigate, useParams } from "react-router";
 
 
 const ProjectGrid = () => {
-
+	const { organizationSlug, workspaceSlug } = useParams<{
+		organizationSlug: string;
+		workspaceSlug: string;
+	}>();
 	const { projects, isLoading } = useProjectStore();
+	const navigate = useNavigate();
 	if (isLoading) {
 		return (
 			<div className="text-center py-10">
@@ -26,7 +31,7 @@ const ProjectGrid = () => {
 					Create your first project to start managing work.
 				</p>
 
-				<Button className="mx-auto mt-6 md:w-56">
+				<Button onClick={() => navigate(`/organizations/${organizationSlug}/workspaces/${workspaceSlug}/projects/create`)} className="mx-auto mt-6 md:w-56">
 					Create Project
 				</Button>
 
@@ -40,6 +45,7 @@ const ProjectGrid = () => {
 				<ProjectCard
 					key={project.key}
 					id={project.id}
+					projectSlug={project.slug}
 					name={project.name}
 					description={project.description}
 					memberCount={project._count?.members ?? 0}

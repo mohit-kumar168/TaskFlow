@@ -4,6 +4,8 @@ import {
   getOrganization,
   getOrganizations,
   type OrganizationProps,
+  type CreateOrganizationData,
+  createOrganization,
 } from "@/api/organization.api";
 
 interface OrganizationStore {
@@ -16,6 +18,8 @@ interface OrganizationStore {
   fetchOrganization: (organizationSlug: string) => Promise<void>;
 
   setCurrentOrganization: (organization: OrganizationProps) => void;
+
+  createOrganization: (data: CreateOrganizationData) => Promise<OrganizationProps | null>;
 }
 
 export const useOrganizationStore = create<OrganizationStore>((set) => ({
@@ -78,4 +82,28 @@ export const useOrganizationStore = create<OrganizationStore>((set) => ({
       currentOrganization: organization,
     });
   },
+
+  createOrganization: async (data) => {
+    try {
+      set({ isLoading: true });
+
+      const response = await createOrganization(data);
+      const organization = response.data.data;
+
+      set( (state) => ({
+        organizations: [...state.organizations, organization],
+        currentOrganization: organization,
+        isLoading: false,
+      }));
+      return organization;
+
+    } catch (error) {
+      console.error("Failed to create organization:", error);
+
+      set({
+        isLoading: false,
+      });
+      return null;
+    }
+  }
 }));

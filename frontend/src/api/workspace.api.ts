@@ -27,13 +27,13 @@ export interface WorkspaceMemberProps {
 	workspace: WorkspaceProps;
 }
 
-export interface CreateWorkshopProps {
+export interface CreateWorkspaceProps {
 	name: string;
 	description: string;
 	logoUrl?: string;
 }
 
-export const createWorkspace = (organizationSlug: string, data: CreateWorkshopProps) => {
+export const createWorkspace = (organizationSlug: string, data: CreateWorkspaceProps) => {
 	return api.post(`/organizations/${organizationSlug}/workspaces`, data);
 }
 
