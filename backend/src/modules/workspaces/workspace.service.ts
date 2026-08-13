@@ -73,7 +73,7 @@ export const archiveWorkspace = async (organizationSlug: string, workspaceSlug: 
 		throw new apiError(404, "Organization not found.");
 	}
 
-	const workspace = await workspaceRepository.findWorkspaceBySlug(organizationSlug, workspaceSlug, userId);
+	const workspace = await workspaceRepository.findWorkspaceBySlug(organization.id, workspaceSlug, userId);
 
 	if (!workspace) {
 		throw new apiError(404, "Workspace not found.");
