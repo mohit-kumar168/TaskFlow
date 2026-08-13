@@ -16,6 +16,8 @@ import ProjectLayout from "@/layouts/ProjectLayout";
 import ProjectBoard from "@/modules/project/pages/ProjectBoard";
 import ProjectMembers from "@/modules/project/components/ProjectMembers";
 import ProjectPage from "@/modules/project/pages/ProjectPage";
+import UserSetting from "@/modules/dashboard/pages/UserSetting";
+import OrganizationSetting from "@/modules/organization/pages/OrganizationSetting";
 
 export const DashboardRoutes = [
 	{
@@ -28,10 +30,17 @@ export const DashboardRoutes = [
 						path: "/dashboard",
 						element: <Dashboard />,
 					},
-
+					{
+						path: "/settings",
+						element: <UserSetting />,
+					},
 					{
 						path: "/organizations/create",
 						element: <CreateOrganization />,
+					},
+					{
+						path: "/organizations/:organizationSlug/settings",
+						element: <OrganizationSetting />,
 					},
 					{
 						path: "/organizations/:organizationSlug/workspaces",

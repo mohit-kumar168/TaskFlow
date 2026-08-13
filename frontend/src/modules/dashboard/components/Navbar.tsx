@@ -1,5 +1,5 @@
 import { PanelRightOpen, Plus, Settings } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import TFlogo from "@/assets/taskflow-logo.png";
 import SearchInput from "@/components/ui/SearchInput";
 import Button from "@/components/ui/Button";
@@ -11,6 +11,8 @@ type NavbarProps = {
 };
 
 const Navbar = ({ isSidebarOpen, onToggleSidebar }: NavbarProps) => {
+  const navigate = useNavigate();
+
   return (
     <header className="sticky top-0 z-50 flex h-16 items-center justify-between gap-2 border-b border-gray-300 bg-white px-2 sm:px-4 md:px-8">
       {/* Left Section */}
@@ -44,7 +46,7 @@ const Navbar = ({ isSidebarOpen, onToggleSidebar }: NavbarProps) => {
       </div>
       {/* Right Section */}
       <div className="flex items-center gap-3 md:gap-5">
-        <button className="rounded-full p-2 transition-colors hover:bg-gray-100">
+        <button type="button" onClick={() => navigate(`/settings`)} className="rounded-full p-2 transition-colors hover:bg-gray-100">
           <Settings className="h-5 w-5 text-gray-600" />
         </button>
         <button className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-500 shadow transition-transform hover:scale-105">

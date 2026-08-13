@@ -6,6 +6,7 @@ import { useAuthStore } from "@/store/auth.store"
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { useNavigate } from "react-router-dom"
+import { useOrganizationStore } from "@/store/organization.store"
 
 const Login = () => {
 	const { register, handleSubmit, formState: { errors } } = useForm<LoginUserProps>();
@@ -16,7 +17,7 @@ const Login = () => {
 		try {
 			const response = await loginUser(data);
 			setUser(response.data.data.user);
-			navigate("/dashboard");
+			navigate(`/dashboard`);
 
 		} catch (error) {
 			console.log(error);

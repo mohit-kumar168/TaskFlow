@@ -16,6 +16,21 @@ export interface CreateOrganizationData {
   logoUrl?: string;
 }
 
+export interface OrganizationMemberProps {
+  id: string;
+  organizationId: string;
+  userId: string;
+  role: "OWNER" | "ADMIN" | "MEMBER";
+  status: "ACTIVE" | "INACTIVE" | "REMOVED";
+  joinedAt: string;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    avatarUrl: string | null;
+  };
+}
+
 export const getOrganizations = () => {
   return api.get("/organizations");
 };
@@ -37,4 +52,8 @@ export const updateOrganization = (
 
 export const archiveOrganization = (organizationSlug: string) => {
   return api.delete(`/organizations/${organizationSlug}`);
+};
+
+export const getOrganizationMembers = (organizationSlug: string) => {
+  return api.get(`/organizations/${organizationSlug}/members`);
 };

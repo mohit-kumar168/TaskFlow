@@ -14,7 +14,7 @@ const OrganizationSelector = () => {
 
   const handleOrganizationChange = (organization: OrganizationProps) => {
     setCurrentOrganization(organization);
-	navigate(`/organizations/${organization.slug}/workspaces`);
+    navigate(`/organizations/${organization.slug}/workspaces`);
     setIsOpen(false);
   };
 

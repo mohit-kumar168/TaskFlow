@@ -6,26 +6,38 @@ import {
   type OrganizationProps,
   type CreateOrganizationData,
   createOrganization,
+  type OrganizationMemberProps,
+  getOrganizationMembers,
 } from "@/api/organization.api";
 
 interface OrganizationStore {
   organizations: OrganizationProps[];
   currentOrganization: OrganizationProps | null;
+  members: OrganizationMemberProps[];
+
   isLoading: boolean;
+  isMembersLoading: boolean;
 
   fetchOrganizations: () => Promise<void>;
 
   fetchOrganization: (organizationSlug: string) => Promise<void>;
 
+  fetchOrganizationMembers: (organizationSlug: string) => Promise<void>;
+
   setCurrentOrganization: (organization: OrganizationProps) => void;
 
-  createOrganization: (data: CreateOrganizationData) => Promise<OrganizationProps | null>;
+  createOrganization: (
+    data: CreateOrganizationData,
+  ) => Promise<OrganizationProps | null>;
 }
 
 export const useOrganizationStore = create<OrganizationStore>((set) => ({
   organizations: [],
   currentOrganization: null,
+  members: [],
+
   isLoading: false,
+  isMembersLoading: false,
 
   fetchOrganizations: async () => {
     try {
@@ -77,6 +89,28 @@ export const useOrganizationStore = create<OrganizationStore>((set) => ({
     }
   },
 
+  fetchOrganizationMembers: async (organizationSlug) => {
+    try {
+      set({
+        isMembersLoading: true,
+      });
+
+      const response = await getOrganizationMembers(organizationSlug);
+
+      set({
+        members: response.data.data,
+        isMembersLoading: false,
+      });
+    } catch (error) {
+      console.error("Failed to fetch organization members:", error);
+
+      set({
+        members: [],
+        isMembersLoading: false,
+      });
+    }
+  },
+
   setCurrentOrganization: (organization) => {
     set({
       currentOrganization: organization,
@@ -90,13 +124,12 @@ export const useOrganizationStore = create<OrganizationStore>((set) => ({
       const response = await createOrganization(data);
       const organization = response.data.data;
 
-      set( (state) => ({
+      set((state) => ({
         organizations: [...state.organizations, organization],
         currentOrganization: organization,
         isLoading: false,
       }));
       return organization;
-
     } catch (error) {
       console.error("Failed to create organization:", error);
 
@@ -105,5 +138,5 @@ export const useOrganizationStore = create<OrganizationStore>((set) => ({
       });
       return null;
     }
-  }
+  },
 }));

@@ -1,17 +1,12 @@
 import { create } from "zustand";
-
-interface User {
-	id: string;
-	name: string;
-	email: string;
-}
+import type { UserProps } from "@/api/auth.api";
 
 interface AuthStore {
-	user: User | null;
+	user: UserProps | null;
 	isAuthenticated: boolean;
 	isLoading: boolean;
 
-	setUser: (user: User) => void;
+	setUser: (user: UserProps) => void;
 	logout: () => void;
 	setLoading: (loading: boolean) => void;
 }
