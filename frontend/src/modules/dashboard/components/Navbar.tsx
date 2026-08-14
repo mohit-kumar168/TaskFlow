@@ -1,9 +1,11 @@
 import { PanelRightOpen, Plus, Settings } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import TFlogo from "@/assets/taskflow-logo.png";
 import SearchInput from "@/components/ui/SearchInput";
 import Button from "@/components/ui/Button";
 import OrganizationSelector from "@/modules/organization/components/OrganizationSelector";
+import SettingsMenu from "../components/SettingsMenu";
+import { useState } from "react";
 
 type NavbarProps = {
   isSidebarOpen: boolean;
@@ -11,7 +13,7 @@ type NavbarProps = {
 };
 
 const Navbar = ({ isSidebarOpen, onToggleSidebar }: NavbarProps) => {
-  const navigate = useNavigate();
+  const [isSettingsMenuOpen, setIsSettingsMenuOpen] = useState(false);
 
   return (
     <header className="sticky top-0 z-50 flex h-16 items-center justify-between gap-2 border-b border-gray-300 bg-white px-2 sm:px-4 md:px-8">
@@ -46,9 +48,19 @@ const Navbar = ({ isSidebarOpen, onToggleSidebar }: NavbarProps) => {
       </div>
       {/* Right Section */}
       <div className="flex items-center gap-3 md:gap-5">
-        <button type="button" onClick={() => navigate(`/settings`)} className="rounded-full p-2 transition-colors hover:bg-gray-100">
-          <Settings className="h-5 w-5 text-gray-600" />
-        </button>
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setIsSettingsMenuOpen((prev) => !prev)}
+            className={`rounded-full p-2 transition-colors ${isSettingsMenuOpen ? "bg-gray-100" : "hover:bg-gray-100"}`}
+          >
+            <Settings className="h-5 w-5 text-gray-600" />
+          </button>
+
+          {isSettingsMenuOpen && (
+            <SettingsMenu onClose={() => setIsSettingsMenuOpen(false)} />
+          )}
+        </div>
         <button className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-500 shadow transition-transform hover:scale-105">
           <span className="text-xl font-semibold text-white">M</span>
         </button>

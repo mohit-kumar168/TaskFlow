@@ -13,14 +13,10 @@ const UserSetting = () => {
     {
       id: "profile" as const,
       title: "Profile",
-      description: "Manage your personal information",
-      icon: User,
     },
     {
       id: "security" as const,
       title: "Security",
-      description: "Manage your password and account security",
-      icon: Lock,
     },
   ];
 
@@ -34,7 +30,7 @@ const UserSetting = () => {
         <h1 className="text-2xl font-semibold text-gray-900">Settings</h1>
 
         <p className="mt-1 text-sm text-gray-500">
-          Manage your TaskFlow account and preferences.
+          Manage your TaskFlow account.
         </p>
       </div>
 
@@ -42,7 +38,6 @@ const UserSetting = () => {
         <aside className="w-72 shrink-0 border-r border-gray-200">
           <div className="p-3">
             {settings.map((setting) => {
-              const Icon = setting.icon;
               const isActive = activeSection === setting.id;
 
               return (
@@ -56,14 +51,6 @@ const UserSetting = () => {
                       : "text-gray-600 hover:bg-gray-50"
                   }`}
                 >
-                  <Icon
-                    size={19}
-                    className={
-                      isActive
-                        ? "text-orange-500"
-                        : "text-gray-400 group-hover:text-gray-600"
-                    }
-                  />
 
                   <div className="min-w-0 flex-1">
                     <p
@@ -72,10 +59,6 @@ const UserSetting = () => {
                       }`}
                     >
                       {setting.title}
-                    </p>
-
-                    <p className="mt-0.5 truncate text-xs text-gray-400">
-                      {setting.description}
                     </p>
                   </div>
 
@@ -90,16 +73,6 @@ const UserSetting = () => {
         </aside>
 
         <section className="flex-1">
-          <div className="border-b border-gray-200 px-8 py-6">
-            <h2 className="text-lg font-semibold text-gray-900">
-              {activeSetting?.title}
-            </h2>
-
-            <p className="mt-1 text-sm text-gray-500">
-              {activeSetting?.description}
-            </p>
-          </div>
-
           <div className="p-8">
             {activeSection === "profile" && <ProfileSettings />}
 

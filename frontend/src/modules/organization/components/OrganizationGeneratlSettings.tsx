@@ -4,18 +4,21 @@ import { useForm } from "react-hook-form";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 
-import {
-  updateUserProfile,
-  type UpdateUserProfileProps,
-} from "@/api/auth.api";
+import { useOrganizationStore } from "@/store/organization.store";
 
-import { useAuthStore } from "@/store/auth.store";
+type OrganizationFormData = {
+  name: string;
+  description?: string;
+};
 
-const ProfileSettings = () => {
-  const { user, setUser } = useAuthStore();
+const OrganizationGeneralSettings = () => {
+  const {
+    currentOrganization,
+    updateOrganization,
+    isLoading,
+  } = useOrganizationStore();
 
   const [isEditing, setIsEditing] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
 
   const [message, setMessage] = useState<{
     type: "success" | "error";
@@ -27,70 +30,73 @@ const ProfileSettings = () => {
     handleSubmit,
     reset,
     formState: { errors, isDirty },
-  } = useForm<UpdateUserProfileProps>({
+  } = useForm<OrganizationFormData>({
     defaultValues: {
-      name: user?.name ?? "",
-      bio: user?.bio ?? "",
+      name: currentOrganization?.name ?? "",
+      description:
+        currentOrganization?.description ?? "",
     },
   });
 
   useEffect(() => {
     reset({
-      name: user?.name ?? "",
-      bio: user?.bio ?? "",
+      name: currentOrganization?.name ?? "",
+      description:
+        currentOrganization?.description ?? "",
     });
-  }, [user, reset]);
+  }, [currentOrganization, reset]);
 
-  const handleProfileUpdate = async (
-    data: UpdateUserProfileProps,
+  const handleUpdate = async (
+    data: OrganizationFormData,
   ) => {
-    try {
-      setIsSaving(true);
-      setMessage(null);
+    if (!currentOrganization) {
+      return;
+    }
 
-      const response = await updateUserProfile({
-        name: data.name?.trim(),
-        bio: data.bio?.trim() ?? "",
-      });
+    setMessage(null);
 
-      const updatedUser = response.data.data.user;
-
-      setUser(updatedUser);
-      setIsEditing(false);
-
-      setMessage({
-        type: "success",
-        text: "Profile updated successfully.",
-      });
-    } catch (error) {
-      console.error(
-        "Failed to update profile:",
-        error,
+    const updatedOrganization =
+      await updateOrganization(
+        currentOrganization.slug,
+        {
+          name: data.name.trim(),
+          description:
+            data.description?.trim() ?? "",
+        },
       );
 
+    if (!updatedOrganization) {
       setMessage({
         type: "error",
-        text: "Failed to update profile.",
+        text: "Failed to update organization.",
       });
-    } finally {
-      setIsSaving(false);
+
+      return;
     }
+
+    setIsEditing(false);
+
+    setMessage({
+      type: "success",
+      text: "Organization updated successfully.",
+    });
   };
 
   const handleCancelEdit = () => {
     reset({
-      name: user?.name ?? "",
-      bio: user?.bio ?? "",
+      name: currentOrganization?.name,
+      description:
+        currentOrganization?.description ?? "",
     });
 
     setIsEditing(false);
     setMessage(null);
   };
 
-  if (!user) {
+  if (!currentOrganization) {
     return (
       <div className="text-sm text-gray-500">
-        No user information available.
+        No organization selected.
       </div>
     );
   }
@@ -100,11 +106,11 @@ const ProfileSettings = () => {
       <div className="flex items-start justify-between">
         <div>
           <h3 className="text-base font-semibold text-gray-900">
-            Profile
+            Organization
           </h3>
 
           <p className="mt-1 text-sm text-gray-500">
-            Manage your personal information.
+            Manage your organization's basic information.
           </p>
         </div>
 
@@ -115,7 +121,7 @@ const ProfileSettings = () => {
               setIsEditing(true);
               setMessage(null);
             }}
-            className="text-sm font-medium text-orange-500 transition-colors hover:text-orange-600"
+            className="text-sm font-medium text-orange-500 hover:text-orange-600 p-2 rounded-full hover:bg-gray-100"
           >
             Edit
           </button>
@@ -125,62 +131,53 @@ const ProfileSettings = () => {
       <div className="mt-6">
         {isEditing ? (
           <form
-            onSubmit={handleSubmit(handleProfileUpdate)}
+            onSubmit={handleSubmit(handleUpdate)}
             className="space-y-6"
           >
             <Input
               id="name"
-              label="Name"
-              placeholder="Enter your name"
+              label="Organization Name"
               error={errors.name?.message}
               {...register("name", {
-                required: "Name is required.",
+                required:
+                  "Organization name is required.",
                 minLength: {
-                  value: 3,
+                  value: 2,
                   message:
-                    "Name must be at least 3 characters.",
+                    "Organization name must be at least 2 characters.",
                 },
                 maxLength: {
-                  value: 30,
+                  value: 20,
                   message:
-                    "Name cannot exceed 30 characters.",
+                    "Organization name cannot exceed 20 characters.",
                 },
               })}
             />
 
-            <Input
-              id="email"
-              label="Email"
-              type="email"
-              value={user.email}
-              disabled
-            />
-
             <div className="flex flex-col gap-2">
               <label
-                htmlFor="bio"
+                htmlFor="description"
                 className="text-sm font-medium text-gray-700"
               >
-                Bio
+                Description
               </label>
 
               <textarea
-                id="bio"
-                rows={5}
-                placeholder="Tell us a little about yourself..."
-                {...register("bio", {
+                id="description"
+                rows={4}
+                {...register("description", {
                   maxLength: {
                     value: 250,
                     message:
-                      "Bio cannot exceed 250 characters.",
+                      "Description cannot exceed 250 characters.",
                   },
                 })}
-                className="w-full resize-none rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none transition-all focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
+                className="w-full resize-none rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
               />
 
-              {errors.bio && (
+              {errors.description && (
                 <p className="text-sm text-red-500">
-                  {errors.bio.message}
+                  {errors.description.message}
                 </p>
               )}
             </div>
@@ -188,10 +185,10 @@ const ProfileSettings = () => {
             <div className="flex gap-3">
               <Button
                 type="submit"
-                disabled={isSaving || !isDirty}
+                disabled={isLoading || !isDirty}
                 className="w-auto"
               >
-                {isSaving
+                {isLoading
                   ? "Saving..."
                   : "Save Changes"}
               </Button>
@@ -199,8 +196,8 @@ const ProfileSettings = () => {
               <button
                 type="button"
                 onClick={handleCancelEdit}
-                disabled={isSaving}
-                className="rounded-lg px-4 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100 disabled:opacity-50"
+                disabled={isLoading}
+                className="rounded-lg px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100"
               >
                 Cancel
               </button>
@@ -210,31 +207,22 @@ const ProfileSettings = () => {
           <div className="space-y-6">
             <div>
               <p className="text-xs font-medium text-gray-500">
-                Name
+                Organization Name
               </p>
 
               <p className="mt-1 text-sm text-gray-900">
-                {user.name}
+                {currentOrganization.name}
               </p>
             </div>
 
             <div>
               <p className="text-xs font-medium text-gray-500">
-                Email
+                Description
               </p>
 
               <p className="mt-1 text-sm text-gray-900">
-                {user.email}
-              </p>
-            </div>
-
-            <div>
-              <p className="text-xs font-medium text-gray-500">
-                Bio
-              </p>
-
-              <p className="mt-1 whitespace-pre-wrap text-sm text-gray-900">
-                {user.bio || "No bio provided."}
+                {currentOrganization.description ||
+                  "No description provided."}
               </p>
             </div>
           </div>
@@ -256,4 +244,4 @@ const ProfileSettings = () => {
   );
 };
 
-export default ProfileSettings;
+export default OrganizationGeneralSettings;

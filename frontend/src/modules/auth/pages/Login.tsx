@@ -3,10 +3,8 @@ import OrangePanel from "@/modules/auth/components/OrangePanel"
 import Button from "@/components/ui/Button"
 import Input from "@/components/ui/Input"
 import { useAuthStore } from "@/store/auth.store"
-import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { useNavigate } from "react-router-dom"
-import { useOrganizationStore } from "@/store/organization.store"
 
 const Login = () => {
 	const { register, handleSubmit, formState: { errors } } = useForm<LoginUserProps>();

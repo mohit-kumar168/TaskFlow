@@ -8,12 +8,17 @@ import {
   createOrganization,
   type OrganizationMemberProps,
   getOrganizationMembers,
+  updateOrganization,
+  inviteOrganizationMember,
+  updateOrganizationMemberRole,
+  removeOrganizationMember,
+  type InviteOrganizationMemberProps,
 } from "@/api/organization.api";
 
 interface OrganizationStore {
   organizations: OrganizationProps[];
   currentOrganization: OrganizationProps | null;
-  members: OrganizationMemberProps[];
+  organizationMembers: OrganizationMemberProps[];
 
   isLoading: boolean;
   isMembersLoading: boolean;
@@ -29,12 +34,33 @@ interface OrganizationStore {
   createOrganization: (
     data: CreateOrganizationData,
   ) => Promise<OrganizationProps | null>;
+
+  updateOrganization: (
+    organizationSlug: string,
+    data: CreateOrganizationData,
+  ) => Promise<OrganizationProps | null>;
+
+  inviteOrganizationMember: (
+    organizationSlug: string,
+    data: InviteOrganizationMemberProps,
+  ) => Promise<string | null>;
+
+  updateOrganizationMemberRole: (
+    organizationSlug: string,
+    memberId: string,
+    role: "ADMIN" | "MEMBER",
+  ) => Promise<OrganizationMemberProps | null>;
+
+  removeOrganizationMember: (
+    organizationSlug: string,
+    memberId: string,
+  ) => Promise<boolean>;
 }
 
 export const useOrganizationStore = create<OrganizationStore>((set) => ({
   organizations: [],
   currentOrganization: null,
-  members: [],
+  organizationMembers: [],
 
   isLoading: false,
   isMembersLoading: false,
@@ -98,14 +124,14 @@ export const useOrganizationStore = create<OrganizationStore>((set) => ({
       const response = await getOrganizationMembers(organizationSlug);
 
       set({
-        members: response.data.data,
+        organizationMembers: response.data.data,
         isMembersLoading: false,
       });
     } catch (error) {
       console.error("Failed to fetch organization members:", error);
 
       set({
-        members: [],
+        organizationMembers: [],
         isMembersLoading: false,
       });
     }
@@ -137,6 +163,91 @@ export const useOrganizationStore = create<OrganizationStore>((set) => ({
         isLoading: false,
       });
       return null;
+    }
+  },
+
+  updateOrganization: async (organizationSlug, data) => {
+    try {
+      set({ isLoading: true });
+
+      const response = await updateOrganization(organizationSlug, data);
+
+      const organization = response.data.data;
+
+      set((state) => ({
+        currentOrganization: organization,
+        organizations: state.organizations.map((item) =>
+          item.slug === organizationSlug ? organization : item,
+        ),
+        isLoading: false,
+      }));
+
+      return organization;
+    } catch (error) {
+      console.error("Failed to update organization:", error);
+
+      set({ isLoading: false });
+
+      return null;
+    }
+  },
+
+  inviteOrganizationMember: async (organizationSlug, data) => {
+    try {
+      const response = await inviteOrganizationMember(organizationSlug, data);
+
+      return response.data.data.inviteUrl;
+    } catch (error) {
+      console.error("Failed to invite organization member:", error);
+
+      return null;
+    }
+  },
+
+  updateOrganizationMemberRole: async (organizationSlug, memberId, role) => {
+    try {
+      const response = await updateOrganizationMemberRole(
+        organizationSlug,
+        memberId,
+        role,
+      );
+
+      const updatedMember = response.data.data.member;
+
+      set((state) => ({
+        organizationMembers: state.organizationMembers.map((member) =>
+          member.id === updatedMember.id
+            ? {
+                ...member,
+                role: updatedMember.role,
+              }
+            : member,
+        ),
+      }));
+
+      return updatedMember;
+    } catch (error) {
+      console.error("Failed to update organization member role:", error);
+
+      return null;
+    }
+  },
+
+  removeOrganizationMember: async (organizationSlug, memberId) => {
+    try {
+      await removeOrganizationMember(organizationSlug, memberId);
+
+      set((state) => ({
+        organizationMembers: state.organizationMembers.filter(
+          (member) => member.id !== memberId,
+        ),
+      }));
+
+      return true;
+    } catch (error) {
+      console.error("Failed to remove organization member:", error);
+
+      return false;
     }
   },
 }));
