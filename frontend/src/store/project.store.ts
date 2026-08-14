@@ -22,6 +22,7 @@ import {
 interface ProjectStore {
   projects: ProjectProps[];
   projectsByWorkspace: Record<string, ProjectProps[]>;
+  projectsLoadingByWorkspace: Record<string, boolean>;
 
   currentProject: ProjectProps | null;
 
@@ -103,9 +104,15 @@ interface ProjectStore {
   clearBoard: () => void;
 }
 
-export const useProjectStore = create<ProjectStore>((set) => ({
+const getProjectsCacheKey = (
+  organizationSlug: string,
+  workspaceSlug: string,
+) => `${organizationSlug}:${workspaceSlug}`;
+
+export const useProjectStore = create<ProjectStore>((set, get) => ({
   projects: [],
   projectsByWorkspace: {},
+  projectsLoadingByWorkspace: {},
 
   currentProject: null,
 
@@ -118,8 +125,22 @@ export const useProjectStore = create<ProjectStore>((set) => ({
   isBoardColumnsLoading: false,
 
   fetchProjects: async (organizationSlug, workspaceSlug) => {
+    const state = get();
+
+    const cachedProjects = state.projectsByWorkspace[workspaceSlug];
+    const isLoading = state.projectsLoadingByWorkspace[workspaceSlug];
+
+    if (cachedProjects !== undefined) return;
+    if (isLoading) return;
+
     try {
-      set({ isLoading: true });
+      set((state) => ({
+        isLoading: true,
+        projectsLoadingByWorkspace: {
+          ...state.projectsLoadingByWorkspace,
+          [workspaceSlug]: true,
+        },
+      }));
 
       const response = await getProjects(organizationSlug, workspaceSlug);
 
@@ -131,12 +152,22 @@ export const useProjectStore = create<ProjectStore>((set) => ({
           ...state.projectsByWorkspace,
           [workspaceSlug]: projects,
         },
+        projectsLoadingByWorkspace: {
+          ...state.projectsLoadingByWorkspace,
+          [workspaceSlug]: false,
+        },
         isLoading: false,
       }));
     } catch (error) {
       console.error("Failed to fetch projects:", error);
 
-      set({ isLoading: false });
+      set((state) => ({
+        isLoading: false,
+        projectsLoadingByWorkspace: {
+          ...state.projectsLoadingByWorkspace,
+          [workspaceSlug]: false,
+        },
+      }));
     }
   },
 
@@ -215,6 +246,7 @@ export const useProjectStore = create<ProjectStore>((set) => ({
     try {
       set({
         isBoardLoading: true,
+        currentBoard: null,
       });
 
       console.log("Fetching board:", {
@@ -271,6 +303,7 @@ export const useProjectStore = create<ProjectStore>((set) => ({
     try {
       set({
         isBoardColumnsLoading: true,
+        boardColumns: [],
       });
 
       console.log("Fetching board columns:", {

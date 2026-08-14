@@ -3,7 +3,6 @@ import OrangePanel from "@/modules/auth/components/OrangePanel"
 import Button from "@/components/ui/Button"
 import Input from "@/components/ui/Input"
 import { useAuthStore } from "@/store/auth.store"
-import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { useNavigate } from "react-router-dom"
 
@@ -16,7 +15,7 @@ const Login = () => {
 		try {
 			const response = await loginUser(data);
 			setUser(response.data.data.user);
-			navigate("/dashboard");
+			navigate(`/dashboard`);
 
 		} catch (error) {
 			console.log(error);

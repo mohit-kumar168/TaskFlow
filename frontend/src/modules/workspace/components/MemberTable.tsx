@@ -1,8 +1,8 @@
 import React from "react";
-import { type WorkspaceMemberWithUser } from "@/modules/workspace/pages/WorkspaceMembers";
+import { type WorkspaceMemberProps } from "@/api/workspace.api";
 import { MoreVertical } from "lucide-react";
 
-const MemberTable = ({ members }: { members: WorkspaceMemberWithUser[] }) => {
+const MemberTable = ({ members }: { members: WorkspaceMemberProps[] }) => {
   return (
     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
       <table className="w-full">

@@ -1,16 +1,26 @@
 import { create } from "zustand";
+
 import {
   getWorkspace,
   getWorkspaceMembers,
   getWorkspaces,
   createWorkspace,
+  addWorkspaceMember,
+  updateWorkspaceMemberRole,
+  removeWorkspaceMember,
   type WorkspaceProps,
   type CreateWorkspaceProps,
+  type AddWorkspaceMemberProps,
+  type WorkspaceMemberProps,
 } from "@/api/workspace.api";
 
 interface WorkspaceStore {
   workspaces: WorkspaceProps[];
   currentWorkspace: WorkspaceProps | null;
+
+  members: WorkspaceMemberProps[];
+
+  isMembersLoading: boolean;
   isLoading: boolean;
 
   fetchWorkspaces: (organizationSlug: string) => Promise<void>;
@@ -25,14 +35,40 @@ interface WorkspaceStore {
     workspaceSlug: string,
   ) => Promise<void>;
 
-  createWorkspace: (organizationSlug: string, data: CreateWorkspaceProps) => Promise<WorkspaceProps | null>;
+  addWorkspaceMember: (
+    organizationSlug: string,
+    workspaceSlug: string,
+    data: AddWorkspaceMemberProps,
+  ) => Promise<void>;
+
+  updateWorkspaceMemberRole: (
+    organizationSlug: string,
+    workspaceSlug: string,
+    memberId: string,
+    role: "ADMIN" | "MEMBER",
+  ) => Promise<void>;
+
+  removeWorkspaceMember: (
+    organizationSlug: string,
+    workspaceSlug: string,
+    memberId: string,
+  ) => Promise<void>;
+
+  createWorkspace: (
+    organizationSlug: string,
+    data: CreateWorkspaceProps,
+  ) => Promise<WorkspaceProps | null>;
 }
 
 let workspaceRequestId = 0;
 
-export const useWorkspaceStore = create<WorkspaceStore>((set) => ({
+export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
   workspaces: [],
   currentWorkspace: null,
+
+  members: [],
+
+  isMembersLoading: false,
   isLoading: false,
 
   fetchWorkspaces: async (organizationSlug) => {
@@ -84,7 +120,7 @@ export const useWorkspaceStore = create<WorkspaceStore>((set) => ({
         isLoading: false,
       });
     } catch (error) {
-      console.error(error);
+      console.error("Failed to fetch workspace:", error);
 
       set({
         currentWorkspace: null,
@@ -95,27 +131,92 @@ export const useWorkspaceStore = create<WorkspaceStore>((set) => ({
 
   fetchWorkspaceMembers: async (organizationSlug, workspaceSlug) => {
     try {
-      set({ isLoading: true });
+      set({
+        isMembersLoading: true,
+        members: [],
+      });
 
       const response = await getWorkspaceMembers(
         organizationSlug,
         workspaceSlug,
       );
 
-      console.log(response.data.data);
-
-      set({ isLoading: false });
+      set({
+        members: response.data.data,
+        isMembersLoading: false,
+      });
     } catch (error) {
-      console.error(error);
-      set({ isLoading: false });
+      console.error("Failed to fetch workspace members:", error);
+
+      set({
+        members: [],
+        isMembersLoading: false,
+      });
     }
   },
 
-  createWorkspace: async (organizationSlug: string, data: CreateWorkspaceProps) => {
+  addWorkspaceMember: async (organizationSlug, workspaceSlug, data) => {
     try {
-      set({ isLoading: true });
+      await addWorkspaceMember(organizationSlug, workspaceSlug, data);
+
+      await get().fetchWorkspaceMembers(organizationSlug, workspaceSlug);
+    } catch (error) {
+      console.error("Failed to add workspace member:", error);
+
+      throw error;
+    }
+  },
+
+  updateWorkspaceMemberRole: async (
+    organizationSlug,
+    workspaceSlug,
+    memberId,
+    role,
+  ) => {
+    try {
+      const response = await updateWorkspaceMemberRole(
+        organizationSlug,
+        workspaceSlug,
+        memberId,
+        role,
+      );
+
+      const updatedMember = response.data.data;
+
+      set((state) => ({
+        members: state.members.map((member) =>
+          member.id === updatedMember.id ? updatedMember : member,
+        ),
+      }));
+    } catch (error) {
+      console.error("Failed to update workspace member role:", error);
+
+      throw error;
+    }
+  },
+
+  removeWorkspaceMember: async (organizationSlug, workspaceSlug, memberId) => {
+    try {
+      await removeWorkspaceMember(organizationSlug, workspaceSlug, memberId);
+
+      set((state) => ({
+        members: state.members.filter((member) => member.id !== memberId),
+      }));
+    } catch (error) {
+      console.error("Failed to remove workspace member:", error);
+
+      throw error;
+    }
+  },
+
+  createWorkspace: async (organizationSlug, data) => {
+    try {
+      set({
+        isLoading: true,
+      });
 
       const response = await createWorkspace(organizationSlug, data);
+
       const workspace = response.data.data;
 
       set((state) => ({
@@ -123,10 +224,15 @@ export const useWorkspaceStore = create<WorkspaceStore>((set) => ({
         currentWorkspace: workspace,
         isLoading: false,
       }));
+
       return workspace;
     } catch (error) {
-      console.error(error);
-      set({ isLoading: false });
+      console.error("Failed to create workspace:", error);
+
+      set({
+        isLoading: false,
+      });
+
       return null;
     }
   },

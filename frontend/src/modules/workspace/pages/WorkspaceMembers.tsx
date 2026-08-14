@@ -1,78 +1,127 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
-
-import { getWorkspaceMembers } from "@/api/workspace.api";
 
 import Membertoolbar from "@/modules/workspace/components/Membertoolbar";
 import MemberTable from "@/modules/workspace/components/MemberTable";
+import AddMemberModal from "../../../modules/workspace/components/AddMemberModal";
 
-export interface WorkspaceMemberWithUser {
-	id: string;
-	role: "OWNER" | "ADMIN" | "MEMBER";
-	status: "active" | "inactive";
-	joinedAt: string;
-	user: {
-		id: string;
-		name: string;
-		email: string;
-	};
-}
+import { useWorkspaceStore } from "@/store/workspace.store";
 
 const WorkspaceMembers = () => {
-	const {
-		organizationSlug,
-		workspaceSlug,
-	} = useParams<{
-		organizationSlug: string;
-		workspaceSlug: string;
-	}>();
+  const {
+    organizationSlug,
+    workspaceSlug,
+  } = useParams<{
+    organizationSlug: string;
+    workspaceSlug: string;
+  }>();
 
-	const [members, setMembers] = useState<
-		WorkspaceMemberWithUser[]
-	>([]);
+  const {
+    members,
+    isMembersLoading,
+    fetchWorkspaceMembers,
+    addWorkspaceMember,
+  } = useWorkspaceStore();
 
-	const [isLoading, setIsLoading] = useState(false);
+  const [search, setSearch] = useState("");
+  const [isAddMemberOpen, setIsAddMemberOpen] =
+    useState(false);
+  const [isAddingMember, setIsAddingMember] =
+    useState(false);
 
-	useEffect(() => {
-		if (!organizationSlug || !workspaceSlug) {
-			return;
-		}
+  useEffect(() => {
+    if (!organizationSlug || !workspaceSlug) {
+      return;
+    }
 
-		const loadMembers = async () => {
-			try {
-				setIsLoading(true);
+    fetchWorkspaceMembers(
+      organizationSlug,
+      workspaceSlug,
+    );
+  }, [
+    organizationSlug,
+    workspaceSlug,
+    fetchWorkspaceMembers,
+  ]);
 
-				const response = await getWorkspaceMembers(
-					organizationSlug,
-					workspaceSlug,
-				);
+  const filteredMembers = useMemo(() => {
+    const query = search.trim().toLowerCase();
 
-				setMembers(response.data.data);
-			} catch (error) {
-				console.error(
-					"Failed to fetch workspace members:",
-					error,
-				);
+    if (!query) {
+      return members;
+    }
 
-				setMembers([]);
-			} finally {
-				setIsLoading(false);
-			}
-		};
+    return members.filter((member) => {
+      return (
+        member.user.name
+          .toLowerCase()
+          .includes(query) ||
+        member.user.email
+          .toLowerCase()
+          .includes(query) ||
+        member.role
+          .toLowerCase()
+          .includes(query)
+      );
+    });
+  }, [members, search]);
 
-		loadMembers();
-	}, [organizationSlug, workspaceSlug]);
+  const handleAddMember = async (data: {
+    email: string;
+    role: "MEMBER" | "ADMIN";
+  }) => {
+    if (!organizationSlug || !workspaceSlug) {
+      return;
+    }
 
-	if (isLoading) {
-		return <div>Loading members...</div>;
-	}
+    try {
+      setIsAddingMember(true);
 
-	return (
-		<div className="space-y-6">
-			<Membertoolbar />
-			<MemberTable members={members} />
-		</div>
-	);
+      await addWorkspaceMember(
+        organizationSlug,
+        workspaceSlug,
+        data,
+      );
+
+      setIsAddMemberOpen(false);
+    } catch (error) {
+      console.error(
+        "Failed to add workspace member:",
+        error,
+      );
+    } finally {
+      setIsAddingMember(false);
+    }
+  };
+
+  if (isMembersLoading) {
+    return <div>Loading members...</div>;
+  }
+
+  return (
+    <>
+      <div className="space-y-6">
+        <Membertoolbar
+          search={search}
+          onSearchChange={setSearch}
+          onAddMember={() =>
+            setIsAddMemberOpen(true)
+          }
+        />
+
+        <MemberTable members={filteredMembers} />
+      </div>
+
+      <AddMemberModal
+        isOpen={isAddMemberOpen}
+        isSubmitting={isAddingMember}
+        onClose={() =>
+          setIsAddMemberOpen(false)
+        }
+        onSubmit={handleAddMember}
+      />
+    </>
+  );
 };
 
 export default WorkspaceMembers;

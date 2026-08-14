@@ -1,64 +1,50 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
 import WorkspacePageSkeleton from "@/components/skeleton/WorkspacePage";
 import ProjectGrid from "@/modules/project/components/ProjectGrid";
 import WorkspaceToolbar from "@/modules/workspace/components/WorkspaceToolbar";
-
-import { useOrganizationStore } from "@/store/organization.store";
+import ProjectList from "../../../modules/project/components/ProjectList";
 import { useProjectStore } from "@/store/project.store";
 import { useWorkspaceStore } from "@/store/workspace.store";
 
 const WorkspaceOverview = () => {
-	const {
-		organizationSlug,
-		workspaceSlug,
-	} = useParams<{
-		organizationSlug: string;
-		workspaceSlug: string;
-	}>();
+  const [view, setView] = useState<"grid" | "list">("grid");
+  const { organizationSlug, workspaceSlug } = useParams<{
+    organizationSlug: string;
+    workspaceSlug: string;
+  }>();
 
-	const { currentOrganization } = useOrganizationStore();
+  const { fetchWorkspace, currentWorkspace, isLoading } = useWorkspaceStore();
 
-	const {
-		fetchWorkspace,
-		currentWorkspace,
-		isLoading,
-	} = useWorkspaceStore();
+  const { fetchProjects, projects } = useProjectStore();
 
-	const { fetchProjects } = useProjectStore();
+  useEffect(() => {
+    if (!organizationSlug || !workspaceSlug) {
+      return;
+    }
 
-	useEffect(() => {
-		if (!organizationSlug || !workspaceSlug) {
-			return;
-		}
+    fetchWorkspace(organizationSlug, workspaceSlug);
 
-		fetchWorkspace(
-			organizationSlug,
-			workspaceSlug,
-		);
+    fetchProjects(organizationSlug, workspaceSlug);
+  }, [organizationSlug, workspaceSlug, fetchWorkspace, fetchProjects]);
 
-		fetchProjects(
-			organizationSlug,
-			workspaceSlug,
-		);
-	}, [
-		organizationSlug,
-		workspaceSlug,
-		fetchWorkspace,
-		fetchProjects,
-	]);
+  if (isLoading && !currentWorkspace) {
+    return <WorkspacePageSkeleton />;
+  }
 
-	if (isLoading && !currentWorkspace) {
-		return <WorkspacePageSkeleton />;
-	}
-
-	return (
-		<>
-			<WorkspaceToolbar />
-			<ProjectGrid />
-		</>
-	);
+  return (
+    <>
+      <WorkspaceToolbar view={view} onViewChange={setView} />
+      <div className="mt-6">
+        {view === "grid" ? (
+          <ProjectGrid />
+        ) : (
+          <ProjectList projects={projects} />
+        )}
+      </div>
+    </>
+  );
 };
 
 export default WorkspaceOverview;

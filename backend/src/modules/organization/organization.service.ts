@@ -77,7 +77,7 @@ export const inviteMember = async (slug: string, userId: string, data: CreateOrg
 	);
 	const invite = await organizationRepository.createOrganizationInvite(organization.id, data.email, data.role ?? OrganizationRole.MEMBER, token, expiresAt);
 
-	const inviteUrl = `http://localhost:5173/invitations/${token}`;
+	const inviteUrl = `http://localhost:3000/invitations/${token}`;
 
 	return {
 		id: invite.id,
