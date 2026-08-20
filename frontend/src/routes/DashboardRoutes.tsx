@@ -70,15 +70,14 @@ export const DashboardRoutes = [
 									},
 
 									{
-										path: "settings",
-										element: <WorkspaceSettings />,
-									},
-
-									{
 										path: "projects/create",
 										element: <CreateProject />,
 									},
 								],
+							},
+							{
+								path: ":workspaceSlug/settings",
+								element: <WorkspaceSettings />,
 							},
 						],
 					},
