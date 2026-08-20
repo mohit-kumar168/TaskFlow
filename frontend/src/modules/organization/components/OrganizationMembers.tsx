@@ -3,18 +3,18 @@ import { useParams } from "react-router-dom";
 import { MoreVertical } from "lucide-react";
 
 import { useOrganizationStore } from "@/store/organization.store";
-import {
-  removeOrganizationMember,
-  type OrganizationMemberProps,
-} from "@/api/organization.api";
+import { type OrganizationMemberProps } from "@/api/organization.api";
 import InviteMemberModal from "./InviteMemberModal";
 import ChangeOrganizationMemberRoleModal from "./ChangeOrganizationMemberRoleModal";
+import RemoveOrganizationMemberModal from "./RemoveOrganizationMemberModal";
 
 const OrganizationMembers = () => {
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [isInviting, setIsInviting] = useState(false);
   const [invitationUrl, setInvitationUrl] = useState<string | null>(null);
+  const [isRemoveModalOpen, setIsRemoveModalOpen] = useState(false);
+  const [isRemoving, setIsRemoving] = useState(false);
 
   const [selectedMember, setSelectedMember] =
     useState<OrganizationMemberProps | null>(null);
@@ -33,6 +33,7 @@ const OrganizationMembers = () => {
     fetchOrganizationMembers,
     inviteOrganizationMember,
     updateOrganizationMemberRole,
+    removeOrganizationMember,
   } = useOrganizationStore();
 
   const [search, setSearch] = useState("");
@@ -62,21 +63,34 @@ const OrganizationMembers = () => {
     });
   }, [organizationMembers, search]);
 
-  const handleRemoveMember = (memberId: string) => {
-    if (!organizationSlug) {
+  const handleRemoveMember = (member: OrganizationMemberProps) => {
+    setSelectedMember(member);
+    setIsRemoveModalOpen(true);
+    setOpenMenuId(null);
+  };
+
+  const handleConfirmRemove = async () => {
+    if (!organizationSlug || !selectedMember) {
       return;
     }
 
-    const confirmed = window.confirm(
-      "Are you sure you want to remove this member?",
-    );
+    try {
+      setIsRemoving(true);
 
-    if (!confirmed) {
-      return;
+      const success = await removeOrganizationMember(
+        organizationSlug,
+        selectedMember.id,
+      );
+
+      if (!success) {
+        return;
+      }
+
+      setIsRemoveModalOpen(false);
+      setSelectedMember(null);
+    } finally {
+      setIsRemoving(false);
     }
-
-    const removedMember = removeOrganizationMember(organizationSlug, memberId);
-    console.log("Removed member:", removedMember);
   };
 
   const handleInviteMember = async (data: {
@@ -247,8 +261,7 @@ const OrganizationMembers = () => {
                             <button
                               type="button"
                               onClick={() => {
-                                handleRemoveMember(member.id);
-                                setOpenMenuId(null);
+                                handleRemoveMember(member);
                               }}
                               className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50"
                             >
@@ -287,6 +300,17 @@ const OrganizationMembers = () => {
           setSelectedMember(null);
         }}
         onSubmit={handleChangeRole}
+      />
+
+      <RemoveOrganizationMemberModal
+        isOpen={isRemoveModalOpen}
+        member={selectedMember}
+        isSubmitting={isRemoving}
+        onClose={() => {
+          setIsRemoveModalOpen(false);
+          setSelectedMember(null);
+        }}
+        onConfirm={handleConfirmRemove}
       />
     </>
   );

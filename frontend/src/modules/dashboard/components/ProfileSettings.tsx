@@ -189,7 +189,7 @@ const ProfileSettings = () => {
               <Button
                 type="submit"
                 disabled={isSaving || !isDirty}
-                className="w-auto"
+                className=""
               >
                 {isSaving
                   ? "Saving..."
