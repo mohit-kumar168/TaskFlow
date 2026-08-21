@@ -1,12 +1,17 @@
+import { useState } from "react";
 import {
 	MoreHorizontal,
+	Settings,
+	Plus,
 } from "lucide-react";
 import {
 	NavLink,
+	useNavigate,
 	useParams,
 } from "react-router-dom";
 
 import type { ProjectProps } from "@/api/project.api";
+import ProjectSettings from "../pages/ProjectSettings";
 
 interface ProjectHeaderProps {
 	project: ProjectProps;
@@ -15,6 +20,11 @@ interface ProjectHeaderProps {
 const ProjectHeader = ({
 	project,
 }: ProjectHeaderProps) => {
+	const [isMenuOpen, setIsMenuOpen] = useState(false);
+	const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+	const navigate = useNavigate();
+
 	const {
 		organizationSlug,
 		workspaceSlug,
@@ -26,6 +36,20 @@ const ProjectHeader = ({
 	}>();
 
 	const basePath = `/organizations/${organizationSlug}/workspaces/${workspaceSlug}/projects/${projectSlug}`;
+
+	const handleCreateIssue = () => {
+		setIsMenuOpen(false);
+
+		// We'll connect this to the CreateIssueModal
+		// once the modal is available at the project level.
+		window.dispatchEvent(new Event("open-create-issue"));
+	};
+
+	const handleSettings = () => {
+		setIsMenuOpen(false);
+
+		navigate(`${basePath}/settings`);
+	};
 
 	return (
 		<div className="border-b border-gray-200 bg-white">
@@ -51,12 +75,40 @@ const ProjectHeader = ({
 					</div>
 				</div>
 
-				<button
-					type="button"
-					className="rounded-lg p-2 text-gray-500 transition hover:bg-gray-100 hover:text-gray-800"
-				>
-					<MoreHorizontal size={20} />
-				</button>
+				<div className="relative">
+					<button
+						type="button"
+						onClick={() =>
+							setIsMenuOpen((current) => !current)
+						}
+						className="rounded-lg p-2 text-gray-500 transition hover:bg-gray-100 hover:text-gray-800"
+					>
+						<MoreHorizontal size={20} />
+					</button>
+
+					{isMenuOpen && (
+						<div className="absolute right-0 top-11 z-30 w-48 overflow-hidden rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
+							<button
+								type="button"
+								onClick={handleCreateIssue}
+								className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-100"
+							>
+								Create Column
+							</button>
+							<button
+								type="button"
+								onClick={() => {
+									setIsSettingsOpen(true);
+									setIsMenuOpen(false);
+								}}
+								className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-100"
+							>
+								Project Settings
+							</button>
+
+						</div>
+					)}
+				</div>
 			</div>
 
 			{/* Project navigation */}
@@ -65,10 +117,9 @@ const ProjectHeader = ({
 					to={basePath}
 					end
 					className={({ isActive }) =>
-						`border-b-2 py-3 text-sm font-medium transition ${
-							isActive
-								? "border-orange-500 text-gray-900"
-								: "border-transparent text-gray-500 hover:text-gray-900"
+						`border-b-2 py-3 text-sm font-medium transition ${isActive
+							? "border-orange-500 text-gray-900"
+							: "border-transparent text-gray-500 hover:text-gray-900"
 						}`
 					}
 				>
@@ -78,10 +129,9 @@ const ProjectHeader = ({
 				<NavLink
 					to={`${basePath}/board`}
 					className={({ isActive }) =>
-						`border-b-2 py-3 text-sm font-medium transition ${
-							isActive
-								? "border-orange-500 text-gray-900"
-								: "border-transparent text-gray-500 hover:text-gray-900"
+						`border-b-2 py-3 text-sm font-medium transition ${isActive
+							? "border-orange-500 text-gray-900"
+							: "border-transparent text-gray-500 hover:text-gray-900"
 						}`
 					}
 				>
@@ -91,16 +141,23 @@ const ProjectHeader = ({
 				<NavLink
 					to={`${basePath}/members`}
 					className={({ isActive }) =>
-						`border-b-2 py-3 text-sm font-medium transition ${
-							isActive
-								? "border-orange-500 text-gray-900"
-								: "border-transparent text-gray-500 hover:text-gray-900"
+						`border-b-2 py-3 text-sm font-medium transition ${isActive
+							? "border-orange-500 text-gray-900"
+							: "border-transparent text-gray-500 hover:text-gray-900"
 						}`
 					}
 				>
 					Members
 				</NavLink>
 			</div>
+
+			<ProjectSettings
+				isOpen={isSettingsOpen}
+				onClose={() => setIsSettingsOpen(false)}
+				organizationSlug={organizationSlug}
+				workspaceSlug={workspaceSlug}
+				projectSlug={projectSlug}
+			/>
 		</div>
 	);
 };

@@ -68,7 +68,9 @@ const CreateIssueModal = ({
 				type: data.type,
 				priority: data.priority,
 				email: data.email.trim() || undefined,
-				dueDate: data.dueDate || undefined,
+				dueDate: data.dueDate
+					? new Date(`${data.dueDate}T00:00:00.000Z`).toISOString()
+					: undefined,
 			},
 		);
 
