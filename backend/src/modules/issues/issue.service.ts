@@ -4,7 +4,6 @@ import {
 	IssueStatus,
 	MembershipStatus,
 	ProjectRole,
-	WorkspaceRole,
 } from "@/generated/prisma/enums";
 
 import type {
@@ -78,17 +77,47 @@ export const createIssue = async (organizationSlug: string, workspaceSlug: strin
 		assigneeId = assignee.id;
 	}
 
-	const issues = await issueRepository.fetchAllIssues(project.id);
+	const issues =
+		await issueRepository.fetchAllIssuesForKeyGeneration(
+			project.id,
+		);
 
-	const columnIssues = issues.filter((issue) => issue.columnId === column.id);
+	const activeColumnIssues = issues.filter(
+		(issue) =>
+			issue.columnId === column.id &&
+			!issue.isArchived,
+	);
 
-	const position = columnIssues.length;
+	const position = activeColumnIssues.length;
 
-	const issueKey = `${project.key}-${issues.length + 1}`;
+	const issueNumbers = issues
+		.map((issue) => {
+			const [, number] = issue.issueKey.split("-");
+			return Number(number);
+		})
+		.filter((number) => Number.isInteger(number));
+
+	const nextIssueNumber =
+		issueNumbers.length > 0
+			? Math.max(...issueNumbers) + 1
+			: 1;
+
+	const issueKey = `${project.key}-${nextIssueNumber}`;
+
+	console.log("Project ID:", project.id);
+	console.log("Project Key:", project.key);
+	console.log(
+		"Existing issues:",
+		issues.map((issue) => issue.issueKey),
+	);
+	console.log("Issue numbers:", issueNumbers);
+	console.log("Next issue number:", nextIssueNumber);
+	console.log("Generated issue key:", issueKey);
 
 	const existingIssue = await issueRepository.findIssueByKey(project.id, issueKey);
 
 	if (existingIssue) {
+		console.log("COLLISION:", existingIssue);
 		throw new apiError(409, "Unable to generate a unique issue key.");
 	}
 
