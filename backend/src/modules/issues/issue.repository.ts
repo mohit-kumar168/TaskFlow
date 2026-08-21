@@ -88,3 +88,18 @@ export const moveIssue = async (issueId: string, status: IssueStatus, data: Move
 		},
 	});
 };
+
+export const fetchAllIssuesForKeyGeneration = async (
+	projectId: string,
+) => {
+	return await prisma.issue.findMany({
+		where: {
+			projectId,
+		},
+		select: {
+			issueKey: true,
+			columnId: true,
+			isArchived: true,
+		},
+	});
+};

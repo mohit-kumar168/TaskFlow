@@ -198,7 +198,12 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
 
 			set((state) => ({
 				members: state.members.map((member) =>
-					member.id === updatedMember.id ? updatedMember : member,
+					member.id === updatedMember.id
+						? {
+							...member,
+							role: updatedMember.role,
+						}
+						: member,
 				),
 			}));
 		} catch (error) {
