@@ -95,17 +95,10 @@ const CreateIssueModal = ({
 	return (
 		<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
 			<div className="w-full max-w-lg rounded-xl bg-white shadow-xl">
-				{/* Header */}
 				<div className="flex items-start justify-between border-b border-gray-200 px-6 py-5">
-					<div>
-						<h2 className="text-lg font-semibold text-gray-900">
-							Create Issue
-						</h2>
-
-						<p className="mt-1 text-sm text-gray-500">
-							Create a new issue for this project.
-						</p>
-					</div>
+					<h2 className="text-lg font-semibold text-gray-900">
+						Create Issue
+					</h2>
 
 					<button
 						type="button"
@@ -117,7 +110,6 @@ const CreateIssueModal = ({
 					</button>
 				</div>
 
-				{/* Form */}
 				<form
 					onSubmit={handleSubmit(handleCreateIssue)}
 					className="space-y-5 px-6 py-6"
@@ -142,7 +134,6 @@ const CreateIssueModal = ({
 						})}
 					/>
 
-					{/* Description */}
 					<div className="flex flex-col gap-2">
 						<label
 							htmlFor="description"
@@ -172,7 +163,6 @@ const CreateIssueModal = ({
 						)}
 					</div>
 
-					{/* Type + Priority */}
 					<div className="grid grid-cols-2 gap-4">
 						<div className="flex flex-col gap-2">
 							<label
@@ -215,7 +205,6 @@ const CreateIssueModal = ({
 						</div>
 					</div>
 
-					{/* Assignee */}
 					<Input
 						id="email"
 						label="Assignee Email"
@@ -231,7 +220,6 @@ const CreateIssueModal = ({
 						})}
 					/>
 
-					{/* Due Date */}
 					<Input
 						id="dueDate"
 						label="Due Date"
@@ -240,21 +228,21 @@ const CreateIssueModal = ({
 						{...register("dueDate")}
 					/>
 
-					{/* Actions */}
 					<div className="flex justify-end gap-3 pt-2">
-						<button
+						<Button
 							type="button"
+							variant="outline_light"
 							onClick={handleClose}
 							disabled={isCreating}
-							className="rounded-lg px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+							className="md:w-1/2 rounded-lg px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
 						>
 							Cancel
-						</button>
+						</Button>
 
 						<Button
 							type="submit"
 							disabled={isCreating}
-							className="w-auto"
+							className="md:w-1/2"
 						>
 							{isCreating
 								? "Creating..."

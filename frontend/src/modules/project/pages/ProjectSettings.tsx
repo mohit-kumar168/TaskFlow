@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import { X } from "lucide-react";
 
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 
 import { useProjectStore } from "@/store/project.store";
-import { X } from "lucide-react";
 
 type ProjectSettingsFormData = {
 	name: string;
@@ -103,7 +103,7 @@ const ProjectSettings = ({
 
 	const handleArchive = async () => {
 		const confirmed = window.confirm(
-			`Are you sure you want to archive "${currentProject.name}"?`,
+			`Are you sure you want to delete "${currentProject.name}"?`,
 		);
 
 		if (!confirmed) {
@@ -114,16 +114,16 @@ const ProjectSettings = ({
 			setIsArchiving(true);
 			setMessage(null);
 
-			const archived = await archiveProject(
+			const deleted = await archiveProject(
 				organizationSlug,
 				workspaceSlug,
 				projectSlug,
 			);
 
-			if (!archived) {
+			if (!deleted) {
 				setMessage({
 					type: "error",
-					text: "Failed to archive project.",
+					text: "Failed to delete project.",
 				});
 
 				return;
@@ -135,28 +135,32 @@ const ProjectSettings = ({
 		}
 	};
 
-	if (!organizationSlug || !workspaceSlug || !projectSlug) return null;
+	if (
+		!organizationSlug ||
+		!workspaceSlug ||
+		!projectSlug
+	) {
+		return null;
+	}
 
 	return (
 		<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
 			<div className="w-full max-w-lg rounded-xl bg-white shadow-xl">
 				<div className="flex items-start justify-between border-b border-gray-200 px-6 py-5">
-					<div>
-						<h2 className="text-lg font-semibold text-gray-900">
-							Project Settings
-						</h2>
-
-						<p className="mt-1 text-sm text-gray-500">
-							Manage your project's basic information.
-						</p>
-					</div>
+					<h2 className="text-lg font-semibold text-gray-900">
+						Project Settings
+					</h2>
 
 					<button
 						type="button"
 						onClick={onClose}
-						className="rounded-lg px-2 py-1 text-xl text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+						disabled={
+							isProjectLoading ||
+							isArchiving
+						}
+						className="rounded-lg p-1 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-50"
 					>
-						<X />
+						<X size={22} />
 					</button>
 				</div>
 
@@ -208,12 +212,16 @@ const ProjectSettings = ({
 
 							{errors.description && (
 								<p className="text-sm text-red-500">
-									{errors.description.message}
+									{
+										errors.description
+											.message
+									}
 								</p>
 							)}
 						</div>
 					</div>
 
+					{/* Message */}
 					{message && (
 						<p
 							className={`mt-4 text-sm ${message.type === "success"
@@ -225,18 +233,19 @@ const ProjectSettings = ({
 						</p>
 					)}
 
-					<div className="mt-6 flex justify-end gap-3">
-						<button
+					<div className="mt-6 flex items-center justify-end gap-3">
+						<Button
 							type="button"
+							variant="outline_light"
 							onClick={onClose}
 							disabled={
 								isProjectLoading ||
 								isArchiving
 							}
-							className="rounded-lg px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100"
+							className="w-auto rounded-lg px-5 text-sm font-medium text-gray-600 hover:bg-gray-100"
 						>
 							Cancel
-						</button>
+						</Button>
 
 						<Button
 							type="submit"
@@ -245,34 +254,28 @@ const ProjectSettings = ({
 								isArchiving ||
 								!isDirty
 							}
-							className="w-auto"
+							className="w-auto rounded-lg bg-orange-500 px-5 text-sm font-medium text-white hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
 						>
 							{isProjectLoading
 								? "Saving..."
 								: "Save Changes"}
 						</Button>
+
+						<Button
+							type="button"
+							onClick={handleArchive}
+							disabled={
+								isProjectLoading ||
+								isArchiving
+							}
+							className="w-auto rounded-lg bg-orange-500 px-5 text-sm font-medium text-white hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
+						>
+							{isArchiving
+								? "Deleting..."
+								: "Delete Project"}
+						</Button>
 					</div>
 				</form>
-
-				<div className="border-t border-red-100 bg-red-50/40 px-6 py-5">
-					<h3 className="text-sm font-semibold text-red-700">
-						Delete Project
-					</h3>
-
-					<button
-						type="button"
-						onClick={handleArchive}
-						disabled={
-							isProjectLoading ||
-							isArchiving
-						}
-						className="mt-4 rounded-lg border border-red-300 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
-					>
-						{isArchiving
-							? "Deleting..."
-							: "Delete Project"}
-					</button>
-				</div>
 			</div>
 		</div>
 	);

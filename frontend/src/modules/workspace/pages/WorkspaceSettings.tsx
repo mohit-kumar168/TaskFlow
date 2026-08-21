@@ -15,7 +15,10 @@ type WorkspaceFormData = {
 const WorkspaceSettings = () => {
 	const navigate = useNavigate();
 
-	const { organizationSlug, workspaceSlug } = useParams<{
+	const {
+		organizationSlug,
+		workspaceSlug,
+	} = useParams<{
 		organizationSlug: string;
 		workspaceSlug: string;
 	}>();
@@ -81,6 +84,11 @@ const WorkspaceSettings = () => {
 			return;
 		}
 
+		reset({
+			name: updatedWorkspace.name,
+			description: updatedWorkspace.description ?? "",
+		});
+
 		setIsEditing(false);
 
 		setMessage({
@@ -100,7 +108,11 @@ const WorkspaceSettings = () => {
 	};
 
 	const handleDeleteWorkspace = async () => {
-		if (!organizationSlug || !workspaceSlug || !currentWorkspace) {
+		if (
+			!organizationSlug ||
+			!workspaceSlug ||
+			!currentWorkspace
+		) {
 			return;
 		}
 
@@ -130,7 +142,9 @@ const WorkspaceSettings = () => {
 				return;
 			}
 
-			navigate(`/organizations/${organizationSlug}`);
+			navigate(
+				`/organizations/${organizationSlug}`,
+			);
 		} finally {
 			setIsDeleting(false);
 		}
@@ -146,7 +160,6 @@ const WorkspaceSettings = () => {
 
 	return (
 		<div className="max-w-3xl">
-			{/* Header */}
 			<div className="flex items-start justify-between">
 				<div>
 					<h3 className="text-base font-semibold text-gray-900">
@@ -183,7 +196,8 @@ const WorkspaceSettings = () => {
 							label="Workspace Name"
 							error={errors.name?.message}
 							{...register("name", {
-								required: "Workspace name is required.",
+								required:
+									"Workspace name is required.",
 								minLength: {
 									value: 2,
 									message:
@@ -225,26 +239,50 @@ const WorkspaceSettings = () => {
 							)}
 						</div>
 
-						<div className="flex gap-3">
+						<div className="flex items-center gap-3">
 							<Button
 								type="submit"
-								disabled={isLoading || !isDirty}
+								disabled={
+									isLoading ||
+									isDeleting ||
+									!isDirty
+								}
 								className="w-auto"
 							>
-								{isLoading ? "Saving..." : "Save Changes"}
+								{isLoading
+									? "Saving..."
+									: "Save Changes"}
 							</Button>
 
 							<button
 								type="button"
+								onClick={handleDeleteWorkspace}
+								disabled={
+									isLoading ||
+									isDeleting
+								}
+								className="rounded-lg border border-red-200 px-4 py-2.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+							>
+								{isDeleting
+									? "Deleting..."
+									: "Delete Workspace"}
+							</button>
+
+							<button
+								type="button"
 								onClick={handleCancelEdit}
-								disabled={isLoading}
-								className="rounded-lg px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100"
+								disabled={
+									isLoading ||
+									isDeleting
+								}
+								className="rounded-lg px-4 py-2.5 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
 							>
 								Cancel
 							</button>
 						</div>
 					</form>
 				) : (
+					/* View Mode */
 					<div className="space-y-6">
 						<div>
 							<p className="text-xs font-medium text-gray-500">
@@ -280,27 +318,6 @@ const WorkspaceSettings = () => {
 					{message.text}
 				</p>
 			)}
-
-			{/* Danger Zone */}
-			<div className="mt-12 border-t border-gray-200 pt-8">
-				<h3 className="text-base font-semibold text-red-600">
-					Danger Zone
-				</h3>
-
-				<p className="mt-1 text-sm text-gray-500">
-					Deleting this workspace will remove it from your
-					organization.
-				</p>
-
-				<button
-					type="button"
-					onClick={handleDeleteWorkspace}
-					disabled={isDeleting}
-					className="mt-4 rounded-lg border border-red-200 px-4 py-2.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
-				>
-					{isDeleting ? "Deleting..." : "Delete Workspace"}
-				</button>
-			</div>
 		</div>
 	);
 };
