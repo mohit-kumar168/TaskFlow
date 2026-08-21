@@ -12,6 +12,14 @@ const IssueCard = ({
 	return (
 		<button
 			type="button"
+			draggable
+			onDragStart={(event) => {
+				event.dataTransfer.setData(
+					"issueId",
+					issue.id,
+				);
+				event.dataTransfer.effectAllowed = "move";
+			}}
 			onClick={onClick}
 			className="w-full rounded-lg border border-gray-200 bg-white p-4 text-left shadow-sm transition hover:border-gray-300 hover:shadow"
 		>

@@ -8,6 +8,7 @@ import {
 	type IssueProps,
 	type IssueType,
 	type IssuePriority,
+	type UpdateIssueProps,
 } from "@/api/issue.api";
 
 interface IssueDetailsFormData {
@@ -23,23 +24,20 @@ interface IssueDetailsModalProps {
 	isOpen: boolean;
 	issue: IssueProps | null;
 	isSubmitting: boolean;
+	isArchiving: boolean;
 	onClose: () => void;
-	onSubmit: (data: {
-		title: string;
-		description: string;
-		type: IssueType;
-		priority: IssuePriority;
-		dueDate?: string;
-		email?: string;
-	}) => void;
+	onSubmit: (data: UpdateIssueProps) => void;
+	onRemove: () => void;
 }
 
 const IssueDetailsModal = ({
 	isOpen,
 	issue,
 	isSubmitting,
+	isArchiving,
 	onClose,
 	onSubmit,
+	onRemove,
 }: IssueDetailsModalProps) => {
 	const {
 		register,
@@ -221,19 +219,29 @@ const IssueDetailsModal = ({
 					/>
 
 					<div className="flex justify-end gap-3 pt-2">
-						<button
+						<Button
 							type="button"
+							variant="outline_light"
+							onClick={onRemove}
+							disabled={isSubmitting || isArchiving}
+							className="md:w-1/3 rounded-lg px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+						>
+							{isArchiving ? "Removing..." : "Remove Issue"}
+						</Button>
+						<Button
+							type="button"
+							variant="outline_light"
 							onClick={onClose}
 							disabled={isSubmitting}
-							className="rounded-lg px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 disabled:opacity-50"
+							className="md:w-1/3 rounded-lg px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 disabled:opacity-50"
 						>
 							Cancel
-						</button>
+						</Button>
 
 						<Button
 							type="submit"
 							disabled={isSubmitting}
-							className="w-auto"
+							className="md:w-1/3"
 						>
 							{isSubmitting
 								? "Saving..."

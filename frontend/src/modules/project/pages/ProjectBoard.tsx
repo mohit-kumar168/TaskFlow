@@ -10,7 +10,7 @@ import {
 import { useIssueStore } from "@/store/issue.store";
 
 import IssueCard from "@/modules/issue/components/IssueCard";
-import IssueDetailsModal from "@/modules/issue/components/IssueDetailsModal";
+import IssueDetailsModal from "../../../modules/issue/components/IssueDetailsModal";
 import CreateIssueModal from "@/modules/issue/components/CreateIssueModal";
 
 const ProjectBoard = () => {
@@ -25,6 +25,9 @@ const ProjectBoard = () => {
 
 	const [isUpdatingIssue, setIsUpdatingIssue] =
 		useState(false);
+
+	const [dragOverColumnId, setDragOverColumnId] =
+		useState<string | null>(null);
 
 	const {
 		organizationSlug,
@@ -48,6 +51,9 @@ const ProjectBoard = () => {
 		issues,
 		fetchIssues,
 		updateIssue,
+		moveIssue,
+		archiveIssue,
+		isArchiving,
 	} = useIssueStore();
 
 	useEffect(() => {
@@ -119,6 +125,92 @@ const ProjectBoard = () => {
 		}
 	};
 
+	const handleDragOver = (
+		event: React.DragEvent,
+		columnId: string,
+	) => {
+		event.preventDefault();
+
+		event.dataTransfer.dropEffect = "move";
+		setDragOverColumnId(columnId);
+	};
+
+	const handleDragLeave = () => {
+		setDragOverColumnId(null);
+	};
+
+	const handleDrop = async (
+		event: React.DragEvent,
+		columnId: string,
+	) => {
+		event.preventDefault();
+
+		const issueId =
+			event.dataTransfer.getData("issueId");
+
+		setDragOverColumnId(null);
+
+		if (
+			!issueId ||
+			!organizationSlug ||
+			!workspaceSlug ||
+			!projectSlug
+		) {
+			return;
+		}
+
+		const issue = issues.find(
+			(issue) => issue.id === issueId,
+		);
+
+		if (!issue || issue.columnId === columnId) {
+			return;
+		}
+
+		await moveIssue(
+			organizationSlug,
+			workspaceSlug,
+			projectSlug,
+			issueId,
+			{
+				columnId,
+			},
+		);
+	};
+
+	const handleRemoveIssue = async () => {
+		if (
+			!organizationSlug ||
+			!workspaceSlug ||
+			!projectSlug ||
+			!selectedIssue
+		) {
+			return;
+		}
+
+		const confirmed = window.confirm(
+			"Are you sure you want to remove this issue?",
+		);
+
+		if (!confirmed) {
+			return;
+		}
+
+		const success = await archiveIssue(
+			organizationSlug,
+			workspaceSlug,
+			projectSlug,
+			selectedIssue.id,
+		);
+
+		if (!success) {
+			return;
+		}
+
+		setIsIssueModalOpen(false);
+		setSelectedIssue(null);
+	};
+
 	if (isBoardLoading && !currentBoard) {
 		return (
 			<div className="flex min-h-100 items-center justify-center">
@@ -145,15 +237,10 @@ const ProjectBoard = () => {
 		<div className="p-6">
 			{/* Board Header */}
 			<div className="mb-5 flex items-center justify-between">
-				<div>
-					<h2 className="text-base font-semibold text-gray-900">
-						{currentBoard.name}
-					</h2>
+				<h2 className="text-base font-semibold text-gray-900">
+					{currentBoard.name}
+				</h2>
 
-					<p className="mt-1 text-sm text-gray-500">
-						Manage your project work from this board.
-					</p>
-				</div>
 
 				<button
 					type="button"
@@ -178,7 +265,23 @@ const ProjectBoard = () => {
 					return (
 						<div
 							key={column.id}
-							className="w-70 min-w-70 rounded-xl border border-gray-200 bg-gray-100"
+							onDragOver={(event) =>
+								handleDragOver(
+									event,
+									column.id,
+								)
+							}
+							onDragLeave={handleDragLeave}
+							onDrop={(event) =>
+								handleDrop(
+									event,
+									column.id,
+								)
+							}
+							className={`w-70 min-w-70 rounded-xl border bg-gray-100 ${dragOverColumnId === column.id
+								? "border-orange-400"
+								: "border-gray-200"
+								}`}
 						>
 							<div className="flex items-center justify-between px-4 py-3">
 								<div className="flex min-w-0 items-center gap-2">
@@ -268,11 +371,13 @@ const ProjectBoard = () => {
 				isOpen={isIssueModalOpen}
 				issue={selectedIssue}
 				isSubmitting={isUpdatingIssue}
+				isArchiving={isArchiving}
 				onClose={() => {
 					setIsIssueModalOpen(false);
 					setSelectedIssue(null);
 				}}
 				onSubmit={handleUpdateIssue}
+				onRemove={handleRemoveIssue}
 			/>
 		</div>
 	);
