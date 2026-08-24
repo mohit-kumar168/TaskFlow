@@ -12,6 +12,7 @@ const Register = () => {
 	const onSubmit = async (data: RegisterUserProps) => {
 		try {
 			const response = await registerUser(data);
+			alert("User Registered Successfully.")
 			console.log(response.data);
 			navigate("/login");
 		} catch (error) {
