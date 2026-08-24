@@ -9,6 +9,7 @@ import ChangeOrganizationMemberRoleModal from "./ChangeOrganizationMemberRoleMod
 import RemoveOrganizationMemberModal from "./RemoveOrganizationMemberModal";
 import MemberToolbar from "@/components/members/MemberToolbar";
 import MemberTable, { type CommonMemberProps } from "@/components/members/MemberTable";
+import FeedbackModal from "@/components/ui/FeedBackModal";
 
 const OrganizationMembers = () => {
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
@@ -24,6 +25,7 @@ const OrganizationMembers = () => {
   const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
 
   const [isUpdatingRole, setIsUpdatingRole] = useState(false);
+  const [feedback, setFeedback] = useState({ isOpen: false, type: "success" as "success" | "error", title: "", message: "" });
 
   const { organizationSlug } = useParams<{
     organizationSlug: string;
@@ -124,6 +126,7 @@ const OrganizationMembers = () => {
 
       setInvitationUrl(inviteUrl);
       setIsInviteModalOpen(false);
+		  setFeedback({ isOpen: true, type: "success", title: "Invitation Sent", message: "The organization invitation was created successfully." });
     } finally {
       setIsInviting(false);
     }
@@ -149,6 +152,7 @@ const OrganizationMembers = () => {
 
       setIsRoleModalOpen(false);
       setSelectedMember(null);
+		  setFeedback({ isOpen: true, type: "success", title: "Role Updated", message: "The organization member role was updated." });
     } finally {
       setIsUpdatingRole(false);
     }
@@ -326,6 +330,7 @@ const OrganizationMembers = () => {
         }}
         onConfirm={handleConfirmRemove}
       />
+  		<FeedbackModal {...feedback} onClose={() => setFeedback((current) => ({ ...current, isOpen: false }))} />
     </>
   );
 };

@@ -5,6 +5,8 @@ import { useNavigate } from "react-router-dom";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import { useOrganizationStore } from "@/store/organization.store";
+import FeedbackModal from "@/components/ui/FeedBackModal";
+import { useState } from "react";
 
 interface CreateOrganizationForm {
 	name: string;
@@ -14,6 +16,7 @@ interface CreateOrganizationForm {
 
 const CreateOrganization = () => {
 	const navigate = useNavigate();
+	const [feedback, setFeedback] = useState<{ isOpen: boolean; type: "success" | "error"; title: string; message: string }>({ isOpen: false, type: "success", title: "", message: "" });
 
 	const { createOrganization, isLoading } =
 		useOrganizationStore();
@@ -38,10 +41,11 @@ const CreateOrganization = () => {
 		});
 
 		if (!organization) {
+			setFeedback({ isOpen: true, type: "error", title: "Organization Creation Failed", message: "Unable to create the organization. Please try again." });
 			return;
 		}
 
-		navigate("/dashboard");
+		setFeedback({ isOpen: true, type: "success", title: "Organization Created", message: "Your organization was created successfully." });
 	};
 
 	return (
@@ -161,6 +165,7 @@ const CreateOrganization = () => {
 					</div>
 				</form>
 			</div>
+				<FeedbackModal {...feedback} onClose={() => { setFeedback((current) => ({ ...current, isOpen: false })); if (feedback.type === "success") navigate("/dashboard"); }} />
 		</div>
 	);
 };

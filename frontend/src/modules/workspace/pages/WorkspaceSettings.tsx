@@ -6,6 +6,7 @@ import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 
 import { useWorkspaceStore } from "@/store/workspace.store";
+import FeedbackModal from "@/components/ui/FeedBackModal";
 
 type WorkspaceFormData = {
 	name: string;
@@ -37,6 +38,7 @@ const WorkspaceSettings = () => {
 		type: "success" | "error";
 		text: string;
 	} | null>(null);
+	const [feedback, setFeedback] = useState({ isOpen: false, type: "success" as "success" | "error", title: "", message: "" });
 
 	const {
 		register,
@@ -76,6 +78,7 @@ const WorkspaceSettings = () => {
 		);
 
 		if (!updatedWorkspace) {
+			setFeedback({ isOpen: true, type: "error", title: "Update Failed", message: "Unable to update the workspace." });
 			setMessage({
 				type: "error",
 				text: "Failed to update workspace.",
@@ -95,6 +98,7 @@ const WorkspaceSettings = () => {
 			type: "success",
 			text: "Workspace updated successfully.",
 		});
+		setFeedback({ isOpen: true, type: "success", title: "Workspace Updated", message: "Workspace updated successfully." });
 	};
 
 	const handleCancelEdit = () => {
@@ -134,6 +138,7 @@ const WorkspaceSettings = () => {
 			);
 
 			if (!deleted) {
+				setFeedback({ isOpen: true, type: "error", title: "Deletion Failed", message: "Unable to delete the workspace." });
 				setMessage({
 					type: "error",
 					text: "Failed to delete workspace.",
@@ -141,6 +146,7 @@ const WorkspaceSettings = () => {
 
 				return;
 			}
+			setFeedback({ isOpen: true, type: "success", title: "Workspace Deleted", message: "Workspace deleted successfully." });
 
 			navigate(
 				`/organizations/${organizationSlug}`,
@@ -318,6 +324,7 @@ const WorkspaceSettings = () => {
 					{message.text}
 				</p>
 			)}
+			<FeedbackModal {...feedback} onClose={() => { setFeedback((current) => ({ ...current, isOpen: false })); if (feedback.type === "success" && feedback.title === "Workspace Deleted") navigate(`/organizations/${organizationSlug}`); }} />
 		</div>
 	);
 };

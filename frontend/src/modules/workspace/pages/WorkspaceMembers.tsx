@@ -5,6 +5,7 @@ import MemberToolbar from "@/components/members/MemberToolbar";
 import MemberTable, { type CommonMemberProps } from "@/components/members/MemberTable";
 import AddMemberModal from "@/components/members/AddMemberModal";
 import MemberRoleChange, { type MemberRole } from "@/components/members/MemberRoleChange";
+import FeedbackModal from "@/components/ui/FeedBackModal";
 
 import { useWorkspaceStore } from "@/store/workspace.store";
 
@@ -34,6 +35,7 @@ const WorkspaceMembers = () => {
 	const [selectedMember, setSelectedMember] = useState<CommonMemberProps | null>(null);
 	const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
 	const [isUpdatingRole, setIsUpdatingRole] = useState(false);
+	const [feedback, setFeedback] = useState({ isOpen: false, type: "success" as "success" | "error", title: "", message: "" });
 
 	useEffect(() => {
 		if (!organizationSlug || !workspaceSlug) {
@@ -98,7 +100,9 @@ const WorkspaceMembers = () => {
 			);
 
 			setIsAddMemberOpen(false);
+			setFeedback({ isOpen: true, type: "success", title: "Member Added", message: "The member was added to the workspace." });
 		} catch (error) {
+			setFeedback({ isOpen: true, type: "error", title: "Unable to Add Member", message: "The member could not be added to the workspace." });
 			console.error(
 				"Failed to add workspace member:",
 				error,
@@ -115,6 +119,7 @@ const WorkspaceMembers = () => {
 			await updateWorkspaceMemberRole(organizationSlug, workspaceSlug, selectedMember.id, role as "ADMIN" | "MEMBER");
 			setIsRoleModalOpen(false);
 			setSelectedMember(null);
+			setFeedback({ isOpen: true, type: "success", title: "Role Updated", message: "The workspace member role was updated." });
 		} finally {
 			setIsUpdatingRole(false);
 		}
@@ -143,7 +148,7 @@ const WorkspaceMembers = () => {
 					}}
 					onRemove={(member) => {
 						if (organizationSlug && workspaceSlug) {
-							void removeWorkspaceMember(organizationSlug, workspaceSlug, member.id);
+							void removeWorkspaceMember(organizationSlug, workspaceSlug, member.id).then(() => setFeedback({ isOpen: true, type: "success", title: "Member Removed", message: "The member was removed from the workspace." })).catch(() => setFeedback({ isOpen: true, type: "error", title: "Unable to Remove Member", message: "The member could not be removed from the workspace." }));
 						}
 					}}
 					canManage={(member) => member.role !== "OWNER"}
@@ -159,6 +164,7 @@ const WorkspaceMembers = () => {
 				}
 				onSubmit={handleAddMember}
 			/>
+			<FeedbackModal {...feedback} onClose={() => setFeedback((current) => ({ ...current, isOpen: false }))} />
 			<MemberRoleChange
 				isOpen={isRoleModalOpen}
 				memberName={selectedMember?.name ?? ""}

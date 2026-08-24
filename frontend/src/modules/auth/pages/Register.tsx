@@ -4,19 +4,21 @@ import Button from "@/components/ui/Button"
 import Input from "@/components/ui/Input"
 import { useForm } from "react-hook-form"
 import { useNavigate } from "react-router-dom"
+import { useState } from "react"
+import FeedbackModal from "@/components/ui/FeedBackModal"
 
 const Register = () => {
 	const { register, handleSubmit, formState: { errors } } = useForm<RegisterUserProps>();
 	const navigate = useNavigate();
+	const [feedback, setFeedback] = useState<{ isOpen: boolean; type: "success" | "error"; title: string; message: string }>({ isOpen: false, type: "success", title: "", message: "" });
 
 	const onSubmit = async (data: RegisterUserProps) => {
 		try {
 			const response = await registerUser(data);
-			alert("User Registered Successfully.")
+			setFeedback({ isOpen: true, type: "success", title: "Registration Successful", message: "Your account has been created successfully." });
 			console.log(response.data);
-			navigate("/login");
 		} catch (error) {
-			console.log(error);
+			setFeedback({ isOpen: true, type: "error", title: "Registration Failed", message: "Unable to create your account. Please try again." });
 		}
 	}
 
@@ -66,6 +68,7 @@ const Register = () => {
 					</section>
 				</div>
 			</main>
+			<FeedbackModal {...feedback} onClose={() => { setFeedback((current) => ({ ...current, isOpen: false })); if (feedback.type === "success") navigate("/login"); }} />
 
 		</div>
 	)

@@ -3,11 +3,11 @@ import { useParams } from "react-router-dom";
 
 import { useProjectStore } from "@/store/project.store";
 import type { ProjectMemberProps } from "@/api/project.api";
-import ChangeProjectMemberRoleModal from "./ChangeProjectMemberRoleModal";
 import MemberToolbar from "@/components/members/MemberToolbar";
 import MemberTable, { type CommonMemberProps } from "@/components/members/MemberTable";
 import AddMemberModal from "@/components/members/AddMemberModal";
 import MemberRoleChange, { type MemberRole } from "@/components/members/MemberRoleChange";
+import FeedbackModal from "@/components/ui/FeedBackModal";
 
 const ProjectMembers = () => {
 	const [openMenuId, setOpenMenuId] = useState<string | null>(null);
@@ -17,6 +17,7 @@ const ProjectMembers = () => {
 	const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
 	const [isAddingMember, setIsAddingMember] = useState(false);
 	const [search, setSearch] = useState("");
+	const [feedback, setFeedback] = useState({ isOpen: false, type: "success" as "success" | "error", title: "", message: "" });
 
 	const {
 		organizationSlug,
@@ -98,6 +99,9 @@ const ProjectMembers = () => {
 
 			if (success) {
 				setIsAddMemberOpen(false);
+				setFeedback({ isOpen: true, type: "success", title: "Member Added", message: "The member was added to the project." });
+			} else {
+				setFeedback({ isOpen: true, type: "error", title: "Unable to Add Member", message: "The member could not be added to the project." });
 			}
 		} catch (error) {
 			console.error(
@@ -137,6 +141,7 @@ const ProjectMembers = () => {
 
 			setIsRoleModalOpen(false);
 			setSelectedMember(null);
+			setFeedback({ isOpen: true, type: "success", title: "Role Updated", message: "The project member role was updated." });
 		} finally {
 			setIsUpdatingRole(false);
 		}
@@ -163,12 +168,13 @@ const ProjectMembers = () => {
 
 		setOpenMenuId(null);
 
-		await removeProjectMember(
+		const removed = await removeProjectMember(
 			organizationSlug,
 			workspaceSlug,
 			projectSlug,
 			member.id,
 		);
+		setFeedback({ isOpen: true, type: removed ? "success" : "error", title: removed ? "Member Removed" : "Unable to Remove Member", message: removed ? "The member was removed from the project." : "The member could not be removed from the project." });
 	};
 
 	if (isProjectMembersLoading) {
@@ -216,6 +222,7 @@ const ProjectMembers = () => {
 				}}
 				onSubmit={(role) => handleChangeRole(role as "ADMIN" | "MEMBER")}
 			/>
+			<FeedbackModal {...feedback} onClose={() => setFeedback((current) => ({ ...current, isOpen: false }))} />
 		</div>
 	);
 };

@@ -86,7 +86,7 @@ export const createProject = async (
 	data: CreateProjectProps,
 ) => {
 	return api.post(
-		`/organizations/${organizationSlug}/workspaces/${workspaceSlug}`,
+		`/organizations/${organizationSlug}/workspaces/${workspaceSlug}/projects`,
 		data,
 	);
 };
