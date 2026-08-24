@@ -1,40 +1,56 @@
 import { useEffect, useState } from "react";
 
 import Button from "@/components/ui/Button";
-import { type WorkspaceMemberProps } from "@/api/workspace.api";
 
-interface ChangeWorkspaceMemberRoleModalProps {
+export type MemberRole =
+	| "OWNER"
+	| "ADMIN"
+	| "MEMBER";
+
+interface MemberRoleChangeProps {
 	isOpen: boolean;
-	member: WorkspaceMemberProps | null;
+	memberName: string;
+	currentRole: MemberRole;
+	roles: MemberRole[];
 	isSubmitting: boolean;
 	onClose: () => void;
-	onSubmit: (role: "ADMIN" | "MEMBER") => void;
+	onSubmit: (role: MemberRole) => void;
 }
 
-const ChangeWorkspaceMemberRoleModal = ({
+const MemberRoleChange = ({
 	isOpen,
-	member,
+	memberName,
+	currentRole,
+	roles,
 	isSubmitting,
 	onClose,
 	onSubmit,
-}: ChangeWorkspaceMemberRoleModalProps) => {
-	const [role, setRole] = useState<
-		"ADMIN" | "MEMBER"
-	>("MEMBER");
+}: MemberRoleChangeProps) => {
+	const [role, setRole] =
+		useState<MemberRole>(currentRole);
 
 	useEffect(() => {
-		if (member) {
-			setRole(
-				member.role === "ADMIN"
-					? "ADMIN"
-					: "MEMBER",
-			);
+		if (isOpen) {
+			setRole(currentRole);
 		}
-	}, [member]);
+	}, [isOpen, currentRole]);
 
-	if (!isOpen || !member) {
+	if (!isOpen) {
 		return null;
 	}
+
+	const getRoleLabel = (role: MemberRole) => {
+		switch (role) {
+			case "OWNER":
+				return "Owner";
+			case "ADMIN":
+				return "Admin";
+			case "MEMBER":
+				return "Member";
+			default:
+				return role;
+		}
+	};
 
 	return (
 		<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
@@ -45,9 +61,9 @@ const ChangeWorkspaceMemberRoleModal = ({
 					</h2>
 
 					<p className="mt-1 text-sm text-gray-500">
-						Change the workspace role for{" "}
+						Change the role for{" "}
 						<span className="font-medium text-gray-700">
-							{member.user.name}
+							{memberName}
 						</span>
 						.
 					</p>
@@ -55,27 +71,31 @@ const ChangeWorkspaceMemberRoleModal = ({
 
 				<div className="mt-6">
 					<label
-						htmlFor="workspace-member-role"
+						htmlFor="member-role"
 						className="text-sm font-medium text-gray-700"
 					>
 						Role
 					</label>
 
 					<select
-						id="workspace-member-role"
+						id="member-role"
 						value={role}
 						onChange={(event) =>
 							setRole(
-								event.target.value as
-								| "ADMIN"
-								| "MEMBER",
+								event.target.value as MemberRole,
 							)
 						}
 						disabled={isSubmitting}
 						className="mt-2 w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200 disabled:bg-gray-100"
 					>
-						<option value="MEMBER">Member</option>
-						<option value="ADMIN">Admin</option>
+						{roles.map((roleOption) => (
+							<option
+								key={roleOption}
+								value={roleOption}
+							>
+								{getRoleLabel(roleOption)}
+							</option>
+						))}
 					</select>
 				</div>
 
@@ -92,7 +112,10 @@ const ChangeWorkspaceMemberRoleModal = ({
 					<Button
 						type="button"
 						onClick={() => onSubmit(role)}
-						disabled={isSubmitting}
+						disabled={
+							isSubmitting ||
+							role === currentRole
+						}
 						className="w-auto"
 					>
 						{isSubmitting
@@ -105,4 +128,4 @@ const ChangeWorkspaceMemberRoleModal = ({
 	);
 };
 
-export default ChangeWorkspaceMemberRoleModal;
+export default MemberRoleChange;

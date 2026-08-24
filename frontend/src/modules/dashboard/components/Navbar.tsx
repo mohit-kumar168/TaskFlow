@@ -1,8 +1,7 @@
-import { PanelRightOpen, Plus, Settings } from "lucide-react";
-import { Link } from "react-router-dom";
+import { PanelRightOpen, Settings } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import TFlogo from "@/assets/taskflow-logo.png";
 import SearchInput from "@/components/ui/SearchInput";
-import Button from "@/components/ui/Button";
 import OrganizationSelector from "@/modules/organization/components/OrganizationSelector";
 import SettingsMenu from "../components/SettingsMenu";
 import { useState } from "react";
@@ -14,10 +13,17 @@ type NavbarProps = {
 
 const Navbar = ({ isSidebarOpen, onToggleSidebar }: NavbarProps) => {
 	const [isSettingsMenuOpen, setIsSettingsMenuOpen] = useState(false);
+	const [searchQuery, setSearchQuery] = useState("");
+	const navigate = useNavigate();
+
+	const handleSearch = () => {
+		const q = searchQuery.trim();
+		if (!q) return;
+		navigate(`/dashboard/search?q=${encodeURIComponent(q)}`);
+	};
 
 	return (
 		<header className="sticky top-0 z-50 flex h-16 items-center justify-between gap-2 border-b border-gray-300 bg-white px-2 sm:px-4 md:px-8">
-			{/* Left Section */}
 			<div className="flex min-w-0 items-center gap-2 sm:gap-4">
 				<button
 					type="button"
@@ -37,12 +43,20 @@ const Navbar = ({ isSidebarOpen, onToggleSidebar }: NavbarProps) => {
 				</Link>
 				<OrganizationSelector />
 			</div>
+
 			<div className="flex items-center gap-4">
 				<div className="hidden w-56 md:block lg:w-72">
-					<SearchInput placeholder="Search..." />
+					<SearchInput
+						placeholder="Search..."
+						value={searchQuery}
+						onChange={(e) => setSearchQuery(e.target.value)}
+						onKeyDown={(e) => {
+							if (e.key === "Enter") handleSearch();
+						}}
+					/>
 				</div>
 			</div>
-			{/* Right Section */}
+
 			<div className="flex items-center gap-3 md:gap-5">
 				<div className="relative">
 					<button
@@ -64,4 +78,5 @@ const Navbar = ({ isSidebarOpen, onToggleSidebar }: NavbarProps) => {
 		</header>
 	);
 };
+
 export default Navbar;

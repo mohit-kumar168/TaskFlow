@@ -120,6 +120,8 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
 	},
 
 	fetchWorkspace: async (organizationSlug, workspaceSlug) => {
+		const requestId = ++workspaceRequestId;
+
 		try {
 			set({
 				isLoading: true,
@@ -128,11 +130,19 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
 
 			const response = await getWorkspace(organizationSlug, workspaceSlug);
 
+			if (requestId !== workspaceRequestId) {
+				return;
+			}
+
 			set({
 				currentWorkspace: response.data.data,
 				isLoading: false,
 			});
 		} catch (error) {
+			if (requestId !== workspaceRequestId) {
+				return;
+			}
+
 			console.error("Failed to fetch workspace:", error);
 
 			set({

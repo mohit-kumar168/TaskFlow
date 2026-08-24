@@ -19,90 +19,95 @@ import ProjectPage from "@/modules/project/pages/ProjectPage";
 import UserSetting from "@/modules/dashboard/pages/UserSetting";
 import OrganizationSetting from "@/modules/organization/pages/OrganizationSetting";
 import AcceptInvitation from "@/modules/organization/components/AcceptInvitation";
+import DashboardSearchPage from "../modules/dashboard/pages/DashboardSearchPage";
 
 export const DashboardRoutes = [
-	{
-		element: <ProtectedRoute />,
-		children: [
-			{
-				element: <DashboardLayout />,
-				children: [
-					{
-						path: "/invitations/:token",
-						element: <AcceptInvitation />,
-					},
-					{
-						path: "/dashboard",
-						element: <Dashboard />,
-					},
-					{
-						path: "/settings",
-						element: <UserSetting />,
-					},
-					{
-						path: "/organizations/create",
-						element: <CreateOrganization />,
-					},
-					{
-						path: "/organizations/:organizationSlug/settings",
-						element: <OrganizationSetting />,
-					},
-					{
-						path: "/organizations/:organizationSlug/workspaces",
-						children: [
-							{
-								path: "create",
-								element: <CreateWorkspace />,
-							},
+  {
+    element: <ProtectedRoute />,
+    children: [
+      {
+        element: <DashboardLayout />,
+        children: [
+          {
+            path: "/invitations/:token",
+            element: <AcceptInvitation />,
+          },
+          {
+            path: "/dashboard",
+            element: <Dashboard />,
+          },
+          {
+            path: "/dashboard/search",
+            element: <DashboardSearchPage />,
+          },
+          {
+            path: "/settings",
+            element: <UserSetting />,
+          },
+          {
+            path: "/organizations/create",
+            element: <CreateOrganization />,
+          },
+          {
+            path: "/organizations/:organizationSlug/settings",
+            element: <OrganizationSetting />,
+          },
+          {
+            path: "/organizations/:organizationSlug/workspaces",
+            children: [
+              {
+                path: "create",
+                element: <CreateWorkspace />,
+              },
 
-							{
-								path: ":workspaceSlug",
-								element: <WorkspaceLayout />,
-								children: [
-									{
-										index: true,
-										element: <WorkspaceOverview />,
-									},
+              {
+                path: ":workspaceSlug",
+                element: <WorkspaceLayout />,
+                children: [
+                  {
+                    index: true,
+                    element: <WorkspaceOverview />,
+                  },
 
-									{
-										path: "members",
-										element: <WorkspaceMembers />,
-									},
+                  {
+                    path: "members",
+                    element: <WorkspaceMembers />,
+                  },
 
-									{
-										path: "projects/create",
-										element: <CreateProject />,
-									},
-								],
-							},
-							{
-								path: ":workspaceSlug/settings",
-								element: <WorkspaceSettings />,
-							},
-						],
-					},
-					{
-						path: "/organizations/:organizationSlug/workspaces/:workspaceSlug/projects/:projectSlug",
-						element: <ProjectLayout />,
-						children: [
-							{
-								index: true,
-								element: <ProjectPage />,
-							},
+                  {
+                    path: "projects/create",
+                    element: <CreateProject />,
+                  },
+                ],
+              },
+              {
+                path: ":workspaceSlug/settings",
+                element: <WorkspaceSettings />,
+              },
+            ],
+          },
+          {
+            path: "/organizations/:organizationSlug/workspaces/:workspaceSlug/projects/:projectSlug",
+            element: <ProjectLayout />,
+            children: [
+              {
+                index: true,
+                element: <ProjectPage />,
+              },
 
-							{
-								path: "board",
-								element: <ProjectBoard />,
-							},
+              {
+                path: "board",
+                element: <ProjectBoard />,
+              },
 
-							{
-								path: "members",
-								element: <ProjectMembers />,
-							},
-						],
-					},
-				],
-			},
-		],
-	},
+              {
+                path: "members",
+                element: <ProjectMembers />,
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  },
 ];

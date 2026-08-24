@@ -1,22 +1,23 @@
-import { useProjectStore } from "../../../store/project.store";
 import Button from "../../../components/ui/Button";
 import ProjectCard from "./ProjectCard";
 import { useNavigate, useParams } from "react-router";
+import type { ProjectProps } from "../../../api/project.api";
 
 
-const ProjectGrid = () => {
+const ProjectGrid = ({
+	projects,
+	isLoading,
+}: {
+	projects: ProjectProps[];
+	isLoading: boolean;
+}) => {
 	const { organizationSlug, workspaceSlug } = useParams<{
 		organizationSlug: string;
 		workspaceSlug: string;
 	}>();
-	const { projects, isLoading } = useProjectStore();
 	const navigate = useNavigate();
 	if (isLoading) {
-		return (
-			<div className="text-center py-10">
-				Loading Projects...
-			</div>
-		);
+		return <div className="py-10 text-center">Loading Projects...</div>;
 	}
 
 	if (projects.length === 0) {

@@ -17,7 +17,14 @@ const WorkspaceOverview = () => {
 
   const { fetchWorkspace, currentWorkspace, isLoading } = useWorkspaceStore();
 
-  const { fetchProjects, projects } = useProjectStore();
+  const { fetchProjects, projectsByWorkspace, projectsLoadingByWorkspace } = useProjectStore();
+
+  const workspaceProjects = workspaceSlug
+    ? projectsByWorkspace[workspaceSlug] ?? []
+    : [];
+  const areProjectsLoading = workspaceSlug
+    ? projectsLoadingByWorkspace[workspaceSlug] ?? false
+    : false;
 
   useEffect(() => {
     if (!organizationSlug || !workspaceSlug) {
@@ -38,9 +45,9 @@ const WorkspaceOverview = () => {
       <WorkspaceToolbar view={view} onViewChange={setView} />
       <div className="mt-6">
         {view === "grid" ? (
-          <ProjectGrid />
+          <ProjectGrid projects={workspaceProjects} isLoading={areProjectsLoading} />
         ) : (
-          <ProjectList projects={projects} />
+          <ProjectList projects={workspaceProjects} />
         )}
       </div>
     </>
