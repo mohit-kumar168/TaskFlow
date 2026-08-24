@@ -6,6 +6,7 @@ import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 
 import { useWorkspaceStore } from "@/store/workspace.store";
+import { useNavigate } from "react-router-dom";
 
 interface WorkspaceSettingsModalProps {
 	isOpen: boolean;
@@ -27,6 +28,8 @@ const WorkspaceSettingsModal = ({
 	workspaceSlug,
 	onDeleted,
 }: WorkspaceSettingsModalProps) => {
+	const navigate = useNavigate();
+
 	const {
 		currentWorkspace,
 		updateWorkspace,
@@ -141,6 +144,7 @@ const WorkspaceSettingsModal = ({
 			onDeleted();
 		} finally {
 			setIsDeleting(false);
+			navigate(-1);
 		}
 	};
 

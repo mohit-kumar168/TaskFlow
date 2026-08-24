@@ -22,11 +22,6 @@ const sidebarItems: SidebarItem[] = [
 		icon: LayoutDashboard,
 		to: "/dashboard",
 	},
-	{
-		name: "My Tasks",
-		icon: ListTodo,
-		to: "/issues",
-	},
 ];
 
 const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
