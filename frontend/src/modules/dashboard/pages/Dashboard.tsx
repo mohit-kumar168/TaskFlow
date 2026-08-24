@@ -98,17 +98,10 @@ const Dashboard = () => {
 
 	return (
 		<div className="space-y-8 p-6">
-			<div>
 				<h1 className="text-xl font-semibold text-gray-900">
 					Welcome back
 					{user?.name ? `, ${user.name}` : ""}
 				</h1>
-
-				<p className="mt-1 text-sm text-gray-500">
-					Here's what's happening across your
-					workspaces and projects.
-				</p>
-			</div>
 
 			<div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
 				<div className="rounded-xl border border-gray-200 bg-white p-5">
@@ -185,15 +178,9 @@ const Dashboard = () => {
 			</div>
 
 			<div>
-				<div className="mb-4">
-					<h2 className="text-base font-semibold text-gray-900">
+					<h2 className="mb-4 text-base font-semibold text-gray-900">
 						Projects
 					</h2>
-
-					<p className="mt-1 text-sm text-gray-500">
-						Your projects across all workspaces.
-					</p>
-				</div>
 
 				{isLoading ? (
 					<div className="rounded-xl border border-gray-200 bg-white p-8 text-center">

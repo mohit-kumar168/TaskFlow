@@ -16,10 +16,19 @@ const WorkspaceHeader = () => {
 		workspaceSlug: string;
 	}>();
 
-	const { currentWorkspace } = useWorkspaceStore();
+	const { currentWorkspace, isLoading } = useWorkspaceStore();
 
-	if (!currentWorkspace || !organizationSlug || !workspaceSlug) {
+	if (!organizationSlug || !workspaceSlug) {
 		return null;
+	}
+
+	if (!currentWorkspace) {
+		return (
+			<header className="border-b border-gray-200 bg-white px-5 py-5 sm:px-6">
+				<div className="h-5 w-48 animate-pulse rounded bg-gray-200" />
+				{isLoading && <div className="mt-2 h-3 w-72 animate-pulse rounded bg-gray-100" />}
+			</header>
+		);
 	}
 
 	const workspaceBasePath = `/organizations/${organizationSlug}/workspaces/${workspaceSlug}`;

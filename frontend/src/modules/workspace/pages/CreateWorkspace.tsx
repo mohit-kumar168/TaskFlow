@@ -7,6 +7,7 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate, useParams } from "react-router-dom";
+import FeedbackModal from "@/components/ui/FeedBackModal";
 
 interface CreateWorkspaceForm {
   name: string;
@@ -17,6 +18,8 @@ const CreateWorkspace = () => {
   const navigate = useNavigate();
   const { organizationSlug } = useParams<{ organizationSlug: string }>();
   const { createWorkspace, isLoading } = useWorkspaceStore();
+  const [feedback, setFeedback] = useState<{ isOpen: boolean; type: "success" | "error"; title: string; message: string }>({ isOpen: false, type: "success", title: "", message: "" });
+  const [createdWorkspaceSlug, setCreatedWorkspaceSlug] = useState<string | null>(null);
 
   const {
     register,
@@ -27,17 +30,20 @@ const CreateWorkspace = () => {
   const onSubmit = async (data: CreateWorkspaceForm) => {
     try {
       if (!organizationSlug) {
-        console.error("Please select an organization first.");
+				setFeedback({ isOpen: true, type: "error", title: "Workspace Creation Failed", message: "Please select an organization first." });
         return;
       }
 
       const response = await createWorkspace(organizationSlug, data);
 
-      navigate(
-        `/organizations/${organizationSlug}/workspaces/${response?.slug}`,
-      );
-    } catch (error) {
-      console.error(error);
+      if (!response) {
+      setFeedback({ isOpen: true, type: "error", title: "Workspace Creation Failed", message: "Unable to create the workspace. Please try again." });
+      return;
+    }
+    setCreatedWorkspaceSlug(response.slug);
+    setFeedback({ isOpen: true, type: "success", title: "Workspace Created", message: "Your workspace was created successfully." });
+      } catch (error) {
+      setFeedback({ isOpen: true, type: "error", title: "Workspace Creation Failed", message: "Unable to create the workspace. Please try again." });
     }
   };
 
@@ -123,6 +129,7 @@ const CreateWorkspace = () => {
           </div>
         </form>
       </div>
+    <FeedbackModal {...feedback} onClose={() => { setFeedback((current) => ({ ...current, isOpen: false })); if (feedback.type === "success" && createdWorkspaceSlug && organizationSlug) navigate(`/organizations/${organizationSlug}/workspaces/${createdWorkspaceSlug}`); }} />
     </div>
   );
 };

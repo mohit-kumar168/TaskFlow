@@ -5,6 +5,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import { useProjectStore } from "@/store/project.store";
+import FeedbackModal from "@/components/ui/FeedBackModal";
+import { useState } from "react";
 
 interface CreateProjectForm {
 	name: string;
@@ -23,6 +25,8 @@ const CreateProject = () => {
 	}>();
 
 	const { createProject, isLoading } = useProjectStore();
+	const [feedback, setFeedback] = useState<{ isOpen: boolean; type: "success" | "error"; title: string; message: string }>({ isOpen: false, type: "success", title: "", message: "" });
+	const [createdProjectSlug, setCreatedProjectSlug] = useState<string | null>(null);
 
 	const {
 		register,
@@ -40,6 +44,7 @@ const CreateProject = () => {
 
 	const onSubmit = async (data: CreateProjectForm) => {
 		if (!organizationSlug || !workspaceSlug) {
+			setFeedback({ isOpen: true, type: "error", title: "Project Creation Failed", message: "Workspace information is missing." });
 			return;
 		}
 
@@ -57,12 +62,11 @@ const CreateProject = () => {
 		console.log("Created project:", project);
 
 		if (!project) {
+			setFeedback({ isOpen: true, type: "error", title: "Project Creation Failed", message: "Unable to create the project. Please try again." });
 			return;
 		}
-
-		navigate(
-			`/organizations/${organizationSlug}/workspaces/${workspaceSlug}/projects/${project.slug}`,
-		);
+		setCreatedProjectSlug(project.slug);
+		setFeedback({ isOpen: true, type: "success", title: "Project Created", message: "Your project was created successfully." });
 	};
 
 	return (
@@ -213,6 +217,7 @@ const CreateProject = () => {
 					</div>
 				</form>
 			</div>
+			<FeedbackModal {...feedback} onClose={() => { setFeedback((current) => ({ ...current, isOpen: false })); if (feedback.type === "success" && createdProjectSlug && organizationSlug && workspaceSlug) navigate(`/organizations/${organizationSlug}/workspaces/${workspaceSlug}/projects/${createdProjectSlug}`); }} />
 		</div>
 	);
 };

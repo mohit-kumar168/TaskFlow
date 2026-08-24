@@ -6,6 +6,7 @@ import Input from "@/components/ui/Input";
 
 import { useOrganizationStore } from "@/store/organization.store";
 import { useNavigate } from "react-router-dom";
+import FeedbackModal from "@/components/ui/FeedBackModal";
 
 type OrganizationFormData = {
 	name: string;
@@ -29,6 +30,7 @@ const OrganizationGeneralSettings = () => {
 		type: "success" | "error";
 		text: string;
 	} | null>(null);
+	const [feedback, setFeedback] = useState({ isOpen: false, type: "success" as "success" | "error", title: "", message: "", shouldNavigate: false });
 
 	const {
 		register,
@@ -71,6 +73,7 @@ const OrganizationGeneralSettings = () => {
 			);
 
 		if (!updatedOrganization) {
+			setFeedback({ isOpen: true, type: "error", title: "Update Failed", message: "Unable to update the organization.", shouldNavigate: false });
 			setMessage({
 				type: "error",
 				text: "Failed to update organization.",
@@ -85,6 +88,7 @@ const OrganizationGeneralSettings = () => {
 			type: "success",
 			text: "Organization updated successfully.",
 		});
+		setFeedback({ isOpen: true, type: "success", title: "Organization Updated", message: "Organization updated successfully.", shouldNavigate: false });
 	};
 
 	const handleCancelEdit = () => {
@@ -117,6 +121,7 @@ const OrganizationGeneralSettings = () => {
 			const deleted = await archiveOrganization(currentOrganization.slug);
 
 			if (!deleted) {
+				setFeedback({ isOpen: true, type: "error", title: "Deletion Failed", message: "Unable to delete the organization.", shouldNavigate: false });
 				setMessage({
 					type: "error",
 					text: "Failed to delete organization."
@@ -124,9 +129,9 @@ const OrganizationGeneralSettings = () => {
 
 				return;
 			}
+			setFeedback({ isOpen: true, type: "success", title: "Organization Deleted", message: "Organization deleted successfully.", shouldNavigate: true });
 		} finally {
 			setIsDeleting(false);
-			navigate("/dashboard");
 		}
 	};
 
@@ -292,6 +297,7 @@ const OrganizationGeneralSettings = () => {
 					{message.text}
 				</p>
 			)}
+			<FeedbackModal {...feedback} onClose={() => { setFeedback((current) => ({ ...current, isOpen: false })); if (feedback.shouldNavigate) navigate("/dashboard"); }} />
 		</div>
 	);
 };

@@ -7,6 +7,9 @@ import { type OrganizationMemberProps } from "@/api/organization.api";
 import InviteMemberModal from "./InviteMemberModal";
 import ChangeOrganizationMemberRoleModal from "./ChangeOrganizationMemberRoleModal";
 import RemoveOrganizationMemberModal from "./RemoveOrganizationMemberModal";
+import MemberToolbar from "@/components/members/MemberToolbar";
+import MemberTable, { type CommonMemberProps } from "@/components/members/MemberTable";
+import FeedbackModal from "@/components/ui/FeedBackModal";
 
 const OrganizationMembers = () => {
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
@@ -22,6 +25,7 @@ const OrganizationMembers = () => {
   const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
 
   const [isUpdatingRole, setIsUpdatingRole] = useState(false);
+  const [feedback, setFeedback] = useState({ isOpen: false, type: "success" as "success" | "error", title: "", message: "" });
 
   const { organizationSlug } = useParams<{
     organizationSlug: string;
@@ -62,6 +66,15 @@ const OrganizationMembers = () => {
       );
     });
   }, [organizationMembers, search]);
+
+  const commonMembers: CommonMemberProps[] = filteredMembers.map((member) => ({
+    id: member.id,
+    name: member.user.name,
+    email: member.user.email,
+    role: member.role,
+    status: member.status,
+    joinedAt: member.joinedAt,
+  }));
 
   const handleRemoveMember = (member: OrganizationMemberProps) => {
     setSelectedMember(member);
@@ -113,6 +126,7 @@ const OrganizationMembers = () => {
 
       setInvitationUrl(inviteUrl);
       setIsInviteModalOpen(false);
+		  setFeedback({ isOpen: true, type: "success", title: "Invitation Sent", message: "The organization invitation was created successfully." });
     } finally {
       setIsInviting(false);
     }
@@ -138,6 +152,7 @@ const OrganizationMembers = () => {
 
       setIsRoleModalOpen(false);
       setSelectedMember(null);
+		  setFeedback({ isOpen: true, type: "success", title: "Role Updated", message: "The organization member role was updated." });
     } finally {
       setIsUpdatingRole(false);
     }
@@ -150,27 +165,30 @@ const OrganizationMembers = () => {
   return (
     <>
       <div className="space-y-6">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div className="relative w-full md:w-80">
-            <input
-              type="text"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search members..."
-              className="w-full rounded-lg border border-gray-300 py-3 px-4 outline-none focus:border-orange-500"
-            />
-          </div>
+		<MemberToolbar search={search} onSearchChange={setSearch} onAddMember={() => setIsInviteModalOpen(true)} addLabel="Invite Member" />
 
-          <button
-            type="button"
-            onClick={() => setIsInviteModalOpen(true)}
-            className="rounded-lg bg-orange-500 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-orange-600"
-          >
-            Invite Member
-          </button>
+		<div className="relative">
+		  <MemberTable
+		    members={commonMembers}
+		    showStatus
+		    onChangeRole={(member) => {
+		      setSelectedMember(organizationMembers.find((item) => item.id === member.id) ?? null);
+		      setIsRoleModalOpen(true);
+		    }}
+		    onRemove={(member) => {
+		      const original = organizationMembers.find((item) => item.id === member.id);
+		      if (original) handleRemoveMember(original);
+		    }}
+		    canManage={(member) => member.role !== "OWNER"}
+		  />
+          <InviteMemberModal
+            isOpen={isInviteModalOpen}
+            isSubmitting={isInviting}
+            onClose={() => setIsInviteModalOpen(false)}
+            onSubmit={handleInviteMember}
+          />
         </div>
-
-        <div className="relative rounded-xl border border-gray-200 bg-white shadow-sm">
+        {false && <div className="relative rounded-xl border border-gray-200 bg-white shadow-sm">
           <table className="w-full">
             <thead className="bg-gray-50">
               <tr>
@@ -282,7 +300,7 @@ const OrganizationMembers = () => {
             onClose={() => setIsInviteModalOpen(false)}
             onSubmit={handleInviteMember}
           />
-        </div>
+        </div>}
 
         {filteredMembers.length === 0 && (
           <div className="py-10 text-center text-sm text-gray-500">
@@ -312,6 +330,7 @@ const OrganizationMembers = () => {
         }}
         onConfirm={handleConfirmRemove}
       />
+  		<FeedbackModal {...feedback} onClose={() => setFeedback((current) => ({ ...current, isOpen: false }))} />
     </>
   );
 };

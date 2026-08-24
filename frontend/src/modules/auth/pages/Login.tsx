@@ -5,11 +5,14 @@ import Input from "@/components/ui/Input"
 import { useAuthStore } from "@/store/auth.store"
 import { useForm } from "react-hook-form"
 import { useNavigate } from "react-router-dom"
+import { useState } from "react"
+import FeedbackModal from "@/components/ui/FeedBackModal"
 
 const Login = () => {
 	const { register, handleSubmit, formState: { errors } } = useForm<LoginUserProps>();
 	const navigate = useNavigate();
 	const { setUser } = useAuthStore();
+	const [feedback, setFeedback] = useState<{ isOpen: boolean; type: "success" | "error"; title: string; message: string }>({ isOpen: false, type: "success", title: "", message: "" });
 
 	const onSubmit = async (data: LoginUserProps) => {
 		try {
@@ -18,7 +21,7 @@ const Login = () => {
 			navigate(`/dashboard`);
 
 		} catch (error) {
-			console.log(error);
+			setFeedback({ isOpen: true, type: "error", title: "Login Failed", message: "Unable to sign in. Please check your credentials and try again." });
 		}
 	}
 
@@ -63,6 +66,7 @@ const Login = () => {
 					<OrangePanel title="Welcome to TaskFlow!" subtitle="Create an account and start managing your projects with your team." navigateTo="/register" buttonText="Create Account" />
 				</div>
 			</main>
+			<FeedbackModal {...feedback} onClose={() => setFeedback((current) => ({ ...current, isOpen: false }))} />
 		</div>
 	)
 }

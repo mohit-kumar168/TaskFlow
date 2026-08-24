@@ -6,6 +6,7 @@ import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 
 import { useProjectStore } from "@/store/project.store";
+import FeedbackModal from "@/components/ui/FeedBackModal";
 
 type ProjectSettingsFormData = {
 	name: string;
@@ -38,6 +39,7 @@ const ProjectSettings = ({
 		type: "success" | "error";
 		text: string;
 	} | null>(null);
+	const [feedback, setFeedback] = useState({ isOpen: false, type: "success" as "success" | "error", title: "", message: "" });
 
 	const [isArchiving, setIsArchiving] = useState(false);
 
@@ -82,6 +84,7 @@ const ProjectSettings = ({
 		);
 
 		if (!updatedProject) {
+			setFeedback({ isOpen: true, type: "error", title: "Update Failed", message: "Unable to update the project." });
 			setMessage({
 				type: "error",
 				text: "Failed to update project.",
@@ -99,6 +102,7 @@ const ProjectSettings = ({
 			type: "success",
 			text: "Project updated successfully.",
 		});
+		setFeedback({ isOpen: true, type: "success", title: "Project Updated", message: "Project updated successfully." });
 	};
 
 	const handleArchive = async () => {
@@ -121,6 +125,7 @@ const ProjectSettings = ({
 			);
 
 			if (!deleted) {
+				setFeedback({ isOpen: true, type: "error", title: "Deletion Failed", message: "Unable to delete the project." });
 				setMessage({
 					type: "error",
 					text: "Failed to delete project.",
@@ -128,6 +133,7 @@ const ProjectSettings = ({
 
 				return;
 			}
+			setFeedback({ isOpen: true, type: "success", title: "Project Deleted", message: "Project deleted successfully." });
 
 			onClose();
 		} finally {
@@ -277,6 +283,7 @@ const ProjectSettings = ({
 					</div>
 				</form>
 			</div>
+			<FeedbackModal {...feedback} onClose={() => setFeedback((current) => ({ ...current, isOpen: false }))} />
 		</div>
 	);
 };
