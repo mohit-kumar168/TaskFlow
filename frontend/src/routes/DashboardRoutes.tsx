@@ -1,4 +1,4 @@
-import DashboardLayout from "@/layouts/DashboardLayout";
+import DashboardLayout from "../layouts/DashboardLayout";
 import ProtectedRoute from "./ProtectedRoute";
 
 import Dashboard from "@/modules/dashboard/pages/Dashboard";

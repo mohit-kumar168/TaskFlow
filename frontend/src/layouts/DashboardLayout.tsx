@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import Navbar from "@/modules/dashboard/components/Navbar";
-import Sidebar from "@/modules/dashboard/components/Sidebar";
+import Sidebar from "../modules/dashboard/components/Sidebar";
 import { Outlet } from "react-router-dom";
 import { useOrganizationStore } from "@/store/organization.store";
 
