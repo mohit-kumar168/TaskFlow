@@ -8,41 +8,46 @@ import organizationRoutes from "./modules/organization/organization.routes";
 import workspaceRoutes from "./modules/workspaces/workspace.routes";
 import projectRoutes from "./modules/projects/project.routes";
 import issueRoutes from "./modules/issues/issue.routes";
+import sprintRoutes from "./modules/sprints/sprint.routes";
 
 const app = express();
 
 app.use(cors({
-	origin: process.env.FRONTEND_URL,
-	credentials: true,
+  origin: process.env.FRONTEND_URL,
+  credentials: true,
 }));
 app.use(express.json());
 app.use(cookieParser());
 
 app.use(
-	"/api/auth",
-	authRoutes
+  "/api/auth",
+  authRoutes
 );
 
 app.use(
-	"/api/organizations",
-	organizationRoutes
+  "/api/organizations",
+  organizationRoutes
 );
 
 app.use(
-	"/api/organizations/:organizationSlug/workspaces",
-	workspaceRoutes
+  "/api/organizations/:organizationSlug/workspaces",
+  workspaceRoutes
 );
 
 app.use(
-	"/api/organizations/:organizationSlug/workspaces/:workspaceSlug/projects",
-	projectRoutes
+  "/api/organizations/:organizationSlug/workspaces/:workspaceSlug/projects",
+  projectRoutes
 );
 
 app.use(
-	"/api/organizations/:organizationSlug/workspaces/:workspaceSlug/projects/:projectSlug/issues",
-	issueRoutes
+  "/api/organizations/:organizationSlug/workspaces/:workspaceSlug/projects/:projectSlug/issues",
+  issueRoutes
 );
 
+app.use(
+  "/api/organizations/:organizationSlug/workspaces/:workspaceSlug/projects/:projectSlug/sprints",
+  sprintRoutes,
+);
 
 app.use(errorMiddleware);
 
