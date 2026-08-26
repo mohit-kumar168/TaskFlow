@@ -1,22 +1,23 @@
 export interface RegisterWithCredentialsInput {
-	name: string;
-	email: string;
-	password: string;
-	bio?: string;
-	avatarUrl?: string;
+  name: string;
+  email: string;
+  password: string;
+  bio?: string;
+  avatarUrl?: string;
 }
 
 export interface LoginWithCredentialsInput {
-	email: string;
-	password: string;
+  email: string;
+  password: string;
 }
 
 export interface ChangePasswordInput {
-	currentPassword: string;
-	newPassword: string;
+  currentPassword: string;
+  newPassword: string;
 }
 
-export interface updateProfileInput {
-	name?: string;
-	bio?: string;
+export interface UpdateProfileInput {
+  name?: string;
+  bio?: string;
+  avatarUrl?: string;
 }
