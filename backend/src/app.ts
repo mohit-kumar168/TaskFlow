@@ -8,6 +8,7 @@ import organizationRoutes from "./modules/organization/organization.routes";
 import workspaceRoutes from "./modules/workspaces/workspace.routes";
 import projectRoutes from "./modules/projects/project.routes";
 import issueRoutes from "./modules/issues/issue.routes";
+import commentRoutes from "./modules/comments/comment.routes";
 import sprintRoutes from "./modules/sprints/sprint.routes";
 
 const app = express();
@@ -42,6 +43,11 @@ app.use(
 app.use(
   "/api/organizations/:organizationSlug/workspaces/:workspaceSlug/projects/:projectSlug/issues",
   issueRoutes
+);
+
+app.use(
+  "/api/organizations/:organizationSlug/workspaces/:workspaceSlug/projects/:projectSlug/issues/:issueId/comments",
+  commentRoutes,
 );
 
 app.use(

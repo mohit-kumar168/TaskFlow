@@ -1,15 +1,15 @@
 import apiError from "@/utils/apiError";
 
 import {
-	IssueStatus,
-	MembershipStatus,
-	ProjectRole,
+  IssueStatus,
+  MembershipStatus,
+  ProjectRole,
 } from "@/generated/prisma/enums";
 
 import type {
-	CreateIssueInput,
-	MoveIssueInput,
-	UpdateIssueInput,
+  CreateIssueInput,
+  MoveIssueInput,
+  UpdateIssueInput,
 } from "./issue.types";
 
 import * as issueRepository from "./issue.repository";
@@ -19,546 +19,572 @@ import * as organizationRepository from "@/modules/organization/organization.rep
 import * as authRepository from "@/modules/auth/auth.repository";
 
 export const createIssue = async (organizationSlug: string, workspaceSlug: string, projectSlug: string, userId: string, data: CreateIssueInput) => {
-	const organization = await organizationRepository.findOrganizationBySlug(organizationSlug, userId);
-	if (!organization) {
-		throw new apiError(404, "Organization not found.");
-	}
+  const organization = await organizationRepository.findOrganizationBySlug(organizationSlug, userId);
+  if (!organization) {
+    throw new apiError(404, "Organization not found.");
+  }
 
-	const workspace = await workspaceRepository.findWorkspaceBySlug(organization.id, workspaceSlug, userId);
-	if (!workspace) {
-		throw new apiError(404, "Workspace not found.");
-	}
+  const workspace = await workspaceRepository.findWorkspaceBySlug(organization.id, workspaceSlug, userId);
+  if (!workspace) {
+    throw new apiError(404, "Workspace not found.");
+  }
 
-	const project = await projectRepository.findProjectBySlug(workspace.id, userId, projectSlug);
-	if (!project) {
-		throw new apiError(404, "Project not found.");
-	}
+  const project = await projectRepository.findProjectBySlug(workspace.id, userId, projectSlug);
+  if (!project) {
+    throw new apiError(404, "Project not found.");
+  }
 
-	const projectMember = await projectRepository.findProjectMemberByUserId(project.id, userId);
-	if (!projectMember) {
-		throw new apiError(404, "You don't have permission to create issue.");
-	}
+  const projectMember = await projectRepository.findProjectMemberByUserId(project.id, userId);
+  if (!projectMember) {
+    throw new apiError(404, "You don't have permission to create issue.");
+  }
 
-	const board = await projectRepository.findBoardByProjectId(project.id);
-	if (!board) {
-		throw new apiError(404, "Board not found.");
-	}
+  const board = await projectRepository.findBoardByProjectId(project.id);
+  if (!board) {
+    throw new apiError(404, "Board not found.");
+  }
 
-	let column;
+  let column;
 
-	if (data.columnId) {
-		column = await projectRepository.findBoardColumnById(board.id, data.columnId);
-		if (!column) {
-			throw new apiError(404, "Board column not found.");
-		}
-	} else {
-		const columns = await projectRepository.fetchBoardColumns(board.id);
+  if (data.columnId) {
+    column = await projectRepository.findBoardColumnById(board.id, data.columnId);
+    if (!column) {
+      throw new apiError(404, "Board column not found.");
+    }
+  } else {
+    const columns = await projectRepository.fetchBoardColumns(board.id);
 
-		column = columns.find((col) => col.name === "Todo");
+    column = columns.find((col) => col.name === "Todo");
 
-		if (!column) {
-			throw new apiError(404, "Todo column not found.");
-		}
-	}
+    if (!column) {
+      throw new apiError(404, "Todo column not found.");
+    }
+  }
 
-	let assigneeId;
+  let assigneeId;
 
-	if (data.email) {
-		const assignee = await authRepository.findUserByEmail(data.email);
-		if (!assignee) {
-			throw new apiError(404, "Assignee not found.");
-		}
+  if (data.email) {
+    const assignee = await authRepository.findUserByEmail(data.email);
+    if (!assignee) {
+      throw new apiError(404, "Assignee not found.");
+    }
 
-		const assigneeProjectMember = await projectRepository.findProjectMemberByUserId(project.id, assignee.id);
-		if (!assigneeProjectMember) {
-			throw new apiError(404, "Assignee is not a member of this project.");
-		}
+    const assigneeProjectMember = await projectRepository.findProjectMemberByUserId(project.id, assignee.id);
+    if (!assigneeProjectMember) {
+      throw new apiError(404, "Assignee is not a member of this project.");
+    }
 
-		assigneeId = assignee.id;
-	}
+    assigneeId = assignee.id;
+  }
 
-	const issues =
-		await issueRepository.fetchAllIssuesForKeyGeneration(
-			project.id,
-		);
+  let sprintId: string | undefined;
 
-	const activeColumnIssues = issues.filter(
-		(issue) =>
-			issue.columnId === column.id &&
-			!issue.isArchived,
-	);
+  if (data.sprintId) {
+    const sprint = await issueRepository.findSprintById(project.id, data.sprintId);
 
-	const position = activeColumnIssues.length;
+    if (!sprint) {
+      throw new apiError(404, "Sprint not found in this project.");
+    }
 
-	const issueNumbers = issues
-		.map((issue) => {
-			const [, number] = issue.issueKey.split("-");
-			return Number(number);
-		})
-		.filter((number) => Number.isInteger(number));
+    sprintId = sprint.id;
+  }
 
-	const nextIssueNumber =
-		issueNumbers.length > 0
-			? Math.max(...issueNumbers) + 1
-			: 1;
+  const issues =
+    await issueRepository.fetchAllIssuesForKeyGeneration(
+      project.id,
+    );
 
-	const issueKey = `${project.key}-${nextIssueNumber}`;
+  const activeColumnIssues = issues.filter(
+    (issue) =>
+      issue.columnId === column.id &&
+      !issue.isArchived,
+  );
 
-	console.log("Project ID:", project.id);
-	console.log("Project Key:", project.key);
-	console.log(
-		"Existing issues:",
-		issues.map((issue) => issue.issueKey),
-	);
-	console.log("Issue numbers:", issueNumbers);
-	console.log("Next issue number:", nextIssueNumber);
-	console.log("Generated issue key:", issueKey);
+  const position = activeColumnIssues.length;
 
-	const existingIssue = await issueRepository.findIssueByKey(project.id, issueKey);
+  const issueNumbers = issues
+    .map((issue) => {
+      const [, number] = issue.issueKey.split("-");
+      return Number(number);
+    })
+    .filter((number) => Number.isInteger(number));
 
-	if (existingIssue) {
-		console.log("COLLISION:", existingIssue);
-		throw new apiError(409, "Unable to generate a unique issue key.");
-	}
+  const nextIssueNumber =
+    issueNumbers.length > 0
+      ? Math.max(...issueNumbers) + 1
+      : 1;
 
-	return await issueRepository.createIssue(project.id, column.id, userId, issueKey, position, data, assigneeId);
+  const issueKey = `${project.key}-${nextIssueNumber}`;
+
+  console.log("Project ID:", project.id);
+  console.log("Project Key:", project.key);
+  console.log(
+    "Existing issues:",
+    issues.map((issue) => issue.issueKey),
+  );
+  console.log("Issue numbers:", issueNumbers);
+  console.log("Next issue number:", nextIssueNumber);
+  console.log("Generated issue key:", issueKey);
+
+  const existingIssue = await issueRepository.findIssueByKey(project.id, issueKey);
+
+  if (existingIssue) {
+    console.log("COLLISION:", existingIssue);
+    throw new apiError(409, "Unable to generate a unique issue key.");
+  }
+
+  return await issueRepository.createIssue(project.id, column.id, userId, issueKey, position, data, assigneeId, sprintId);
 };
 
 export const fetchAllIssues = async (
-	organizationSlug: string,
-	workspaceSlug: string,
-	projectSlug: string,
-	userId: string,
+  organizationSlug: string,
+  workspaceSlug: string,
+  projectSlug: string,
+  userId: string,
 ) => {
-	const organization =
-		await organizationRepository.findOrganizationBySlug(
-			organizationSlug,
-			userId,
-		);
+  const organization =
+    await organizationRepository.findOrganizationBySlug(
+      organizationSlug,
+      userId,
+    );
 
-	if (!organization) {
-		throw new apiError(404, "Organization not found.");
-	}
+  if (!organization) {
+    throw new apiError(404, "Organization not found.");
+  }
 
-	const workspace =
-		await workspaceRepository.findWorkspaceBySlug(
-			organization.id,
-			workspaceSlug,
-			userId,
-		);
+  const workspace =
+    await workspaceRepository.findWorkspaceBySlug(
+      organization.id,
+      workspaceSlug,
+      userId,
+    );
 
-	if (!workspace) {
-		throw new apiError(404, "Workspace not found.");
-	}
+  if (!workspace) {
+    throw new apiError(404, "Workspace not found.");
+  }
 
-	const project =
-		await projectRepository.findProjectBySlug(
-			workspace.id,
-			userId,
-			projectSlug,
-		);
+  const project =
+    await projectRepository.findProjectBySlug(
+      workspace.id,
+      userId,
+      projectSlug,
+    );
 
-	if (!project) {
-		throw new apiError(404, "Project not found.");
-	}
+  if (!project) {
+    throw new apiError(404, "Project not found.");
+  }
 
-	const projectMember =
-		await projectRepository.findProjectMemberByUserId(
-			project.id,
-			userId,
-		);
+  const projectMember =
+    await projectRepository.findProjectMemberByUserId(
+      project.id,
+      userId,
+    );
 
-	if (!projectMember) {
-		throw new apiError(
-			403,
-			"You don't have access to this project.",
-		);
-	}
+  if (!projectMember) {
+    throw new apiError(
+      403,
+      "You don't have access to this project.",
+    );
+  }
 
-	return await issueRepository.fetchAllIssues(
-		project.id,
-	);
+  return await issueRepository.fetchAllIssues(
+    project.id,
+  );
 };
 
 export const fetchIssue = async (
-	organizationSlug: string,
-	workspaceSlug: string,
-	projectSlug: string,
-	userId: string,
-	issueId: string,
+  organizationSlug: string,
+  workspaceSlug: string,
+  projectSlug: string,
+  userId: string,
+  issueId: string,
 ) => {
-	const organization =
-		await organizationRepository.findOrganizationBySlug(
-			organizationSlug,
-			userId,
-		);
+  const organization =
+    await organizationRepository.findOrganizationBySlug(
+      organizationSlug,
+      userId,
+    );
 
-	if (!organization) {
-		throw new apiError(404, "Organization not found.");
-	}
+  if (!organization) {
+    throw new apiError(404, "Organization not found.");
+  }
 
-	const workspace =
-		await workspaceRepository.findWorkspaceBySlug(
-			organization.id,
-			workspaceSlug,
-			userId,
-		);
+  const workspace =
+    await workspaceRepository.findWorkspaceBySlug(
+      organization.id,
+      workspaceSlug,
+      userId,
+    );
 
-	if (!workspace) {
-		throw new apiError(404, "Workspace not found.");
-	}
+  if (!workspace) {
+    throw new apiError(404, "Workspace not found.");
+  }
 
-	const project =
-		await projectRepository.findProjectBySlug(
-			workspace.id,
-			userId,
-			projectSlug,
-		);
+  const project =
+    await projectRepository.findProjectBySlug(
+      workspace.id,
+      userId,
+      projectSlug,
+    );
 
-	if (!project) {
-		throw new apiError(404, "Project not found.");
-	}
+  if (!project) {
+    throw new apiError(404, "Project not found.");
+  }
 
-	const projectMember =
-		await projectRepository.findProjectMemberByUserId(
-			project.id,
-			userId,
-		);
+  const projectMember =
+    await projectRepository.findProjectMemberByUserId(
+      project.id,
+      userId,
+    );
 
-	if (!projectMember) {
-		throw new apiError(
-			403,
-			"You don't have access to this project.",
-		);
-	}
+  if (!projectMember) {
+    throw new apiError(
+      403,
+      "You don't have access to this project.",
+    );
+  }
 
-	const issue =
-		await issueRepository.fetchIssueById(
-			project.id,
-			issueId,
-		);
+  const issue =
+    await issueRepository.fetchIssueById(
+      project.id,
+      issueId,
+    );
 
-	if (!issue) {
-		throw new apiError(
-			404,
-			"Issue not found.",
-		);
-	}
+  if (!issue) {
+    throw new apiError(
+      404,
+      "Issue not found.",
+    );
+  }
 
-	return issue;
+  return issue;
 };
 
 export const updateIssue = async (
-	organizationSlug: string,
-	workspaceSlug: string,
-	projectSlug: string,
-	userId: string,
-	issueId: string,
-	data: UpdateIssueInput,
+  organizationSlug: string,
+  workspaceSlug: string,
+  projectSlug: string,
+  userId: string,
+  issueId: string,
+  data: UpdateIssueInput,
 ) => {
-	const organization =
-		await organizationRepository.findOrganizationBySlug(
-			organizationSlug,
-			userId,
-		);
+  const organization =
+    await organizationRepository.findOrganizationBySlug(
+      organizationSlug,
+      userId,
+    );
 
-	if (!organization) {
-		throw new apiError(404, "Organization not found.");
-	}
+  if (!organization) {
+    throw new apiError(404, "Organization not found.");
+  }
 
-	const workspace =
-		await workspaceRepository.findWorkspaceBySlug(
-			organization.id,
-			workspaceSlug,
-			userId,
-		);
+  const workspace =
+    await workspaceRepository.findWorkspaceBySlug(
+      organization.id,
+      workspaceSlug,
+      userId,
+    );
 
-	if (!workspace) {
-		throw new apiError(404, "Workspace not found.");
-	}
+  if (!workspace) {
+    throw new apiError(404, "Workspace not found.");
+  }
 
-	const project =
-		await projectRepository.findProjectBySlug(
-			workspace.id,
-			userId,
-			projectSlug,
-		);
+  const project =
+    await projectRepository.findProjectBySlug(
+      workspace.id,
+      userId,
+      projectSlug,
+    );
 
-	if (!project) {
-		throw new apiError(404, "Project not found.");
-	}
+  if (!project) {
+    throw new apiError(404, "Project not found.");
+  }
 
-	const projectMember =
-		await projectRepository.findProjectMemberByUserId(
-			project.id,
-			userId,
-		);
+  const projectMember =
+    await projectRepository.findProjectMemberByUserId(
+      project.id,
+      userId,
+    );
 
-	if (!projectMember) {
-		throw new apiError(
-			403,
-			"You don't have permission to update this issue.",
-		);
-	}
+  if (!projectMember) {
+    throw new apiError(
+      403,
+      "You don't have permission to update this issue.",
+    );
+  }
 
-	const issue =
-		await issueRepository.fetchIssueById(
-			project.id,
-			issueId,
-		);
+  const issue =
+    await issueRepository.fetchIssueById(
+      project.id,
+      issueId,
+    );
 
-	if (!issue) {
-		throw new apiError(
-			404,
-			"Issue not found.",
-		);
-	}
+  if (!issue) {
+    throw new apiError(
+      404,
+      "Issue not found.",
+    );
+  }
 
-	let assigneeId: string | undefined;
+  let sprintId: string | null | undefined;
+  if (data.sprintId) {
+    const sprint = await issueRepository.findSprintById(project.id, data.sprintId);
 
-	if (data.email) {
-		const assignee =
-			await authRepository.findUserByEmail(
-				data.email,
-			);
+    if (!sprint) {
+      throw new apiError(404, "Sprint not found in this project");
+    }
 
-		if (!assignee) {
-			throw new apiError(
-				404,
-				"Assignee not found.",
-			);
-		}
+    sprintId = sprint.id;
+  } else if (data.sprintId === null) {
+    sprintId = null;
+  }
 
-		const workspaceMember =
-			await workspaceRepository.fetchWorkspaceMemberByUserId(
-				workspace.id,
-				assignee.id,
-			);
+  let assigneeId: string | undefined;
 
-		if (
-			!workspaceMember ||
-			workspaceMember.status !==
-			MembershipStatus.ACTIVE
-		) {
-			throw new apiError(
-				400,
-				"Assignee is not a member of this workspace.",
-			);
-		}
+  if (data.email) {
+    const assignee =
+      await authRepository.findUserByEmail(
+        data.email,
+      );
 
-		const projectAssignee =
-			await projectRepository.findProjectMemberByUserId(
-				project.id,
-				assignee.id,
-			);
+    if (!assignee) {
+      throw new apiError(
+        404,
+        "Assignee not found.",
+      );
+    }
 
-		if (!projectAssignee) {
-			throw new apiError(
-				400,
-				"Assignee is not a member of this project.",
-			);
-		}
+    const workspaceMember =
+      await workspaceRepository.fetchWorkspaceMemberByUserId(
+        workspace.id,
+        assignee.id,
+      );
 
-		assigneeId = assignee.id;
-	}
+    if (
+      !workspaceMember ||
+      workspaceMember.status !==
+      MembershipStatus.ACTIVE
+    ) {
+      throw new apiError(
+        400,
+        "Assignee is not a member of this workspace.",
+      );
+    }
 
-	return await issueRepository.updateIssue(
-		issue.id,
-		data,
-		assigneeId,
-	);
+    const projectAssignee =
+      await projectRepository.findProjectMemberByUserId(
+        project.id,
+        assignee.id,
+      );
+
+    if (!projectAssignee) {
+      throw new apiError(
+        400,
+        "Assignee is not a member of this project.",
+      );
+    }
+
+    assigneeId = assignee.id;
+  }
+
+  return await issueRepository.updateIssue(
+    issue.id,
+    data,
+    assigneeId,
+    sprintId,
+  );
 };
 
 export const moveIssue = async (
-	organizationSlug: string,
-	workspaceSlug: string,
-	projectSlug: string,
-	userId: string,
-	issueId: string,
-	data: MoveIssueInput,
+  organizationSlug: string,
+  workspaceSlug: string,
+  projectSlug: string,
+  userId: string,
+  issueId: string,
+  data: MoveIssueInput,
 ) => {
-	const organization =
-		await organizationRepository.findOrganizationBySlug(
-			organizationSlug,
-			userId,
-		);
+  const organization =
+    await organizationRepository.findOrganizationBySlug(
+      organizationSlug,
+      userId,
+    );
 
-	if (!organization) {
-		throw new apiError(404, "Organization not found.");
-	}
+  if (!organization) {
+    throw new apiError(404, "Organization not found.");
+  }
 
-	const workspace =
-		await workspaceRepository.findWorkspaceBySlug(
-			organization.id,
-			workspaceSlug,
-			userId,
-		);
+  const workspace =
+    await workspaceRepository.findWorkspaceBySlug(
+      organization.id,
+      workspaceSlug,
+      userId,
+    );
 
-	if (!workspace) {
-		throw new apiError(404, "Workspace not found.");
-	}
+  if (!workspace) {
+    throw new apiError(404, "Workspace not found.");
+  }
 
-	const project =
-		await projectRepository.findProjectBySlug(
-			workspace.id,
-			userId,
-			projectSlug,
-		);
+  const project =
+    await projectRepository.findProjectBySlug(
+      workspace.id,
+      userId,
+      projectSlug,
+    );
 
-	if (!project) {
-		throw new apiError(404, "Project not found.");
-	}
+  if (!project) {
+    throw new apiError(404, "Project not found.");
+  }
 
-	const projectMember =
-		await projectRepository.findProjectMemberByUserId(
-			project.id,
-			userId,
-		);
+  const projectMember =
+    await projectRepository.findProjectMemberByUserId(
+      project.id,
+      userId,
+    );
 
-	if (!projectMember) {
-		throw new apiError(
-			403,
-			"You don't have permission to move issues.",
-		);
-	}
+  if (!projectMember) {
+    throw new apiError(
+      403,
+      "You don't have permission to move issues.",
+    );
+  }
 
-	const issue =
-		await issueRepository.fetchIssueById(
-			project.id,
-			issueId,
-		);
+  const issue =
+    await issueRepository.fetchIssueById(
+      project.id,
+      issueId,
+    );
 
-	if (!issue) {
-		throw new apiError(
-			404,
-			"Issue not found.",
-		);
-	}
+  if (!issue) {
+    throw new apiError(
+      404,
+      "Issue not found.",
+    );
+  }
 
-	const board =
-		await projectRepository.findBoardByProjectId(
-			project.id,
-		);
+  const board =
+    await projectRepository.findBoardByProjectId(
+      project.id,
+    );
 
-	if (!board) {
-		throw new apiError(404, "Board not found.");
-	}
+  if (!board) {
+    throw new apiError(404, "Board not found.");
+  }
 
-	const column =
-		await projectRepository.findBoardColumnById(
-			board.id,
-			data.columnId,
-		);
+  const column =
+    await projectRepository.findBoardColumnById(
+      board.id,
+      data.columnId,
+    );
 
-	if (!column) {
-		throw new apiError(
-			404,
-			"Board column not found.",
-		);
-	}
-	let status: IssueStatus;
+  if (!column) {
+    throw new apiError(
+      404,
+      "Board column not found.",
+    );
+  }
+  let status: IssueStatus;
 
-	switch (column.name.toLowerCase()) {
-		case "todo":
-			status = IssueStatus.TODO;
-			break;
+  switch (column.name.toLowerCase()) {
+    case "todo":
+      status = IssueStatus.TODO;
+      break;
 
-		case "in progress":
-			status = IssueStatus.IN_PROGRESS;
-			break;
+    case "in progress":
+      status = IssueStatus.IN_PROGRESS;
+      break;
 
-		case "in review":
-			status = IssueStatus.IN_REVIEW;
-			break;
+    case "in review":
+      status = IssueStatus.IN_REVIEW;
+      break;
 
-		case "done":
-			status = IssueStatus.DONE;
-			break;
+    case "done":
+      status = IssueStatus.DONE;
+      break;
 
-		default:
-			status = IssueStatus.TODO;
-	}
+    default:
+      status = IssueStatus.TODO;
+  }
 
-	return await issueRepository.moveIssue(
-		issue.id,
-		status,
-		data,
-	);
+  return await issueRepository.moveIssue(
+    issue.id,
+    status,
+    data,
+  );
 };
 
 export const archiveIssue = async (
-	organizationSlug: string,
-	workspaceSlug: string,
-	projectSlug: string,
-	userId: string,
-	issueId: string,
+  organizationSlug: string,
+  workspaceSlug: string,
+  projectSlug: string,
+  userId: string,
+  issueId: string,
 ) => {
-	const organization =
-		await organizationRepository.findOrganizationBySlug(
-			organizationSlug,
-			userId,
-		);
+  const organization =
+    await organizationRepository.findOrganizationBySlug(
+      organizationSlug,
+      userId,
+    );
 
-	if (!organization) {
-		throw new apiError(404, "Organization not found.");
-	}
+  if (!organization) {
+    throw new apiError(404, "Organization not found.");
+  }
 
-	const workspace =
-		await workspaceRepository.findWorkspaceBySlug(
-			organization.id,
-			workspaceSlug,
-			userId,
-		);
+  const workspace =
+    await workspaceRepository.findWorkspaceBySlug(
+      organization.id,
+      workspaceSlug,
+      userId,
+    );
 
-	if (!workspace) {
-		throw new apiError(404, "Workspace not found.");
-	}
+  if (!workspace) {
+    throw new apiError(404, "Workspace not found.");
+  }
 
-	const project =
-		await projectRepository.findProjectBySlug(
-			workspace.id,
-			userId,
-			projectSlug,
-		);
+  const project =
+    await projectRepository.findProjectBySlug(
+      workspace.id,
+      userId,
+      projectSlug,
+    );
 
-	if (!project) {
-		throw new apiError(404, "Project not found.");
-	}
+  if (!project) {
+    throw new apiError(404, "Project not found.");
+  }
 
-	const projectMember =
-		await projectRepository.findProjectMemberByUserId(
-			project.id,
-			userId,
-		);
+  const projectMember =
+    await projectRepository.findProjectMemberByUserId(
+      project.id,
+      userId,
+    );
 
-	if (!projectMember) {
-		throw new apiError(
-			403,
-			"You don't have access to this project.",
-		);
-	}
+  if (!projectMember) {
+    throw new apiError(
+      403,
+      "You don't have access to this project.",
+    );
+  }
 
-	if (projectMember.role !== ProjectRole.ADMIN) {
-		throw new apiError(
-			403,
-			"Only project owner or admin can archive issues.",
-		);
-	}
+  if (projectMember.role !== ProjectRole.ADMIN) {
+    throw new apiError(
+      403,
+      "Only project owner or admin can archive issues.",
+    );
+  }
 
-	const issue =
-		await issueRepository.fetchIssueById(
-			project.id,
-			issueId,
-		);
+  const issue =
+    await issueRepository.fetchIssueById(
+      project.id,
+      issueId,
+    );
 
-	if (!issue) {
-		throw new apiError(
-			404,
-			"Issue not found.",
-		);
-	}
+  if (!issue) {
+    throw new apiError(
+      404,
+      "Issue not found.",
+    );
+  }
 
-	return await issueRepository.archiveIssue(
-		issue.id,
-	);
+  return await issueRepository.archiveIssue(
+    issue.id,
+  );
 };
