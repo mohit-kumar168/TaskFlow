@@ -79,3 +79,55 @@ export const getWorkspaceFolder = (workspaceSlug: string) => `taskflow/workspace
 export const getProjectFolder = (projectSlug: string) => `taskflow/projects/project_${projectSlug}`;
 
 
+
+/*
+import fs from "node:fs";
+import cloudinary from "../config/cloudinary";
+
+interface UploadImageOptions {
+  folder: string;
+  publicId?: string;
+}
+
+export const uploadOnCloudinary = async (
+  localFilePath: string,
+  options?: UploadImageOptions,
+) => {
+  try {
+    if (!localFilePath) return null;
+
+    const response = await cloudinary.uploader.upload(localFilePath, {
+      upload_preset: "test_preset",
+      resource_type: "image",
+      folder: options?.folder,
+      public_id: options?.publicId,
+      overwrite: true,
+    });
+
+    // const response = await cloudinary.uploader.unsigned_upload(localFilePath, "test_preset");
+
+    fs.unlinkSync(localFilePath);
+    return response;
+  } catch (error) {
+    console.error("Cloudinary upload error:", error);
+    fs.unlinkSync(localFilePath);
+    return null;
+  }
+};
+
+export const deleteImageFromCloudinary = async (publicId: string) => {
+  await cloudinary.uploader.destroy(publicId);
+};
+
+export const getUserFolder = (userId: string) =>
+  `taskflow/users/user_${userId}`;
+
+export const getOrganizationFolder = (organizationSlug: string) =>
+  `taskflow/organizations/organization_${organizationSlug}`;
+
+export const getWorkspaceFolder = (workspaceSlug: string) =>
+  `taskflow/workspaces/workspace_${workspaceSlug}`;
+
+export const getProjectFolder = (projectSlug: string) =>
+  `taskflow/projects/project_${projectSlug}`;
+*/
