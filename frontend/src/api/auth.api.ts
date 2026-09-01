@@ -22,6 +22,7 @@ export interface UserProps {
 export interface UpdateUserProfileProps {
   name?: string;
   bio?: string;
+  avatar?: File;
 }
 
 export interface ChangePasswordProps {
@@ -50,7 +51,20 @@ export const getCurrentUser = () => {
 };
 
 export const updateUserProfile = (data: UpdateUserProfileProps) => {
-  return api.patch("/auth/update-profile", data);
+  const formData = new FormData();
+
+  if (data.name !== undefined) {
+    formData.append("name", data.name);
+  }
+
+  if (data.bio !== undefined) {
+    formData.append("bio", data.bio);
+  }
+
+  if (data.avatar) {
+    formData.append("avatar", data.avatar);
+  }
+  return api.patch("/auth/update-profile", formData);
 };
 
 export const changeUserPassword = (data: ChangePasswordProps) => {

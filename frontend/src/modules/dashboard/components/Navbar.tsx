@@ -160,9 +160,16 @@ const Navbar = ({
           className="ml-1 flex items-center gap-2 rounded-lg px-1.5 py-1.5 transition-colors hover:bg-gray-100"
           title={user?.name || "Profile"}
         >
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-orange-500 text-sm font-semibold text-white">
-            {userInitial}
-          </div>
+          {user?.avatarUrl
+            ? <img
+              src={user.avatarUrl}
+              alt="user avatar"
+              className="h-9 w-9 rounded-full"
+            />
+            : <div className="flex h-9 w-9 items-center justify-center rounded-full bg-orange-500 text-sm font-semibold text-white">
+              {userInitial}
+            </div>
+          }
 
           <div className="hidden max-w-32 text-left lg:block">
             <p className="truncate text-sm font-medium text-gray-900">

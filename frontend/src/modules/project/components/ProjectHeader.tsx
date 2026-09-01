@@ -174,6 +174,18 @@ const ProjectHeader = ({ project }: ProjectHeaderProps) => {
           </NavLink>
 
           <NavLink
+            to={`${basePath}/sprints`}
+            className={({ isActive }) =>
+              `relative shrink-0 pb-3 text-sm font-medium transition-colors ${isActive
+                ? "text-orange-500 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-orange-500"
+                : "text-gray-500 hover:text-gray-900"
+              }`
+            }
+          >
+            Sprints
+          </NavLink>
+
+          <NavLink
             to={`${basePath}/members`}
             className={({ isActive }) =>
               `relative shrink-0 pb-3 text-sm font-medium transition-colors ${isActive
