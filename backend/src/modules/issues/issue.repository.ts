@@ -1,5 +1,9 @@
 import prisma from "@/prisma/client";
-import type { CreateIssueInput, MoveIssueInput, UpdateIssueInput } from "./issue.types";
+import type {
+  CreateIssueInput,
+  MoveIssueInput,
+  UpdateIssueInput,
+} from "./issue.types";
 import type { IssueStatus } from "@/generated/prisma/enums";
 
 export const createIssue = async (
@@ -10,7 +14,7 @@ export const createIssue = async (
   position: number,
   data: CreateIssueInput,
   assigneeId?: string,
-  sprintId?: string
+  sprintId?: string,
 ) => {
   return await prisma.issue.create({
     data: {
@@ -27,23 +31,43 @@ export const createIssue = async (
       position,
       sprintId,
     },
+    include: {
+      assignee: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          avatarUrl: true,
+        },
+      },
+    },
   });
 };
 
 export const fetchAllIssues = async (
-  projectId: string
+  projectId: string,
 ) => {
   return await prisma.issue.findMany({
     where: {
       projectId,
       isArchived: false,
     },
+    include: {
+      assignee: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          avatarUrl: true,
+        },
+      },
+    },
   });
 };
 
 export const fetchIssueById = async (
   projectId: string,
-  issueId: string
+  issueId: string,
 ) => {
   return await prisma.issue.findFirst({
     where: {
@@ -51,12 +75,22 @@ export const fetchIssueById = async (
       projectId,
       isArchived: false,
     },
+    include: {
+      assignee: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          avatarUrl: true,
+        },
+      },
+    },
   });
 };
 
 export const findSprintById = async (
   projectId: string,
-  sprintId: string
+  sprintId: string,
 ) => {
   return await prisma.sprint.findFirst({
     where: {
@@ -68,7 +102,7 @@ export const findSprintById = async (
 
 export const findIssueByKey = async (
   projectId: string,
-  issueKey: string
+  issueKey: string,
 ) => {
   return await prisma.issue.findUnique({
     where: {
@@ -90,6 +124,7 @@ export const updateIssue = async (
     where: {
       id: issueId,
     },
+
     data: {
       title: data.title,
       description: data.description,
@@ -99,16 +134,27 @@ export const updateIssue = async (
       assigneeId: assigneeId ?? null,
       sprintId,
     },
+    include: {
+      assignee: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          avatarUrl: true,
+        },
+      },
+    },
   });
 };
 
 export const archiveIssue = async (
-  issueId: string
+  issueId: string,
 ) => {
   return await prisma.issue.update({
     where: {
       id: issueId,
     },
+
     data: {
       isArchived: true,
     },
@@ -118,15 +164,26 @@ export const archiveIssue = async (
 export const moveIssue = async (
   issueId: string,
   status: IssueStatus,
-  data: MoveIssueInput
+  data: MoveIssueInput,
 ) => {
   return await prisma.issue.update({
     where: {
       id: issueId,
     },
+
     data: {
       columnId: data.columnId,
       status,
+    },
+    include: {
+      assignee: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          avatarUrl: true,
+        },
+      },
     },
   });
 };
@@ -138,6 +195,7 @@ export const fetchAllIssuesForKeyGeneration = async (
     where: {
       projectId,
     },
+
     select: {
       issueKey: true,
       columnId: true,

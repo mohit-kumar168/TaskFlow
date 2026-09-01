@@ -14,6 +14,17 @@ export const createComment = async (
       authorId,
       content: data.content,
     },
+    include: {
+      author: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          avatarUrl: true,
+        },
+      },
+    },
+
   });
 };
 
@@ -23,6 +34,16 @@ export const fetchAllComments = async (
   return await prisma.comment.findMany({
     where: {
       issueId,
+    },
+    include: {
+      author: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          avatarUrl: true,
+        },
+      },
     },
     orderBy: {
       createdAt: "asc",
@@ -38,6 +59,16 @@ export const fetchCommentById = async (
     where: {
       id: commentId,
       issueId,
+    },
+    include: {
+      author: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          avatarUrl: true,
+        },
+      },
     },
   });
 };
