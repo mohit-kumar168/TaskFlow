@@ -63,7 +63,7 @@ export const findSprintById = async (
       id: sprintId,
       projectId,
     },
-  })
+  });
 };
 
 export const findIssueByKey = async (

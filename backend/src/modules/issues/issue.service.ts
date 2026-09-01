@@ -80,7 +80,10 @@ export const createIssue = async (organizationSlug: string, workspaceSlug: strin
   let sprintId: string | undefined;
 
   if (data.sprintId) {
-    const sprint = await issueRepository.findSprintById(project.id, data.sprintId);
+    const sprint = await issueRepository.findSprintById(
+      project.id,
+      data.sprintId,
+    );
 
     if (!sprint) {
       throw new apiError(404, "Sprint not found in this project.");
