@@ -20,6 +20,7 @@ import UserSetting from "@/modules/dashboard/pages/UserSetting";
 import OrganizationSetting from "@/modules/organization/pages/OrganizationSetting";
 import AcceptInvitation from "@/modules/organization/components/AcceptInvitation";
 import DashboardSearchPage from "../modules/dashboard/pages/DashboardSearchPage";
+import ProjectSprints from "../modules/issue/pages/ProjectSprints";
 
 export const DashboardRoutes = [
   {
@@ -98,6 +99,11 @@ export const DashboardRoutes = [
               {
                 path: "board",
                 element: <ProjectBoard />,
+              },
+
+              {
+                path: "sprints",
+                element: <ProjectSprints />,
               },
 
               {

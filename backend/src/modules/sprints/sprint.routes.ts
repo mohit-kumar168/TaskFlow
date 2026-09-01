@@ -17,7 +17,7 @@ import {
   fetchSprintIssues,
 } from "./sprint.controller";
 
-const router = Router();
+const router = Router({ mergeParams: true });
 
 router.use(protect);
 

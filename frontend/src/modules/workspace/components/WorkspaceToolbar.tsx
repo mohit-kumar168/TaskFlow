@@ -11,7 +11,7 @@ const WorkspaceToolbar = ({
 }: WorkspaceToolbarProps) => {
   return (
     <div>
-      <div className="hidden md:block flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+      <div className="hidden md:flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
           <div className="flex w-fit self-start overflow-hidden rounded-lg border border-gray-300 bg-white">
             <button

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 
 import Button from "@/components/ui/Button";
@@ -16,6 +16,16 @@ const ProfileSettings = () => {
 
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+
+  const [selectedAvatar, setSelectedAvatar] =
+    useState<File | null>(null);
+
+  const [avatarPreview, setAvatarPreview] =
+    useState<string | null>(null);
+
+  const fileInputRef = useRef<HTMLInputElement | null>(
+    null,
+  );
 
   const [message, setMessage] = useState<{
     type: "success" | "error";
@@ -39,7 +49,50 @@ const ProfileSettings = () => {
       name: user?.name ?? "",
       bio: user?.bio ?? "",
     });
+
+    setSelectedAvatar(null);
+    setAvatarPreview(null);
   }, [user, reset]);
+
+  const handleAvatarChange = (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = event.target.files?.[0];
+
+    if (!file) return;
+
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+    ];
+
+    if (!allowedTypes.includes(file.type)) {
+      setMessage({
+        type: "error",
+        text: "Only JPG, PNG, and WEBP images are allowed.",
+      });
+
+      event.target.value = "";
+      return;
+    }
+
+    const maxFileSize = 5 * 1024 * 1024;
+
+    if (file.size > maxFileSize) {
+      setMessage({
+        type: "error",
+        text: "Image size cannot exceed 5MB.",
+      });
+
+      event.target.value = "";
+      return;
+    }
+
+    setSelectedAvatar(file);
+    setAvatarPreview(URL.createObjectURL(file));
+    setMessage(null);
+  };
 
   const handleProfileUpdate = async (
     data: UpdateUserProfileProps,
@@ -51,11 +104,20 @@ const ProfileSettings = () => {
       const response = await updateUserProfile({
         name: data.name?.trim(),
         bio: data.bio?.trim() ?? "",
+        avatar: selectedAvatar ?? undefined,
       });
 
       const updatedUser = response.data.data.user;
 
       setUser(updatedUser);
+
+      setSelectedAvatar(null);
+      setAvatarPreview(null);
+
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+
       setIsEditing(false);
 
       setMessage({
@@ -83,6 +145,13 @@ const ProfileSettings = () => {
       bio: user?.bio ?? "",
     });
 
+    setSelectedAvatar(null);
+    setAvatarPreview(null);
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+
     setIsEditing(false);
     setMessage(null);
   };
@@ -94,6 +163,9 @@ const ProfileSettings = () => {
       </div>
     );
   }
+
+  const currentAvatar =
+    avatarPreview ?? user.avatarUrl;
 
   return (
     <div className="max-w-3xl">
@@ -128,6 +200,41 @@ const ProfileSettings = () => {
             onSubmit={handleSubmit(handleProfileUpdate)}
             className="space-y-6"
           >
+            {/* Avatar */}
+            <div>
+              <label className="text-sm font-medium text-gray-700">
+                Profile picture
+              </label>
+
+              <div className="mt-3 flex items-center gap-4">
+                {currentAvatar ? (
+                  <img
+                    src={currentAvatar}
+                    alt="Profile"
+                    className="h-16 w-16 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 text-lg font-semibold text-gray-500">
+                    {user.name.charAt(0).toUpperCase()}
+                  </div>
+                )}
+
+                <div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={handleAvatarChange}
+                    className="block text-sm text-gray-600"
+                  />
+
+                  <p className="mt-1 text-xs text-gray-500">
+                    JPG, PNG or WEBP. Maximum 5MB.
+                  </p>
+                </div>
+              </div>
+            </div>
+
             <Input
               id="name"
               label="Name"
@@ -188,7 +295,7 @@ const ProfileSettings = () => {
             <div className="flex gap-3">
               <Button
                 type="submit"
-                disabled={isSaving || !isDirty}
+                disabled={isSaving || (!isDirty && !selectedAvatar)}
                 className=""
               >
                 {isSaving
@@ -208,6 +315,27 @@ const ProfileSettings = () => {
           </form>
         ) : (
           <div className="space-y-6">
+            {/* Avatar */}
+            <div>
+              <p className="text-xs font-medium text-gray-500">
+                Profile picture
+              </p>
+
+              <div className="mt-2">
+                {user.avatarUrl ? (
+                  <img
+                    src={user.avatarUrl}
+                    alt="Profile"
+                    className="h-16 w-16 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 text-lg font-semibold text-gray-500">
+                    {user.name.charAt(0).toUpperCase()}
+                  </div>
+                )}
+              </div>
+            </div>
+
             <div>
               <p className="text-xs font-medium text-gray-500">
                 Name
@@ -243,11 +371,10 @@ const ProfileSettings = () => {
 
       {message && (
         <p
-          className={`mt-6 text-sm ${
-            message.type === "success"
-              ? "text-green-600"
-              : "text-red-500"
-          }`}
+          className={`mt-6 text-sm ${message.type === "success"
+            ? "text-green-600"
+            : "text-red-500"
+            }`}
         >
           {message.text}
         </p>
