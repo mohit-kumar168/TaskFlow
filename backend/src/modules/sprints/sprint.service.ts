@@ -14,6 +14,7 @@ import * as sprintRepository from "./sprint.repository";
 import * as projectRepository from "@/modules/projects/project.repository";
 import * as workspaceRepository from "@/modules/workspaces/workspace.repository";
 import * as organizationRepository from "@/modules/organization/organization.repository";
+import * as notificationService from "@/modules/notifications/notification.service";
 
 const getProject = async (
   organizationSlug: string,
@@ -233,10 +234,30 @@ export const startSprint = async (
     );
   }
 
-  return await sprintRepository.startSprint(
-    sprint.id,
-    sprint.startDate ?? new Date(),
-  );
+  const updatedSprint =
+    await sprintRepository.startSprint(
+      sprint.id,
+      sprint.startDate ?? new Date(),
+    );
+
+  const members =
+    await projectRepository.fetchAllProjectMembers(
+      project.id,
+    );
+
+  for (const member of members) {
+    if (member.user.id === userId) {
+      continue;
+    }
+
+    await notificationService.createNotification({
+      userId: member.user.id,
+      title: "Sprint started",
+      message: `Sprint "${updatedSprint.name}" has started.`,
+    });
+  }
+
+  return updatedSprint;
 };
 
 export const completeSprint = async (
@@ -301,11 +322,31 @@ export const completeSprint = async (
     }
   }
 
-  return await sprintRepository.completeSprint(
-    project.id,
-    sprint.id,
-    data,
-  );
+  const completedSprint =
+    await sprintRepository.completeSprint(
+      project.id,
+      sprint.id,
+      data,
+    );
+
+  const members =
+    await projectRepository.fetchAllProjectMembers(
+      project.id,
+    );
+
+  for (const member of members) {
+    if (member.user.id === userId) {
+      continue;
+    }
+
+    await notificationService.createNotification({
+      userId: member.user.id,
+      title: "Sprint completed",
+      message: `Sprint "${completedSprint.name}" has been completed.`,
+    });
+  }
+
+  return completedSprint;
 };
 
 export const fetchSprintIssues = async (

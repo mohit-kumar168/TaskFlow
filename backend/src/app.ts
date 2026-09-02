@@ -10,6 +10,7 @@ import projectRoutes from "./modules/projects/project.routes";
 import issueRoutes from "./modules/issues/issue.routes";
 import commentRoutes from "./modules/comments/comment.routes";
 import sprintRoutes from "./modules/sprints/sprint.routes";
+import notificationRoutes from "./modules/notifications/notification.routes";
 
 const app = express();
 
@@ -53,6 +54,11 @@ app.use(
 app.use(
   "/api/organizations/:organizationSlug/workspaces/:workspaceSlug/projects/:projectSlug/sprints",
   sprintRoutes,
+);
+
+app.use(
+  "/api/notifications",
+  notificationRoutes,
 );
 
 app.use(errorMiddleware);

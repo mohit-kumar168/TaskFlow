@@ -117,7 +117,7 @@ export const findIssueByKey = async (
 export const updateIssue = async (
   issueId: string,
   data: UpdateIssueInput,
-  assigneeId?: string,
+  assigneeId?: string | null,
   sprintId?: string | null,
 ) => {
   return await prisma.issue.update({
@@ -131,7 +131,9 @@ export const updateIssue = async (
       priority: data.priority,
       dueDate: data.dueDate,
       type: data.type,
-      assigneeId: assigneeId ?? null,
+      ...(assigneeId !== undefined && {
+        assigneeId,
+      }),
       sprintId,
     },
     include: {
