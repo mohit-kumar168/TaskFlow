@@ -17,6 +17,7 @@ import * as projectRepository from "@/modules/projects/project.repository";
 import * as workspaceRepository from "@/modules/workspaces/workspace.repository";
 import * as organizationRepository from "@/modules/organization/organization.repository";
 import * as authRepository from "@/modules/auth/auth.repository";
+import * as notificationService from "@/modules/notifications/notification.service";
 
 export const createIssue = async (organizationSlug: string, workspaceSlug: string, projectSlug: string, userId: string, data: CreateIssueInput) => {
   const organization = await organizationRepository.findOrganizationBySlug(organizationSlug, userId);
@@ -136,7 +137,17 @@ export const createIssue = async (organizationSlug: string, workspaceSlug: strin
     throw new apiError(409, "Unable to generate a unique issue key.");
   }
 
-  return await issueRepository.createIssue(project.id, column.id, userId, issueKey, position, data, assigneeId, sprintId);
+  const issue = await issueRepository.createIssue(project.id, column.id, userId, issueKey, position, data, assigneeId, sprintId);
+
+  if (assigneeId && assigneeId !== userId) {
+    await notificationService.createNotification({
+      userId: assigneeId,
+      title: "Issue assigned to you",
+      message: `You have been assigned issue ${issue.issueKey}: ${issue.title}`,
+    });
+  }
+
+  return issue;
 };
 
 export const fetchAllIssues = async (
@@ -342,7 +353,7 @@ export const updateIssue = async (
     sprintId = null;
   }
 
-  let assigneeId: string | undefined;
+  let assigneeId: string | null | undefined;
 
   if (data.email) {
     const assignee =
@@ -390,12 +401,24 @@ export const updateIssue = async (
     assigneeId = assignee.id;
   }
 
-  return await issueRepository.updateIssue(
+  const updatedIssue = await issueRepository.updateIssue(
     issue.id,
     data,
     assigneeId,
     sprintId,
   );
+
+  if (
+    assigneeId &&
+    assigneeId !== userId
+  ) {
+    await notificationService.createNotification({
+      userId: assigneeId,
+      title: "Issue assigned to you",
+      message: `You have been assigned issue ${updatedIssue.issueKey}: ${updatedIssue.title}`,
+    });
+  }
+  return updatedIssue;
 };
 
 export const moveIssue = async (

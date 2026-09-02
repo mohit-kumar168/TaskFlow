@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Pencil } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { useParams } from "react-router-dom";
 
@@ -11,7 +12,12 @@ import {
   type IssuePriority,
   type UpdateIssueProps,
 } from "@/api/issue.api";
-import { getAllSprints, type SprintProps } from "@/api/sprint.api";
+import {
+  getAllSprints,
+  type SprintProps,
+} from "@/api/sprint.api";
+
+import CommentSection from "./CommentSection";
 
 interface IssueDetailsFormData {
   title: string;
@@ -42,11 +48,25 @@ const IssueDetailsModal = ({
   onSubmit,
   onRemove,
 }: IssueDetailsModalProps) => {
-  const { organizationSlug, workspaceSlug, projectSlug } = useParams<{
+  const {
+    organizationSlug,
+    workspaceSlug,
+    projectSlug,
+  } = useParams<{
     organizationSlug: string;
     workspaceSlug: string;
     projectSlug: string;
   }>();
+
+  const [isEditing, setIsEditing] =
+    useState(false);
+
+  const [sprints, setSprints] = useState<
+    SprintProps[]
+  >([]);
+
+  const [isSprintsLoading, setIsSprintsLoading] =
+    useState(false);
 
   const {
     register,
@@ -65,25 +85,40 @@ const IssueDetailsModal = ({
     },
   });
 
-  const [sprints, setSprints] = useState<SprintProps[]>([]);
-  const [isSprintsLoading, setIsSprintsLoading] = useState(false);
-
+  /*
+   * Load the project's sprints when
+   * the issue modal is opened.
+   */
   useEffect(() => {
-    if (!isOpen || !organizationSlug || !workspaceSlug || !projectSlug) {
+    if (
+      !isOpen ||
+      !organizationSlug ||
+      !workspaceSlug ||
+      !projectSlug
+    ) {
       return;
     }
 
     const loadSprints = async () => {
       try {
         setIsSprintsLoading(true);
-        const response = await getAllSprints(
-          organizationSlug,
-          workspaceSlug,
-          projectSlug,
+
+        const response =
+          await getAllSprints(
+            organizationSlug,
+            workspaceSlug,
+            projectSlug,
+          );
+
+        setSprints(
+          response.data.data ?? [],
         );
-        setSprints(response.data.data ?? []);
       } catch (error) {
-        console.error("Failed to fetch sprints for issue modal:", error);
+        console.error(
+          "Failed to fetch sprints for issue modal:",
+          error,
+        );
+
         setSprints([]);
       } finally {
         setIsSprintsLoading(false);
@@ -91,246 +126,559 @@ const IssueDetailsModal = ({
     };
 
     loadSprints();
-  }, [isOpen, organizationSlug, workspaceSlug, projectSlug]);
+  }, [
+    isOpen,
+    organizationSlug,
+    workspaceSlug,
+    projectSlug,
+  ]);
 
+  /*
+   * Reset the form whenever a different
+   * issue is opened.
+   */
   useEffect(() => {
     if (!issue) {
       return;
     }
-
-    const selectedSprint = sprints.find((sprint) => sprint.id === issue.sprintId);
 
     reset({
       title: issue.title,
       description: issue.description ?? "",
       type: issue.type,
       priority: issue.priority,
-      dueDate: issue.dueDate ? issue.dueDate.split("T")[0] : "",
+      dueDate: issue.dueDate
+        ? issue.dueDate.split("T")[0]
+        : "",
       email: "",
-      sprintId: selectedSprint?.id ?? issue.sprintId ?? "",
+      sprintId: issue.sprintId ?? "",
     });
-  }, [issue, sprints, reset]);
+
+    setIsEditing(false);
+  }, [issue, reset]);
+
+  /*
+   * Close edit mode whenever the modal
+   * itself is closed.
+   */
+  useEffect(() => {
+    if (!isOpen) {
+      setIsEditing(false);
+    }
+  }, [isOpen]);
 
   if (!isOpen || !issue) {
     return null;
   }
 
-  const selectedSprint = sprints.find((sprint) => sprint.id === issue.sprintId);
+  const selectedSprint = sprints.find(
+    (sprint) =>
+      sprint.id === issue.sprintId,
+  );
 
-  const handleFormSubmit = (data: IssueDetailsFormData) => {
+  const handleFormSubmit = (
+    data: IssueDetailsFormData,
+  ) => {
     onSubmit({
       title: data.title.trim(),
       description: data.description.trim(),
       type: data.type,
       priority: data.priority,
       dueDate: data.dueDate
-        ? new Date(`${data.dueDate}T00:00:00.000Z`).toISOString()
+        ? new Date(
+          `${data.dueDate}T00:00:00.000Z`,
+        ).toISOString()
         : undefined,
-      email: data.email.trim() || undefined,
-      sprintId: data.sprintId || undefined,
+      email:
+        data.email.trim() || undefined,
+      sprintId:
+        data.sprintId || undefined,
     });
   };
 
+  const handleCancelEdit = () => {
+    reset({
+      title: issue.title,
+      description: issue.description ?? "",
+      type: issue.type,
+      priority: issue.priority,
+      dueDate: issue.dueDate
+        ? issue.dueDate.split("T")[0]
+        : "",
+      email: "",
+      sprintId: issue.sprintId ?? "",
+    });
+
+    setIsEditing(false);
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-      <div className="w-full max-w-lg rounded-xl bg-white shadow-xl">
-        <div className="flex items-start justify-between border-b border-gray-200 px-6 py-5">
-          <div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-6">
+      <div className="flex max-h-[90vh] w-full max-w-6xl flex-col overflow-hidden rounded-xl bg-white shadow-xl">
+        {/* Header */}
+        <div className="flex shrink-0 items-start justify-between border-b border-gray-200 px-6 py-5">
+          <div className="min-w-0">
             <p className="text-xs font-medium text-gray-400">
               {issue.issueKey}
             </p>
 
-            <h2 className="mt-1 text-lg font-semibold text-gray-900">
-              Edit Issue
+            <h2 className="mt-1 truncate text-lg font-semibold text-gray-900">
+              {isEditing
+                ? "Edit Issue"
+                : issue.title}
             </h2>
 
-            {selectedSprint ? (
-              <p className="mt-1 text-xs text-orange-600">
-                Sprint: {selectedSprint.name}
-              </p>
-            ) : issue.sprintId ? (
-              <p className="mt-1 text-xs text-gray-500">
-                Sprint attached
-              </p>
-            ) : (
-              <p className="mt-1 text-xs text-gray-500">
-                No sprint assigned
-              </p>
+            {!isEditing && (
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <span className="rounded-md bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
+                  {issue.type}
+                </span>
+
+                <span className="rounded-md bg-orange-50 px-2 py-1 text-xs font-medium text-orange-600">
+                  {issue.priority}
+                </span>
+
+                {selectedSprint && (
+                  <span className="rounded-md bg-orange-50 px-2 py-1 text-xs font-medium text-orange-600">
+                    {selectedSprint.name}
+                  </span>
+                )}
+              </div>
             )}
           </div>
 
           <button
             type="button"
             onClick={onClose}
-            disabled={isSubmitting || isArchiving}
-            className="rounded-lg px-2 py-1 text-xl text-gray-400 hover:bg-gray-100 hover:text-gray-600 disabled:opacity-50"
+            disabled={
+              isSubmitting ||
+              isArchiving
+            }
+            className="ml-4 shrink-0 rounded-lg px-2 py-1 text-xl text-gray-400 hover:bg-gray-100 hover:text-gray-600 disabled:opacity-50"
           >
             ×
           </button>
         </div>
 
-        <form
-          onSubmit={handleSubmit(handleFormSubmit)}
-          className="space-y-5 p-6"
-        >
-          <Input
-            id="title"
-            label="Title"
-            error={errors.title?.message}
-            {...register("title", {
-              required: "Issue title is required.",
-              minLength: {
-                value: 2,
-                message: "Issue title must be at least 2 characters.",
-              },
-            })}
-          />
+        {/* Main content */}
+        <div className="grid min-h-0 flex-1 lg:grid-cols-2">
+          {/* LEFT - ISSUE DETAILS */}
+          <div className="min-h-0 overflow-y-auto border-b border-gray-200 p-6 lg:border-b-0 lg:border-r">
+            {!isEditing ? (
+              /* READ ONLY */
+              <div className="space-y-6">
+                {/* Title */}
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
+                    Title
+                  </p>
 
-          <div className="flex flex-col gap-2">
-            <label
-              htmlFor="description"
-              className="text-sm font-medium text-gray-700"
-            >
-              Description
-            </label>
+                  <p className="mt-1 text-sm font-medium text-gray-900">
+                    {issue.title}
+                  </p>
+                </div>
 
-            <textarea
-              id="description"
-              rows={4}
-              {...register("description")}
-              disabled={isSubmitting}
-              className="w-full resize-none rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200 disabled:bg-gray-50"
-              placeholder="Describe the issue..."
+                {/* Description */}
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
+                    Description
+                  </p>
+
+                  {issue.description ? (
+                    <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-gray-700">
+                      {issue.description}
+                    </p>
+                  ) : (
+                    <p className="mt-2 text-sm italic text-gray-400">
+                      No description provided.
+                    </p>
+                  )}
+                </div>
+
+                {/* Details */}
+                <div className="grid grid-cols-2 gap-x-6 gap-y-5">
+                  <div>
+                    <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
+                      Type
+                    </p>
+
+                    <p className="mt-1 text-sm font-medium text-gray-800">
+                      {issue.type}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
+                      Priority
+                    </p>
+
+                    <p className="mt-1 text-sm font-medium text-gray-800">
+                      {issue.priority}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
+                      Status
+                    </p>
+
+                    <p className="mt-1 text-sm font-medium text-gray-800">
+                      {issue.status}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
+                      Sprint
+                    </p>
+
+                    <p className="mt-1 text-sm font-medium text-gray-800">
+                      {selectedSprint?.name ??
+                        "No Sprint"}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
+                      Due Date
+                    </p>
+
+                    <p className="mt-1 text-sm font-medium text-gray-800">
+                      {issue.dueDate
+                        ? new Date(
+                          issue.dueDate,
+                        ).toLocaleDateString()
+                        : "No due date"}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
+                      Assignee
+                    </p>
+
+                    <p className="mt-1 break-all text-sm font-medium text-gray-800">
+                      {issue.assignee?.name ??
+                        "Unassigned"}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Edit button */}
+                <div className="border-t border-gray-200 pt-5">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() =>
+                      setIsEditing(true)
+                    }
+                    disabled={
+                      isSubmitting ||
+                      isArchiving
+                    }
+                    className="flex w-full items-center justify-center gap-2"
+                  >
+                    <Pencil size={15} />
+                    Edit Issue
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              /* EDIT MODE */
+              <form
+                onSubmit={handleSubmit(
+                  handleFormSubmit,
+                )}
+                className="space-y-5"
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
+                      Editing
+                    </p>
+
+                    <p className="mt-1 text-sm font-medium text-gray-900">
+                      {issue.issueKey}
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={
+                      handleCancelEdit
+                    }
+                    disabled={
+                      isSubmitting ||
+                      isArchiving
+                    }
+                    className="text-sm font-medium text-gray-500 hover:text-gray-700 disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                </div>
+
+                <Input
+                  id="title"
+                  label="Title"
+                  error={
+                    errors.title?.message
+                  }
+                  {...register("title", {
+                    required:
+                      "Issue title is required.",
+                    minLength: {
+                      value: 2,
+                      message:
+                        "Issue title must be at least 2 characters.",
+                    },
+                  })}
+                />
+
+                <div className="flex flex-col gap-2">
+                  <label
+                    htmlFor="description"
+                    className="text-sm font-medium text-gray-700"
+                  >
+                    Description
+                  </label>
+
+                  <textarea
+                    id="description"
+                    rows={5}
+                    {...register(
+                      "description",
+                    )}
+                    disabled={
+                      isSubmitting ||
+                      isArchiving
+                    }
+                    className="w-full resize-none rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200 disabled:bg-gray-50"
+                    placeholder="Describe the issue..."
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-2">
+                    <label
+                      htmlFor="type"
+                      className="text-sm font-medium text-gray-700"
+                    >
+                      Type
+                    </label>
+
+                    <select
+                      id="type"
+                      {...register("type")}
+                      disabled={
+                        isSubmitting ||
+                        isArchiving
+                      }
+                      className="rounded-lg border border-gray-300 px-4 py-2.5 text-sm outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200 disabled:bg-gray-50"
+                    >
+                      <option value="TASK">
+                        Task
+                      </option>
+
+                      <option value="BUG">
+                        Bug
+                      </option>
+
+                      <option value="STORY">
+                        Story
+                      </option>
+
+                      <option value="EPIC">
+                        Epic
+                      </option>
+                    </select>
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <label
+                      htmlFor="priority"
+                      className="text-sm font-medium text-gray-700"
+                    >
+                      Priority
+                    </label>
+
+                    <select
+                      id="priority"
+                      {...register(
+                        "priority",
+                      )}
+                      disabled={
+                        isSubmitting ||
+                        isArchiving
+                      }
+                      className="rounded-lg border border-gray-300 px-4 py-2.5 text-sm outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200 disabled:bg-gray-50"
+                    >
+                      <option value="LOW">
+                        Low
+                      </option>
+
+                      <option value="MEDIUM">
+                        Medium
+                      </option>
+
+                      <option value="HIGH">
+                        High
+                      </option>
+
+                      <option value="URGENT">
+                        Urgent
+                      </option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Sprint */}
+                <div className="flex flex-col gap-2">
+                  <label
+                    htmlFor="sprintId"
+                    className="text-sm font-medium text-gray-700"
+                  >
+                    Sprint
+                  </label>
+
+                  <select
+                    id="sprintId"
+                    {...register("sprintId")}
+                    disabled={
+                      isSubmitting ||
+                      isArchiving ||
+                      isSprintsLoading
+                    }
+                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200 disabled:bg-gray-50"
+                  >
+                    <option value="">
+                      {isSprintsLoading
+                        ? "Loading sprints..."
+                        : "No Sprint"}
+                    </option>
+
+                    {sprints.map(
+                      (sprint) => (
+                        <option
+                          key={sprint.id}
+                          value={sprint.id}
+                        >
+                          {sprint.name}
+                        </option>
+                      ),
+                    )}
+                  </select>
+                </div>
+
+                {/* Due date */}
+                <div className="flex flex-col gap-2">
+                  <label
+                    htmlFor="dueDate"
+                    className="text-sm font-medium text-gray-700"
+                  >
+                    Due Date
+                  </label>
+
+                  <input
+                    id="dueDate"
+                    type="date"
+                    {...register("dueDate")}
+                    disabled={
+                      isSubmitting ||
+                      isArchiving
+                    }
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200 disabled:bg-gray-50"
+                  />
+                </div>
+
+                {/* Assignee */}
+                <Input
+                  id="email"
+                  type="email"
+                  label="Assignee Email"
+                  placeholder="member@example.com"
+                  error={
+                    errors.email?.message
+                  }
+                  {...register("email")}
+                  disabled={
+                    isSubmitting ||
+                    isArchiving
+                  }
+                />
+
+                {/* Edit actions */}
+                <div className="flex gap-3 border-t border-gray-200 pt-5">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={
+                      handleCancelEdit
+                    }
+                    disabled={
+                      isSubmitting ||
+                      isArchiving
+                    }
+                    className="flex-1"
+                  >
+                    Cancel
+                  </Button>
+
+                  <Button
+                    type="submit"
+                    variant="outline"
+                    disabled={
+                      isSubmitting ||
+                      isArchiving
+                    }
+                    className="flex-1"
+                  >
+                    {isSubmitting
+                      ? "Saving..."
+                      : "Save Changes"}
+                  </Button>
+                </div>
+              </form>
+            )}
+          </div>
+
+          {/* RIGHT - COMMENTS */}
+          <div className="min-h-0 overflow-hidden p-6">
+            <CommentSection
+              issueId={issue.id}
             />
           </div>
+        </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col gap-2">
-              <label
-                htmlFor="type"
-                className="text-sm font-medium text-gray-700"
-              >
-                Type
-              </label>
+        {/* Footer */}
+        <div className="flex shrink-0 items-center justify-between border-t border-gray-200 px-6 py-4">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onRemove}
+            disabled={
+              isSubmitting ||
+              isArchiving
+            }
+            className="text-sm font-medium text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {isArchiving
+              ? "Removing..."
+              : "Remove Issue"}
+          </Button>
 
-              <select
-                id="type"
-                {...register("type")}
-                disabled={isSubmitting}
-                className="rounded-lg border border-gray-300 px-4 py-2.5 text-sm outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
-              >
-                <option value="TASK">Task</option>
-                <option value="BUG">Bug</option>
-                <option value="STORY">Story</option>
-                <option value="EPIC">Epic</option>
-              </select>
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <label
-                htmlFor="priority"
-                className="text-sm font-medium text-gray-700"
-              >
-                Priority
-              </label>
-
-              <select
-                id="priority"
-                {...register("priority")}
-                disabled={isSubmitting}
-                className="rounded-lg border border-gray-300 px-4 py-2.5 text-sm outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
-              >
-                <option value="LOW">Low</option>
-                <option value="MEDIUM">Medium</option>
-                <option value="HIGH">High</option>
-                <option value="URGENT">Urgent</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <label
-              htmlFor="sprintId"
-              className="text-sm font-medium text-gray-700"
-            >
-              Sprint
-            </label>
-
-            <select
-              id="sprintId"
-              {...register("sprintId")}
-              disabled={isSubmitting || isArchiving || isSprintsLoading}
-              className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200 disabled:bg-gray-50"
-            >
-              <option value="">
-                {isSprintsLoading ? "Loading sprints..." : "No Sprint"}
-              </option>
-
-              {sprints.map((sprint) => (
-                <option key={sprint.id} value={sprint.id}>
-                  {sprint.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <label
-              htmlFor="dueDate"
-              className="text-sm font-medium text-gray-700"
-            >
-              Due Date
-            </label>
-
-            <input
-              id="dueDate"
-              type="date"
-              {...register("dueDate")}
-              disabled={isSubmitting || isArchiving}
-              className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200 disabled:bg-gray-50"
-            />
-          </div>
-
-          <Input
-            id="email"
-            type="email"
-            label="Assignee Email"
-            placeholder="member@example.com"
-            error={errors.email?.message}
-            {...register("email")}
-          />
-
-          <div className="flex justify-end gap-3 pt-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onRemove}
-              disabled={isSubmitting || isArchiving}
-              className="md:w-1/3 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {isArchiving ? "Removing..." : "Remove Issue"}
-            </Button>
-
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              disabled={isSubmitting || isArchiving}
-              className="md:w-1/3 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 disabled:opacity-50"
-            >
-              Cancel
-            </Button>
-
-            <Button
-              type="submit"
-              variant="outline"
-              disabled={isSubmitting || isArchiving}
-              className="md:w-1/3"
-            >
-              {isSubmitting ? "Saving..." : "Save Changes"}
-            </Button>
-          </div>
-        </form>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onClose}
+            disabled={
+              isSubmitting ||
+              isArchiving
+            }
+            className="text-sm font-medium text-gray-600 hover:bg-gray-100 disabled:opacity-50"
+          >
+            Close
+          </Button>
+        </div>
       </div>
     </div>
   );

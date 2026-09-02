@@ -4,6 +4,7 @@ import * as issueRepository from "../issues/issue.repository";
 import * as projectRepository from "../projects/project.repository";
 import * as workspaceRepository from "../workspaces/workspace.repository";
 import * as organizationRepository from "../organization/organization.repository";
+import * as notificationService from "@/modules/notifications/notification.service";
 
 import type {
   CommentInput,
@@ -75,11 +76,21 @@ export const createComment = async (
     );
   }
 
-  return await commentRepository.createComment(
+  const comment = await commentRepository.createComment(
     issue.id,
     userId,
     data,
   );
+
+  if (issue.assigneeId && issue.assigneeId !== userId) {
+    await notificationService.createNotification({
+      userId: issue.assigneeId,
+      title: "New comment on your issue",
+      message: `${comment.author.name} commented on ${issue.issueKey}: ${comment.content}`,
+    });
+  }
+
+  return comment;
 };
 
 export const fetchAllComments = async (

@@ -33,6 +33,13 @@ export interface IssueProps {
 
   createdAt: string;
   updatedAt: string;
+
+  assignee: {
+    id: string;
+    name: string;
+    email: string;
+    avatarUrl: string | null;
+  } | null;
 }
 
 export interface CreateIssueProps {

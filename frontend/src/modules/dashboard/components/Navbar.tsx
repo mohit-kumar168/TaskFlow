@@ -1,5 +1,4 @@
 import {
-  Bell,
   PanelRightOpen,
   Plus,
   Settings,
@@ -11,6 +10,7 @@ import TFlogo from "@/assets/taskflow-logo.png";
 import SearchInput from "@/components/ui/SearchInput";
 import OrganizationSelector from "@/modules/organization/components/OrganizationSelector";
 import SettingsMenu from "../components/SettingsMenu";
+import NotificationDropdown from "./NotificationDropdown";
 
 import { useAuthStore } from "@/store/auth.store";
 import Button from "@/components/ui/Button";
@@ -64,7 +64,9 @@ const Navbar = ({
           className="flex h-9 w-9 items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-800"
         >
           <PanelRightOpen
-            className={`h-5 w-5 transition-transform duration-300 ${isSidebarOpen ? "" : "rotate-180"
+            className={`h-5 w-5 transition-transform duration-300 ${isSidebarOpen
+              ? ""
+              : "rotate-180"
               }`}
           />
         </button>
@@ -72,7 +74,7 @@ const Navbar = ({
         {/* Logo */}
         <Link
           to="/dashboard"
-          className="hidden sm:flex items-center"
+          className="hidden items-center sm:flex"
         >
           <img
             src={TFlogo}
@@ -84,10 +86,11 @@ const Navbar = ({
 
       {/* Organization Selector and Searchbar */}
       <div className="flex flex-1 items-center justify-center gap-4 px-2 sm:px-4">
-        <div className="px-1 py-1.5 ml-1 border border-gray-300 rounded-lg hover:bg-gray-100">
+        <div className="ml-1 rounded-lg border border-gray-300 px-1 py-1.5 hover:bg-gray-100">
           <OrganizationSelector />
         </div>
-        <div className="hidden md:block w-full max-w-xl">
+
+        <div className="hidden w-full max-w-xl md:block">
           <SearchInput
             placeholder="Search across tasks, projects, workspaces..."
             value={searchQuery}
@@ -105,6 +108,7 @@ const Navbar = ({
 
       {/* Right Section */}
       <div className="flex min-w-fit items-center gap-1 sm:gap-2">
+        {/* Create */}
         <Button
           type="button"
           className=""
@@ -113,17 +117,8 @@ const Navbar = ({
           <Plus className="h-5 w-5" />
         </Button>
 
-        <button
-          type="button"
-          className="relative flex h-9 w-9 items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-800 sm:h-10 sm:w-10"
-          title="Notifications"
-        >
-          <Bell className="h-5 w-5" />
-
-          <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-semibold text-white">
-            3
-          </span>
-        </button>
+        {/* Notifications */}
+        <NotificationDropdown />
 
         {/* Settings */}
         <div className="relative">
@@ -160,16 +155,17 @@ const Navbar = ({
           className="ml-1 flex items-center gap-2 rounded-lg px-1.5 py-1.5 transition-colors hover:bg-gray-100"
           title={user?.name || "Profile"}
         >
-          {user?.avatarUrl
-            ? <img
+          {user?.avatarUrl ? (
+            <img
               src={user.avatarUrl}
               alt="user avatar"
               className="h-9 w-9 rounded-full"
             />
-            : <div className="flex h-9 w-9 items-center justify-center rounded-full bg-orange-500 text-sm font-semibold text-white">
+          ) : (
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-orange-500 text-sm font-semibold text-white">
               {userInitial}
             </div>
-          }
+          )}
 
           <div className="hidden max-w-32 text-left lg:block">
             <p className="truncate text-sm font-medium text-gray-900">
