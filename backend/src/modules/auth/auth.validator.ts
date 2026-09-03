@@ -23,10 +23,6 @@ export const registerUserSchema = z.object({
       .string()
       .max(250, "Bio cannot exceed 250 characters.")
       .optional(),
-
-    avatarUrl: z
-      .url("Avatar URL must be valid URL.")
-      .optional()
   }),
 });
 

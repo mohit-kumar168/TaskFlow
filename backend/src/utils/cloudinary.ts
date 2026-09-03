@@ -1,71 +1,108 @@
-import env from "@/config/env";
-import cloudinary from "../config/cloudinary";
-import apiError from "./apiError";
+import { createHash } from "node:crypto";
+import cloudinary from "@/config/cloudinary";
 
-interface UploadImageOptions {
+interface UploadOptions {
   folder: string;
   publicId?: string;
+  resourceType?: "image" | "raw" | "video" | "auto";
 }
 
-interface CloudinaryUploadResult {
+interface UploadResult {
   url: string;
   publicId: string;
   resourceType: string;
+  format?: string;
+  bytes: number;
 }
 
-export const uploadImageToCloudinary = (buffer: Buffer, options: UploadImageOptions): Promise<CloudinaryUploadResult> => {
-  return new Promise((resolve, reject) => {
-    const uploadStream = cloudinary.uploader.upload_stream(
-      {
-        cloud_name: env.CLOUDINARY_CLOUD_NAME,
-        api_key: env.CLOUDINARY_API_KEY,
-        api_secret: env.CLOUDINARY_API_SECRET,
+interface CloudinaryUploadResponse {
+  secure_url: string;
+  public_id: string;
+  resource_type: string;
+  format?: string;
+  bytes: number;
+  error?: { message?: string };
+}
 
-        folder: options.folder,
-        public_id: options.publicId,
-        resource_type: "image",
-        overwrite: true,
-      },
-      (error, result) => {
-        if (error) {
-          reject(error);
-          return;
-        }
+export const uploadToCloudinary = async (
+  buffer: Buffer,
+  options: UploadOptions,
+): Promise<UploadResult> => {
+  const config = cloudinary.config();
+  const timestamp = Math.floor(Date.now() / 1000);
+  const signatureParams: Record<string, string | number> = {
+    folder: options.folder,
+    timestamp,
+  };
 
-        if (!result) {
-          reject(
-            new apiError(500, "Cloudinary upload failed")
-          );
-          return;
-        }
+  if (options.publicId) {
+    signatureParams.public_id = options.publicId;
+  }
 
-        resolve({
-          url: result.secure_url,
-          publicId: result.public_id,
-          resourceType: result.resource_type,
-        });
-      },
-    );
-    uploadStream.end(buffer);
-  })
+  const signatureString = Object.keys(signatureParams)
+    .sort()
+    .map((key) => `${key}=${signatureParams[key]}`)
+    .join("&");
+  const signature = createHash("sha1")
+    .update(`${signatureString}${config.api_secret}`)
+    .digest("hex");
+
+  const formData = new FormData();
+  formData.append(
+    "file",
+    new Blob([new Uint8Array(buffer)]),
+    options.publicId ?? "upload",
+  );
+  formData.append("api_key", config.api_key!);
+  formData.append("timestamp", String(timestamp));
+  formData.append("signature", signature);
+  formData.append("folder", options.folder);
+
+  if (options.publicId) {
+    formData.append("public_id", options.publicId);
+  }
+
+  const response = await fetch(
+    `https://api.cloudinary.com/v1_1/${config.cloud_name}/${options.resourceType ?? "auto"}/upload`,
+    { method: "POST", body: formData },
+  );
+  const result = await response.json() as CloudinaryUploadResponse;
+
+  if (!response.ok) {
+    throw new Error(result?.error?.message ?? "Cloudinary upload failed");
+  }
+
+  return {
+    url: result.secure_url,
+    publicId: result.public_id,
+    resourceType: result.resource_type,
+    format: result.format,
+    bytes: result.bytes,
+  };
 };
 
-export const deleteImageFromCloudinary = async (publicId: string) => {
+export const deleteFromCloudinary = (
+  publicId: string,
+  resourceType:
+    | "image"
+    | "raw"
+    | "video"
+    | "auto" = "image",
+) => {
   return new Promise((resolve, reject) => {
     cloudinary.uploader.destroy(
       publicId,
       {
-        cloud_name: env.CLOUDINARY_CLOUD_NAME,
-        api_key: env.CLOUDINARY_API_KEY,
-        api_secret: env.CLOUDINARY_API_SECRET,
-      } as any,
+        resource_type: resourceType,
+      },
       (error, result) => {
         if (error) {
           reject(error);
           return;
         }
+
         resolve(result);
-      }
+      },
     );
   });
 };
@@ -77,57 +114,3 @@ export const getOrganizationFolder = (organizationSlug: string) => `taskflow/org
 export const getWorkspaceFolder = (workspaceSlug: string) => `taskflow/workspaces/workspace_${workspaceSlug}`;
 
 export const getProjectFolder = (projectSlug: string) => `taskflow/projects/project_${projectSlug}`;
-
-
-
-/*
-import fs from "node:fs";
-import cloudinary from "../config/cloudinary";
-
-interface UploadImageOptions {
-  folder: string;
-  publicId?: string;
-}
-
-export const uploadOnCloudinary = async (
-  localFilePath: string,
-  options?: UploadImageOptions,
-) => {
-  try {
-    if (!localFilePath) return null;
-
-    const response = await cloudinary.uploader.upload(localFilePath, {
-      upload_preset: "test_preset",
-      resource_type: "image",
-      folder: options?.folder,
-      public_id: options?.publicId,
-      overwrite: true,
-    });
-
-    // const response = await cloudinary.uploader.unsigned_upload(localFilePath, "test_preset");
-
-    fs.unlinkSync(localFilePath);
-    return response;
-  } catch (error) {
-    console.error("Cloudinary upload error:", error);
-    fs.unlinkSync(localFilePath);
-    return null;
-  }
-};
-
-export const deleteImageFromCloudinary = async (publicId: string) => {
-  await cloudinary.uploader.destroy(publicId);
-};
-
-export const getUserFolder = (userId: string) =>
-  `taskflow/users/user_${userId}`;
-
-export const getOrganizationFolder = (organizationSlug: string) =>
-  `taskflow/organizations/organization_${organizationSlug}`;
-
-export const getWorkspaceFolder = (workspaceSlug: string) =>
-  `taskflow/workspaces/workspace_${workspaceSlug}`;
-
-export const getProjectFolder = (projectSlug: string) =>
-  `taskflow/projects/project_${projectSlug}`;
-*/

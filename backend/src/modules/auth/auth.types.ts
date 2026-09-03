@@ -3,7 +3,6 @@ export interface RegisterWithCredentialsInput {
   email: string;
   password: string;
   bio?: string;
-  avatarUrl?: string;
 }
 
 export interface LoginWithCredentialsInput {
