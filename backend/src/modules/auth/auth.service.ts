@@ -18,7 +18,7 @@ import {
   generateRefreshToken,
   verifyRefreshToken
 } from "@/utils/jwt";
-import { getUserFolder, uploadImageToCloudinary } from "@/utils/cloudinary";
+import { getUserFolder, uploadToCloudinary } from "@/utils/cloudinary";
 
 export const registerWithCredentials = async (data: RegisterWithCredentialsInput) => {
   const existingUser = await authRepository.findUserByEmail(data.email);
@@ -146,19 +146,20 @@ export const updateProfile = async (
     throw new apiError(404, "User not found.");
   }
 
-  let avatarUrl = data.avatarUrl;
+  let avatarUrl;
 
   console.log("Before Cloudinary upload");
 
   if (file) {
-    const uploadImage = await uploadImageToCloudinary(
-      file.buffer,
-      {
-        folder: getUserFolder(userId),
-        publicId: "avatar",
-      },
-    );
-
+    const uploadImage =
+      await uploadToCloudinary(
+        file.buffer,
+        {
+          folder: getUserFolder(userId),
+          publicId: "avatar",
+          resourceType: "image",
+        },
+      );
     console.log("Cloudinary result:", uploadImage);
 
     avatarUrl = uploadImage.url;

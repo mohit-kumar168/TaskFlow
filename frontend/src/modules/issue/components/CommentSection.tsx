@@ -197,34 +197,40 @@ const CommentSection = ({
   return (
     <div className="flex h-full min-h-0 flex-col">
       {/* Header */}
-      <div className="shrink-0 border-b border-gray-200 pb-3">
+      <div className="shrink-0 border-b border-gray-200 pb-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-gray-900">
-            Comments
-          </h3>
+          <div>
+            <h3 className="text-sm font-semibold text-gray-900">
+              Comments
+            </h3>
 
-          <span className="text-xs text-gray-400">
+            <p className="mt-1 text-xs text-gray-400">
+              Discussion about this issue
+            </p>
+          </div>
+
+          <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-500">
             {comments.length}
           </span>
         </div>
       </div>
 
       {/* Comments */}
-      <div className="min-h-0 flex-1 overflow-y-auto py-3 pr-1">
+      <div className="min-h-0 flex-1 overflow-y-auto py-4 pr-1">
         {isLoading ? (
-          <div className="py-8 text-center">
-            <p className="text-sm text-gray-500">
+          <div className="py-10 text-center">
+            <p className="text-sm text-gray-400">
               Loading comments...
             </p>
           </div>
         ) : comments.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 px-4 py-6 text-center">
+          <div className="rounded-xl border border-dashed border-gray-200 px-4 py-8 text-center">
             <p className="text-sm text-gray-500">
               No comments yet.
             </p>
 
             <p className="mt-1 text-xs text-gray-400">
-              Be the first to leave a comment.
+              Start the discussion below.
             </p>
           </div>
         ) : (
@@ -234,13 +240,15 @@ const CommentSection = ({
                 editingCommentId ===
                 comment.id;
 
+              const isAuthor =
+                user?.id === comment.author.id;
+
               return (
                 <div
                   key={comment.id}
-                  className="group rounded-lg border border-gray-200 px-3 py-2.5 transition hover:border-gray-300"
+                  className="group rounded-xl border border-gray-200 bg-white px-4 py-2 transition hover:border-gray-300"
                 >
-                  <div className="flex items-start gap-2.5">
-                    {/* Avatar */}
+                  <div className="flex items-start gap-3">
                     {comment.author.avatarUrl ? (
                       <img
                         src={
@@ -250,7 +258,7 @@ const CommentSection = ({
                         alt={
                           comment.author.name
                         }
-                        className="h-8 w-8 shrink-0 rounded-full object-cover"
+                        className="h-10 w-10 shrink-0 rounded-full object-cover"
                       />
                     ) : (
                       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-orange-100 text-xs font-semibold text-orange-600">
@@ -262,22 +270,21 @@ const CommentSection = ({
                     )}
 
                     <div className="min-w-0 flex-1">
-                      {/* Author + actions */}
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex min-w-0 items-center gap-2">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
                           <p className="truncate text-sm font-medium text-gray-900">
                             {comment.author.name}
                           </p>
 
-                          <span className="shrink-0 text-[11px] text-gray-400">
+                          <p className="mt-0.5 text-xs text-gray-400">
                             {formatCommentDate(
                               comment.createdAt,
                             )}
-                          </span>
+                          </p>
                         </div>
 
-                        {!isEditing &&
-                          user?.id === comment.authorId && (
+                        {isAuthor &&
+                          !isEditing && (
                             <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition group-hover:opacity-100">
                               <button
                                 type="button"
@@ -290,7 +297,7 @@ const CommentSection = ({
                                   isUpdating ||
                                   isDeleting
                                 }
-                                className="rounded-md p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50"
+                                className="rounded-md p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50"
                                 title="Edit comment"
                               >
                                 <Pencil
@@ -309,7 +316,7 @@ const CommentSection = ({
                                   isUpdating ||
                                   isDeleting
                                 }
-                                className="rounded-md p-1 text-gray-400 hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
+                                className="rounded-md p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
                                 title="Delete comment"
                               >
                                 <Trash2
@@ -320,9 +327,8 @@ const CommentSection = ({
                           )}
                       </div>
 
-                      {/* Comment content */}
                       {isEditing ? (
-                        <div className="mt-2">
+                        <div className="mt-3">
                           <textarea
                             value={
                               editingContent
@@ -336,15 +342,15 @@ const CommentSection = ({
                               )
                             }
                             maxLength={1000}
-                            rows={2}
+                            rows={3}
                             autoFocus
                             disabled={
                               isUpdating
                             }
-                            className="w-full resize-none rounded-md border border-gray-300 px-2.5 py-2 text-sm outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200 disabled:bg-gray-50"
+                            className="w-full resize-none rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none transition focus:border-orange-500 focus:ring-2 focus:ring-orange-200 disabled:bg-gray-50"
                           />
 
-                          <div className="mt-1.5 flex justify-end gap-1.5">
+                          <div className="mt-2 flex items-center justify-end gap-2">
                             <button
                               type="button"
                               onClick={
@@ -353,10 +359,10 @@ const CommentSection = ({
                               disabled={
                                 isUpdating
                               }
-                              className="flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-gray-500 hover:bg-gray-100 disabled:opacity-50"
+                              className="flex items-center gap-1 rounded-md px-2.5 py-1.5 text-xs font-medium text-gray-500 hover:bg-gray-100 disabled:opacity-50"
                             >
                               <X
-                                size={12}
+                                size={13}
                               />
                               Cancel
                             </button>
@@ -372,7 +378,7 @@ const CommentSection = ({
                                 isUpdating ||
                                 !editingContent.trim()
                               }
-                              className="rounded-md bg-orange-500 px-2.5 py-1 text-xs font-medium text-white hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
+                              className="rounded-md bg-orange-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
                             >
                               {isUpdating
                                 ? "Saving..."
@@ -381,7 +387,7 @@ const CommentSection = ({
                           </div>
                         </div>
                       ) : (
-                        <p className="mt-1.5 whitespace-pre-wrap break-words text-sm leading-5 text-gray-700">
+                        <p className="mt-1 whitespace-pre-wrap break-words text-sm leading-6 text-gray-700">
                           {comment.content}
                         </p>
                       )}
@@ -396,7 +402,7 @@ const CommentSection = ({
 
       {/* Composer */}
       <div className="shrink-0 border-t border-gray-200 pt-3">
-        <div className="flex items-center gap-2">
+        <div className="flex items-end gap-2">
           <textarea
             value={content}
             onChange={(event) =>
@@ -406,32 +412,32 @@ const CommentSection = ({
             rows={2}
             placeholder="Write a comment..."
             disabled={isCreating}
-            className="min-h-12 flex-1 resize-none rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none transition focus:border-orange-500 focus:ring-2 focus:ring-orange-200 disabled:bg-gray-50"
+            className="min-h-12 max-h-32 flex-1 resize-none rounded-lg border border-gray-300 px-3 py-2.5 text-sm outline-none transition focus:border-orange-500 focus:ring-2 focus:ring-orange-200 disabled:bg-gray-50"
           />
 
-          <div className="mt-1 flex flex-col justify-center items-center">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleCreateComment}
-              disabled={
-                isCreating ||
-                !content.trim()
-              }
-              className="flex h-10 shrink-0 items-center gap-1.5 px-3"
-            >
-              <Send size={14} />
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleCreateComment}
+            disabled={
+              isCreating ||
+              !content.trim()
+            }
+            className="flex h-11 shrink-0 items-center gap-1.5 px-3"
+          >
+            <Send size={14} />
 
-              <span className="hidden sm:inline">
-                {isCreating
-                  ? "Sending..."
-                  : "Send"}
-              </span>
-            </Button>
-          </div>
-
+            <span className="hidden sm:inline">
+              {isCreating
+                ? "Sending..."
+                : "Send"}
+            </span>
+          </Button>
         </div>
 
+        <p className="mt-1 text-right text-[11px] text-gray-400">
+          {content.length}/1000
+        </p>
       </div>
     </div>
   );

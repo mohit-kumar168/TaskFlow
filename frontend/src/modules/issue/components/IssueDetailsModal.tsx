@@ -12,12 +12,14 @@ import {
   type IssuePriority,
   type UpdateIssueProps,
 } from "@/api/issue.api";
+
 import {
   getAllSprints,
   type SprintProps,
 } from "@/api/sprint.api";
 
 import CommentSection from "./CommentSection";
+import AttachmentSection from "./AttachmentSection";
 
 interface IssueDetailsFormData {
   title: string;
@@ -85,10 +87,6 @@ const IssueDetailsModal = ({
     },
   });
 
-  /*
-   * Load the project's sprints when
-   * the issue modal is opened.
-   */
   useEffect(() => {
     if (
       !isOpen ||
@@ -133,10 +131,6 @@ const IssueDetailsModal = ({
     projectSlug,
   ]);
 
-  /*
-   * Reset the form whenever a different
-   * issue is opened.
-   */
   useEffect(() => {
     if (!issue) {
       return;
@@ -157,10 +151,6 @@ const IssueDetailsModal = ({
     setIsEditing(false);
   }, [issue, reset]);
 
-  /*
-   * Close edit mode whenever the modal
-   * itself is closed.
-   */
   useEffect(() => {
     if (!isOpen) {
       setIsEditing(false);
@@ -175,6 +165,9 @@ const IssueDetailsModal = ({
     (sprint) =>
       sprint.id === issue.sprintId,
   );
+
+  const isDisabled =
+    isSubmitting || isArchiving;
 
   const handleFormSubmit = (
     data: IssueDetailsFormData,
@@ -213,33 +206,33 @@ const IssueDetailsModal = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-6">
-      <div className="flex max-h-[90vh] w-full max-w-6xl flex-col overflow-hidden rounded-xl bg-white shadow-xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-2 sm:p-4">
+      <div className="flex h-[calc(100vh-1rem)] w-full max-w-6xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl sm:h-[90vh]">
         {/* Header */}
-        <div className="flex shrink-0 items-start justify-between border-b border-gray-200 px-6 py-5">
+        <div className="flex shrink-0 items-start justify-between gap-4 border-b border-gray-200 px-4 py-4 sm:px-6">
           <div className="min-w-0">
             <p className="text-xs font-medium text-gray-400">
               {issue.issueKey}
             </p>
 
-            <h2 className="mt-1 truncate text-lg font-semibold text-gray-900">
+            <h2 className="mt-1 truncate text-base font-semibold text-gray-900 sm:text-lg">
               {isEditing
                 ? "Edit Issue"
                 : issue.title}
             </h2>
 
             {!isEditing && (
-              <div className="mt-2 flex flex-wrap items-center gap-2">
-                <span className="rounded-md bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
+              <div className="mt-2 flex flex-wrap gap-2">
+                <span className="rounded-md bg-gray-100 px-2 py-1 text-[11px] font-medium text-gray-600">
                   {issue.type}
                 </span>
 
-                <span className="rounded-md bg-orange-50 px-2 py-1 text-xs font-medium text-orange-600">
+                <span className="rounded-md bg-orange-50 px-2 py-1 text-[11px] font-medium text-orange-600">
                   {issue.priority}
                 </span>
 
                 {selectedSprint && (
-                  <span className="rounded-md bg-orange-50 px-2 py-1 text-xs font-medium text-orange-600">
+                  <span className="rounded-md bg-gray-100 px-2 py-1 text-[11px] font-medium text-gray-600">
                     {selectedSprint.name}
                   </span>
                 )}
@@ -250,37 +243,22 @@ const IssueDetailsModal = ({
           <button
             type="button"
             onClick={onClose}
-            disabled={
-              isSubmitting ||
-              isArchiving
-            }
-            className="ml-4 shrink-0 rounded-lg px-2 py-1 text-xl text-gray-400 hover:bg-gray-100 hover:text-gray-600 disabled:opacity-50"
+            disabled={isDisabled}
+            className="shrink-0 rounded-lg px-2 py-1 text-xl leading-none text-gray-400 transition hover:bg-gray-100 hover:text-gray-600 disabled:opacity-50"
+            aria-label="Close"
           >
             ×
           </button>
         </div>
 
-        {/* Main content */}
-        <div className="grid min-h-0 flex-1 lg:grid-cols-2">
-          {/* LEFT - ISSUE DETAILS */}
-          <div className="min-h-0 overflow-y-auto border-b border-gray-200 p-6 lg:border-b-0 lg:border-r">
+        {/* Content */}
+        <div className="grid min-h-0 flex-1 grid-cols-1 md:grid-cols-2">
+          {/* LEFT - ISSUE */}
+          <div className="min-h-0 overflow-y-auto border-b border-gray-200 px-4 py-5 sm:px-6 md:border-b-0 md:border-r">
             {!isEditing ? (
-              /* READ ONLY */
-              <div className="space-y-6">
-                {/* Title */}
-                <div>
-                  <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
-                    Title
-                  </p>
-
-                  <p className="mt-1 text-sm font-medium text-gray-900">
-                    {issue.title}
-                  </p>
-                </div>
-
-                {/* Description */}
-                <div>
-                  <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
+              <div className="space-y-5">
+                <section>
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
                     Description
                   </p>
 
@@ -293,136 +271,122 @@ const IssueDetailsModal = ({
                       No description provided.
                     </p>
                   )}
-                </div>
+                </section>
 
-                {/* Details */}
-                <div className="grid grid-cols-2 gap-x-6 gap-y-5">
-                  <div>
-                    <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
-                      Type
-                    </p>
+                {/* Issue details */}
+                <section className="rounded-xl border border-gray-200 bg-gray-50/50 p-4">
+                  <div className="grid grid-cols-2 gap-x-5 gap-y-4">
+                    <div>
+                      <p className="text-[11px] font-medium uppercase tracking-wide text-gray-400">
+                        Type
+                      </p>
 
-                    <p className="mt-1 text-sm font-medium text-gray-800">
-                      {issue.type}
-                    </p>
+                      <p className="mt-1 text-sm font-medium text-gray-800">
+                        {issue.type}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-[11px] font-medium uppercase tracking-wide text-gray-400">
+                        Priority
+                      </p>
+
+                      <p className="mt-1 text-sm font-medium text-gray-800">
+                        {issue.priority}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-[11px] font-medium uppercase tracking-wide text-gray-400">
+                        Status
+                      </p>
+
+                      <p className="mt-1 text-sm font-medium text-gray-800">
+                        {issue.status}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-[11px] font-medium uppercase tracking-wide text-gray-400">
+                        Sprint
+                      </p>
+
+                      <p className="mt-1 truncate text-sm font-medium text-gray-800">
+                        {selectedSprint?.name ??
+                          "No Sprint"}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-[11px] font-medium uppercase tracking-wide text-gray-400">
+                        Due Date
+                      </p>
+
+                      <p className="mt-1 text-sm font-medium text-gray-800">
+                        {issue.dueDate
+                          ? new Date(
+                            issue.dueDate,
+                          ).toLocaleDateString()
+                          : "No due date"}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-[11px] font-medium uppercase tracking-wide text-gray-400">
+                        Assignee
+                      </p>
+
+                      <p className="mt-1 truncate text-sm font-medium text-gray-800">
+                        {issue.assignee?.name ??
+                          "Unassigned"}
+                      </p>
+                    </div>
                   </div>
+                </section>
 
-                  <div>
-                    <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
-                      Priority
-                    </p>
+                {/* Attachments */}
+                <AttachmentSection
+                  issueId={issue.id}
+                />
 
-                    <p className="mt-1 text-sm font-medium text-gray-800">
-                      {issue.priority}
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
-                      Status
-                    </p>
-
-                    <p className="mt-1 text-sm font-medium text-gray-800">
-                      {issue.status}
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
-                      Sprint
-                    </p>
-
-                    <p className="mt-1 text-sm font-medium text-gray-800">
-                      {selectedSprint?.name ??
-                        "No Sprint"}
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
-                      Due Date
-                    </p>
-
-                    <p className="mt-1 text-sm font-medium text-gray-800">
-                      {issue.dueDate
-                        ? new Date(
-                          issue.dueDate,
-                        ).toLocaleDateString()
-                        : "No due date"}
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
-                      Assignee
-                    </p>
-
-                    <p className="mt-1 break-all text-sm font-medium text-gray-800">
-                      {issue.assignee?.name ??
-                        "Unassigned"}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Edit button */}
-                <div className="border-t border-gray-200 pt-5">
+                {/* Edit */}
+                <div className="border-t border-gray-200 pt-4">
                   <Button
                     type="button"
                     variant="outline"
                     onClick={() =>
                       setIsEditing(true)
                     }
-                    disabled={
-                      isSubmitting ||
-                      isArchiving
-                    }
+                    disabled={isDisabled}
                     className="flex w-full items-center justify-center gap-2"
                   >
-                    <Pencil size={15} />
+                    <Pencil size={14} />
                     Edit Issue
                   </Button>
                 </div>
               </div>
             ) : (
-              /* EDIT MODE */
+              /* EDIT FORM */
               <form
                 onSubmit={handleSubmit(
                   handleFormSubmit,
                 )}
                 className="space-y-5"
               >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
-                      Editing
-                    </p>
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+                    Editing
+                  </p>
 
-                    <p className="mt-1 text-sm font-medium text-gray-900">
-                      {issue.issueKey}
-                    </p>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={
-                      handleCancelEdit
-                    }
-                    disabled={
-                      isSubmitting ||
-                      isArchiving
-                    }
-                    className="text-sm font-medium text-gray-500 hover:text-gray-700 disabled:opacity-50"
-                  >
-                    Cancel
-                  </button>
+                  <p className="mt-1 text-sm font-medium text-gray-900">
+                    {issue.issueKey}
+                  </p>
                 </div>
 
                 <Input
                   id="title"
                   label="Title"
-                  error={
-                    errors.title?.message
-                  }
+                  error={errors.title?.message}
                   {...register("title", {
                     required:
                       "Issue title is required.",
@@ -432,6 +396,7 @@ const IssueDetailsModal = ({
                         "Issue title must be at least 2 characters.",
                     },
                   })}
+                  disabled={isDisabled}
                 />
 
                 <div className="flex flex-col gap-2">
@@ -445,19 +410,15 @@ const IssueDetailsModal = ({
                   <textarea
                     id="description"
                     rows={5}
-                    {...register(
-                      "description",
-                    )}
-                    disabled={
-                      isSubmitting ||
-                      isArchiving
-                    }
-                    className="w-full resize-none rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200 disabled:bg-gray-50"
+                    {...register("description")}
+                    disabled={isDisabled}
+                    className="w-full resize-none rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none transition focus:border-orange-500 focus:ring-2 focus:ring-orange-200 disabled:bg-gray-50"
                     placeholder="Describe the issue..."
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  {/* Type */}
                   <div className="flex flex-col gap-2">
                     <label
                       htmlFor="type"
@@ -469,11 +430,8 @@ const IssueDetailsModal = ({
                     <select
                       id="type"
                       {...register("type")}
-                      disabled={
-                        isSubmitting ||
-                        isArchiving
-                      }
-                      className="rounded-lg border border-gray-300 px-4 py-2.5 text-sm outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200 disabled:bg-gray-50"
+                      disabled={isDisabled}
+                      className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm outline-none transition focus:border-orange-500 focus:ring-2 focus:ring-orange-200 disabled:bg-gray-50"
                     >
                       <option value="TASK">
                         Task
@@ -493,6 +451,7 @@ const IssueDetailsModal = ({
                     </select>
                   </div>
 
+                  {/* Priority */}
                   <div className="flex flex-col gap-2">
                     <label
                       htmlFor="priority"
@@ -503,14 +462,9 @@ const IssueDetailsModal = ({
 
                     <select
                       id="priority"
-                      {...register(
-                        "priority",
-                      )}
-                      disabled={
-                        isSubmitting ||
-                        isArchiving
-                      }
-                      className="rounded-lg border border-gray-300 px-4 py-2.5 text-sm outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200 disabled:bg-gray-50"
+                      {...register("priority")}
+                      disabled={isDisabled}
+                      className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm outline-none transition focus:border-orange-500 focus:ring-2 focus:ring-orange-200 disabled:bg-gray-50"
                     >
                       <option value="LOW">
                         Low
@@ -544,11 +498,10 @@ const IssueDetailsModal = ({
                     id="sprintId"
                     {...register("sprintId")}
                     disabled={
-                      isSubmitting ||
-                      isArchiving ||
+                      isDisabled ||
                       isSprintsLoading
                     }
-                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200 disabled:bg-gray-50"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm outline-none transition focus:border-orange-500 focus:ring-2 focus:ring-orange-200 disabled:bg-gray-50"
                   >
                     <option value="">
                       {isSprintsLoading
@@ -556,16 +509,14 @@ const IssueDetailsModal = ({
                         : "No Sprint"}
                     </option>
 
-                    {sprints.map(
-                      (sprint) => (
-                        <option
-                          key={sprint.id}
-                          value={sprint.id}
-                        >
-                          {sprint.name}
-                        </option>
-                      ),
-                    )}
+                    {sprints.map((sprint) => (
+                      <option
+                        key={sprint.id}
+                        value={sprint.id}
+                      >
+                        {sprint.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
@@ -582,11 +533,8 @@ const IssueDetailsModal = ({
                     id="dueDate"
                     type="date"
                     {...register("dueDate")}
-                    disabled={
-                      isSubmitting ||
-                      isArchiving
-                    }
-                    className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200 disabled:bg-gray-50"
+                    disabled={isDisabled}
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm outline-none transition focus:border-orange-500 focus:ring-2 focus:ring-orange-200 disabled:bg-gray-50"
                   />
                 </div>
 
@@ -596,28 +544,20 @@ const IssueDetailsModal = ({
                   type="email"
                   label="Assignee Email"
                   placeholder="member@example.com"
-                  error={
-                    errors.email?.message
-                  }
+                  error={errors.email?.message}
                   {...register("email")}
-                  disabled={
-                    isSubmitting ||
-                    isArchiving
-                  }
+                  disabled={isDisabled}
                 />
 
-                {/* Edit actions */}
-                <div className="flex gap-3 border-t border-gray-200 pt-5">
+                {/* Actions */}
+                <div className="flex flex-col gap-2 border-t border-gray-200 pt-4 sm:flex-row">
                   <Button
                     type="button"
                     variant="outline"
                     onClick={
                       handleCancelEdit
                     }
-                    disabled={
-                      isSubmitting ||
-                      isArchiving
-                    }
+                    disabled={isDisabled}
                     className="flex-1"
                   >
                     Cancel
@@ -626,10 +566,7 @@ const IssueDetailsModal = ({
                   <Button
                     type="submit"
                     variant="outline"
-                    disabled={
-                      isSubmitting ||
-                      isArchiving
-                    }
+                    disabled={isDisabled}
                     className="flex-1"
                   >
                     {isSubmitting
@@ -642,7 +579,7 @@ const IssueDetailsModal = ({
           </div>
 
           {/* RIGHT - COMMENTS */}
-          <div className="min-h-0 overflow-hidden p-6">
+          <div className="min-h-0 overflow-hidden px-4 py-5 sm:px-6">
             <CommentSection
               issueId={issue.id}
             />
@@ -650,15 +587,12 @@ const IssueDetailsModal = ({
         </div>
 
         {/* Footer */}
-        <div className="flex shrink-0 items-center justify-between border-t border-gray-200 px-6 py-4">
+        <div className="flex shrink-0 items-center justify-between gap-3 border-t border-gray-200 px-4 py-3 sm:px-6">
           <Button
             type="button"
             variant="outline"
             onClick={onRemove}
-            disabled={
-              isSubmitting ||
-              isArchiving
-            }
+            disabled={isDisabled}
             className="text-sm font-medium text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isArchiving
@@ -670,10 +604,7 @@ const IssueDetailsModal = ({
             type="button"
             variant="outline"
             onClick={onClose}
-            disabled={
-              isSubmitting ||
-              isArchiving
-            }
+            disabled={isDisabled}
             className="text-sm font-medium text-gray-600 hover:bg-gray-100 disabled:opacity-50"
           >
             Close

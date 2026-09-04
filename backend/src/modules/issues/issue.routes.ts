@@ -2,54 +2,60 @@ import { Router } from "express";
 
 
 import {
-	createIssueSchema,
-	updateIssueSchema,
-	moveIssueSchema,
+  createIssueSchema,
+  updateIssueSchema,
+  moveIssueSchema,
 } from "./issue.validator";
 
 import {
-	createIssue,
-	fetchAllIssues,
-	fetchIssue,
-	updateIssue,
-	moveIssue,
-	archiveIssue,
+  createIssue,
+  fetchAllIssues,
+  fetchIssue,
+  updateIssue,
+  moveIssue,
+  archiveIssue,
 } from "./issue.controller";
+import attachmentRouter from "@/modules/attachments/attachment.routes"
 import validateRequest from "@/middleware/validateRequest.middleware";
 
-const router = Router({mergeParams: true});
+const router = Router({ mergeParams: true });
 
 router.post(
-	"/",
-	validateRequest(createIssueSchema),
-	createIssue,
+  "/",
+  validateRequest(createIssueSchema),
+  createIssue,
 );
 
 router.get(
-	"/",
-	fetchAllIssues,
+  "/",
+  fetchAllIssues,
 );
 
 router.get(
-	"/:issueId",
-	fetchIssue,
+  "/:issueId",
+  fetchIssue,
 );
 
 router.patch(
-	"/:issueId",
-	validateRequest(updateIssueSchema),
-	updateIssue,
+  "/:issueId",
+  validateRequest(updateIssueSchema),
+  updateIssue,
 );
 
 router.patch(
-	"/:issueId/move",
-	validateRequest(moveIssueSchema),
-	moveIssue,
+  "/:issueId/move",
+  validateRequest(moveIssueSchema),
+  moveIssue,
 );
 
 router.delete(
-	"/:issueId",
-	archiveIssue,
+  "/:issueId",
+  archiveIssue,
+);
+
+router.use(
+  "/:issueId/attachments",
+  attachmentRouter,
 );
 
 export default router;

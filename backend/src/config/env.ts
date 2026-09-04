@@ -23,6 +23,8 @@ const envSchema = z.object({
     .min(1, "REFRESH_TOKEN_SECRET is required"),
 
   REFRESH_TOKEN_EXPIRES_IN: z.custom<SignOptions["expiresIn"]>(),
+
+  CLOUDINARY_URL: z.string().min(1, "CLOUDINARY_URL is required"),
   /*
     CLOUDINARY_CLOUD_NAME: z
       .string()
