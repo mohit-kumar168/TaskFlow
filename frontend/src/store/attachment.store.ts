@@ -4,12 +4,14 @@ import {
   type AttachmentProps,
   uploadAttachment,
   fetchAllAttachments,
+  deleteAttachment,
 } from "@/api/attachment.api";
 
 interface AttachmentStore {
   attachments: AttachmentProps[];
   isLoading: boolean;
   isUploading: boolean;
+  isDeleting: boolean;
   error: string | null;
 
   fetchAttachments: (
@@ -27,6 +29,14 @@ interface AttachmentStore {
     file: File,
   ) => Promise<void>;
 
+  removeAttachment: (
+    organizationSlug: string,
+    workspaceSlug: string,
+    projectSlug: string,
+    issueId: string,
+    attachmentId: string,
+  ) => Promise<void>;
+
   clearAttachments: () => void;
 }
 
@@ -34,6 +44,7 @@ const useAttachmentStore = create<AttachmentStore>((set) => ({
   attachments: [],
   isLoading: false,
   isUploading: false,
+  isDeleting: false,
   error: null,
 
   fetchAttachments: async (
@@ -109,11 +120,52 @@ const useAttachmentStore = create<AttachmentStore>((set) => ({
     }
   },
 
+  removeAttachment: async (
+    organizationSlug,
+    workspaceSlug,
+    projectSlug,
+    issueId,
+    attachmentId,
+  ) => {
+    try {
+      set({
+        isDeleting: true,
+        error: null,
+      });
+
+      await deleteAttachment(
+        organizationSlug,
+        workspaceSlug,
+        projectSlug,
+        issueId,
+        attachmentId,
+      );
+
+      set((state) => ({
+        attachments: state.attachments.filter(
+          (attachment) =>
+            attachment.id !== attachmentId,
+        ),
+        isDeleting: false,
+      }));
+    } catch (error: any) {
+      set({
+        isDeleting: false,
+        error:
+          error?.response?.data?.message ??
+          "Failed to remove attachment.",
+      });
+
+      throw error;
+    }
+  },
+
   clearAttachments: () => {
     set({
       attachments: [],
       isLoading: false,
       isUploading: false,
+      isDeleting: false,
       error: null,
     });
   },

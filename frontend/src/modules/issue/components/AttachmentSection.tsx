@@ -4,13 +4,13 @@ import {
   FileImage,
   FileText,
   Paperclip,
+  Trash2,
   Upload,
 } from "lucide-react";
 import { useParams } from "react-router-dom";
 
 import Button from "@/components/ui/Button";
 import useAttachmentStore from "@/store/attachment.store";
-
 
 interface AttachmentSectionProps {
   issueId: string;
@@ -22,13 +22,13 @@ const formatFileSize = (bytes: number) => {
   }
 
   const units = ["B", "KB", "MB", "GB"];
+
   const index = Math.floor(
     Math.log(bytes) / Math.log(1024),
   );
 
   return `${(
-    bytes /
-    Math.pow(1024, index)
+    bytes / Math.pow(1024, index)
   ).toFixed(index === 0 ? 0 : 1)} ${units[index]}`;
 };
 
@@ -65,9 +65,11 @@ const AttachmentSection = ({
     attachments,
     isLoading,
     isUploading,
+    isDeleting,
     error,
     fetchAttachments,
     uploadAttachment,
+    removeAttachment,
   } = useAttachmentStore();
 
   const fileInputRef =
@@ -107,7 +109,8 @@ const AttachmentSection = ({
       !organizationSlug ||
       !workspaceSlug ||
       !projectSlug ||
-      isUploading
+      isUploading ||
+      isDeleting
     ) {
       return;
     }
@@ -125,8 +128,43 @@ const AttachmentSection = ({
     }
   };
 
+  const handleRemoveAttachment = async (
+    attachmentId: string,
+    fileName: string,
+  ) => {
+    if (
+      !organizationSlug ||
+      !workspaceSlug ||
+      !projectSlug ||
+      isDeleting
+    ) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Remove "${fileName}"?`,
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      await removeAttachment(
+        organizationSlug,
+        workspaceSlug,
+        projectSlug,
+        issueId,
+        attachmentId,
+      );
+    } catch {
+      // Error is handled by the store.
+    }
+  };
+
   return (
     <section className="border-t border-gray-200 pt-5">
+      {/* Header */}
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
@@ -151,13 +189,16 @@ const AttachmentSection = ({
           </p>
         </div>
 
+        {/* Attach button */}
         <div>
           <input
             ref={fileInputRef}
             type="file"
             className="hidden"
             onChange={handleFileSelect}
-            disabled={isUploading}
+            disabled={
+              isUploading || isDeleting
+            }
           />
 
           <Button
@@ -166,7 +207,9 @@ const AttachmentSection = ({
             onClick={() =>
               fileInputRef.current?.click()
             }
-            disabled={isUploading}
+            disabled={
+              isUploading || isDeleting
+            }
             className="flex shrink-0 items-center gap-2 px-3 py-2 text-xs"
           >
             <Upload size={14} />
@@ -178,6 +221,7 @@ const AttachmentSection = ({
         </div>
       </div>
 
+      {/* Error */}
       {error && (
         <div className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2">
           <p className="text-xs text-red-600">
@@ -186,6 +230,7 @@ const AttachmentSection = ({
         </div>
       )}
 
+      {/* Attachments */}
       <div className="mt-3 space-y-2">
         {isLoading ? (
           <div className="rounded-lg border border-dashed border-gray-200 px-4 py-5 text-center">
@@ -211,32 +256,54 @@ const AttachmentSection = ({
             );
 
             return (
-              <a
+              <div
                 key={attachment.id}
-                href={attachment.fileUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-3 rounded-lg border border-gray-200 px-3 py-2.5 transition hover:border-orange-200 hover:bg-orange-50/30"
+                className="group flex items-center gap-3 rounded-lg border border-gray-200 px-3 py-2.5 transition hover:border-orange-200 hover:bg-orange-50/30"
               >
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gray-100">
-                  <Icon
-                    size={17}
-                    className="text-gray-500"
-                  />
-                </div>
+                {/* File */}
+                <a
+                  href={attachment.fileUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex min-w-0 flex-1 items-center gap-3"
+                >
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gray-100">
+                    <Icon
+                      size={17}
+                      className="text-gray-500"
+                    />
+                  </div>
 
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-gray-800">
-                    {attachment.fileName}
-                  </p>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-gray-800">
+                      {attachment.fileName}
+                    </p>
 
-                  <p className="mt-0.5 text-xs text-gray-400">
-                    {formatFileSize(
-                      attachment.fileSize,
-                    )}
-                  </p>
-                </div>
-              </a>
+                    <p className="mt-0.5 text-xs text-gray-400">
+                      {formatFileSize(
+                        attachment.fileSize,
+                      )}
+                    </p>
+                  </div>
+                </a>
+
+                {/* Remove */}
+                <button
+                  type="button"
+                  onClick={() =>
+                    handleRemoveAttachment(
+                      attachment.id,
+                      attachment.fileName,
+                    )
+                  }
+                  disabled={isDeleting}
+                  title="Remove attachment"
+                  aria-label={`Remove ${attachment.fileName}`}
+                  className="shrink-0 rounded-lg p-2 text-gray-400 opacity-0 transition hover:bg-red-50 hover:text-red-500 group-hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-50 sm:opacity-100"
+                >
+                  <Trash2 size={15} />
+                </button>
+              </div>
             );
           })
         )}

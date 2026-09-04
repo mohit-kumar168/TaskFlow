@@ -64,3 +64,15 @@ export const fetchAllAttachments = async (
     )}`,
   );
 };
+
+export const deleteAttachment = async (
+  organizationSlug: string,
+  workspaceSlug: string,
+  projectSlug: string,
+  issueId: string,
+  attachmentId: string,
+) => {
+  return api.delete(
+    `${getAttachmentBaseUrl(organizationSlug, workspaceSlug, projectSlug, issueId)}/${attachmentId}`,
+  );
+};
