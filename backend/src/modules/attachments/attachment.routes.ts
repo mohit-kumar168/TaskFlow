@@ -5,6 +5,7 @@ import upload from "@/middleware/upload.middleware";
 import {
   createAttachment,
   fetchAttachments,
+  removeAttachment,
 } from "./attachment.controller";
 
 const router = Router({
@@ -20,6 +21,11 @@ router.post(
 router.get(
   "/",
   fetchAttachments,
+);
+
+router.delete(
+  "/:attachmentId",
+  removeAttachment,
 );
 
 export default router;
