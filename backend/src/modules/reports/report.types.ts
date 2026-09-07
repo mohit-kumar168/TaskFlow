@@ -1,6 +1,6 @@
 export interface IssueStatusReport {
   status: string;
-  coutn: number;
+  count: number;
 }
 
 export interface IssuePriorityReport {
@@ -8,8 +8,13 @@ export interface IssuePriorityReport {
   count: number;
 }
 
+export interface IssueTrendReport {
+  date: string;
+  count: number;
+}
+
 export interface SprintProgressReport {
-  srpintId: string;
+  sprintId: string;
   sprintName: string;
   totalIssues: number;
   completedIssues: number;

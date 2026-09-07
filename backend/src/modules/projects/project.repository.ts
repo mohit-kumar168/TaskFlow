@@ -88,7 +88,11 @@ export const findProjectBySlug = async (
 			_count: {
 				select: {
 					members: true,
-					issues: true,
+					issues: {
+						where: {
+							isArchived: false,
+						},
+					},
 				},
 			},
 		},
@@ -104,7 +108,11 @@ export const findProjectById = async (projectId: string) => {
 			_count: {
 				select: {
 					members: true,
-					issues: true,
+					issues: {
+						where: {
+							isArchived: false,
+						},
+					},
 				},
 			},
 		},
@@ -121,7 +129,11 @@ export const fetchAllProjects = async (workspaceId: string) => {
 			_count: {
 				select: {
 					members: true,
-					issues: true,
+					issues: {
+						where: {
+							isArchived: false,
+						},
+					},
 				},
 			},
 		},
