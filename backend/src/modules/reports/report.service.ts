@@ -88,12 +88,28 @@ export const fetchIssueTrendReport = async (
     trend.set(date, (trend.get(date) ?? 0) + 1);
   }
 
-  return Array.from(trend.entries()).map(
-    ([date, count]) => ({
+  const dates = Array.from(trend.keys()).sort();
+
+  if (dates.length === 0) {
+    return [];
+  }
+
+  const result = [];
+  const currentDate = new Date(`${dates[0]}T00:00:00.000Z`);
+  const endDate = new Date(`${dates[dates.length - 1]}T00:00:00.000Z`);
+
+  while (currentDate <= endDate) {
+    const date = currentDate.toISOString().slice(0, 10);
+
+    result.push({
       date,
-      count,
-    })
-  );
+      count: trend.get(date) ?? 0,
+    });
+
+    currentDate.setUTCDate(currentDate.getUTCDate() + 1);
+  }
+
+  return result;
 };
 
 export const fetchSprintProgressReport = async (
