@@ -11,6 +11,7 @@ import issueRoutes from "./modules/issues/issue.routes";
 import commentRoutes from "./modules/comments/comment.routes";
 import sprintRoutes from "./modules/sprints/sprint.routes";
 import notificationRoutes from "./modules/notifications/notification.routes";
+import reportRoutes from "./modules/reports/report.routes";
 
 const app = express();
 
@@ -65,6 +66,11 @@ app.use(
 app.use(
   "/api/notifications",
   notificationRoutes,
+);
+
+app.use(
+  "/api/organizations/:organizationSlug/workspaces/:workspaceSlug/projects/:projectSlug/reports",
+  reportRoutes,
 );
 
 app.use(errorMiddleware);
