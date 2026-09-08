@@ -7,7 +7,7 @@ import {
   getSprintProgressReport,
 } from "./report.controller";
 
-const router = Router();
+const router = Router({ mergeParams: true });
 
 router.get(
   "/issue-status",

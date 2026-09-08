@@ -1,38 +1,17 @@
-import prisma from "../../prisma/client";
+import prisma from "@/prisma/client";
 
-export const fetchIssueStatusReport = async (projectId: string) => {
-  return await prisma.issue.groupBy({
-    by: ["status"],
-    where: {
-      projectId,
-      isArchived: false,
-    },
-    _count: {
-      _all: true,
-    },
-  });
-};
-
-export const fetchIssuePriorityReport = async (projectId: string) => {
-  return await prisma.issue.groupBy({
-    by: ["priority"],
-    where: {
-      projectId,
-      isArchived: false,
-    },
-    _count: {
-      _all: true,
-    },
-  });
-};
-
-export const fetchIssueTrendReport = async (projectId: string) => {
+export const fetchProjectIssues = async (
+  projectId: string,
+) => {
   return await prisma.issue.findMany({
     where: {
       projectId,
       isArchived: false,
     },
     select: {
+      id: true,
+      columnId: true,
+      priority: true,
       createdAt: true,
     },
     orderBy: {
@@ -41,7 +20,7 @@ export const fetchIssueTrendReport = async (projectId: string) => {
   });
 };
 
-export const fetchSprintProgressReport = async (
+export const fetchSprintProgress = async (
   projectId: string,
 ) => {
   return await prisma.sprint.findMany({
@@ -53,9 +32,12 @@ export const fetchSprintProgressReport = async (
       name: true,
       issues: {
         where: {
+          projectId,
           isArchived: false,
         },
         select: {
+          id: true,
+          columnId: true,
           status: true,
         },
       },
