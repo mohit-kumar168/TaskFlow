@@ -351,48 +351,6 @@ const Dashboard = () => {
 							</div>
 						)}
 				</section>
-
-				{/* Quick Actions */}
-				<section>
-					<div className="mb-4">
-						<h2 className="text-lg font-semibold text-gray-900">
-							Quick Actions
-						</h2>
-
-						<p className="mt-1 text-sm text-gray-500">
-							Common actions to help you get
-							started quickly.
-						</p>
-					</div>
-
-					<div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-						<button
-							type="button"
-							disabled={!organizationSlug}
-							onClick={handleCreateWorkspace}
-							className="group flex items-center gap-4 rounded-xl border border-gray-200 bg-white p-4 text-left transition-all hover:border-orange-200 hover:shadow-sm disabled:cursor-not-allowed disabled:opacity-50"
-						>
-							<div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-orange-50 text-orange-500">
-								<Plus size={19} />
-							</div>
-
-							<div className="min-w-0">
-								<p className="text-sm font-semibold text-gray-900">
-									Create Workspace
-								</p>
-
-								<p className="mt-0.5 text-xs text-gray-500">
-									Start organizing your work
-								</p>
-							</div>
-
-							<ArrowRight
-								size={17}
-								className="ml-auto text-gray-300 transition-all group-hover:translate-x-0.5 group-hover:text-orange-500"
-							/>
-						</button>
-					</div>
-				</section>
 			</div>
 		</div>
 	);
