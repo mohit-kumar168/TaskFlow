@@ -1,43 +1,80 @@
 import { useEffect, useState } from "react";
-import { ChevronRight, Folder, FolderKanban, Plus } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronRight,
+  Plus,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import { useWorkspaceStore } from "@/store/workspace.store";
 import { useOrganizationStore } from "@/store/organization.store";
 import { useProjectStore } from "@/store/project.store";
 
-const WorkspaceSection = () => {
-  const [isWorkspacesOpen, setIsWorkspacesOpen] = useState(false);
-  const [openWorkspaces, setOpenWorkspaces] = useState<Set<string>>(new Set());
+const workspaceColors = [
+  "bg-violet-500",
+  "bg-blue-500",
+  "bg-pink-500",
+  "bg-emerald-500",
+  "bg-orange-500",
+];
 
+const projectDotColors = [
+  "bg-orange-500",
+  "bg-emerald-500",
+  "bg-violet-500",
+  "bg-blue-400",
+  "bg-pink-400",
+];
+
+const WorkspaceSection = () => {
   const navigate = useNavigate();
 
-  const { workspaces, fetchWorkspaces } = useWorkspaceStore();
+  const [openWorkspaces, setOpenWorkspaces] =
+    useState<Set<string>>(new Set());
 
-  const { currentOrganization } = useOrganizationStore();
+  const {
+    workspaces,
+    fetchWorkspaces,
+  } = useWorkspaceStore();
 
-  const { projectsByWorkspace, fetchProjects } = useProjectStore();
+  const { currentOrganization } =
+    useOrganizationStore();
+
+  const {
+    projectsByWorkspace,
+    fetchProjects,
+  } = useProjectStore();
 
   useEffect(() => {
     if (!currentOrganization) {
       return;
     }
+
     setOpenWorkspaces(new Set());
 
-    fetchWorkspaces(currentOrganization.slug);
+    const loadWorkspaces = async () => {
+      await fetchWorkspaces(
+        currentOrganization.slug,
+      );
+    };
+
+    loadWorkspaces();
   }, [currentOrganization, fetchWorkspaces]);
 
-  const toggleWorkspace = async (workspaceSlug: string) => {
+  const toggleWorkspace = async (
+    workspaceSlug: string,
+  ) => {
     if (!currentOrganization) {
       return;
     }
 
-    const isCurrentlyOpen = openWorkspaces.has(workspaceSlug);
+    const isOpen =
+      openWorkspaces.has(workspaceSlug);
 
-    setOpenWorkspaces((prev) => {
-      const next = new Set(prev);
+    setOpenWorkspaces((previous) => {
+      const next = new Set(previous);
 
-      if (isCurrentlyOpen) {
+      if (isOpen) {
         next.delete(workspaceSlug);
       } else {
         next.add(workspaceSlug);
@@ -46,124 +83,177 @@ const WorkspaceSection = () => {
       return next;
     });
 
-    if (!isCurrentlyOpen) {
-      await fetchProjects(currentOrganization.slug, workspaceSlug);
+    if (!isOpen) {
+      await fetchProjects(
+        currentOrganization.slug,
+        workspaceSlug,
+      );
     }
   };
 
+  const getWorkspaceInitials = (
+    name: string,
+  ) => {
+    const words = name
+      .trim()
+      .split(/\s+/);
+
+    if (words.length >= 2) {
+      return `${words[0]?.[0] ?? ""}${words[1]?.[0] ?? ""
+        }`.toUpperCase();
+    }
+
+    return (
+      name
+        .trim()
+        .slice(0, 2)
+        .toUpperCase()
+    );
+  };
+
   return (
-    <div>
-      <button
-        type="button"
-        onClick={() => setIsWorkspacesOpen((open) => !open)}
-        className="group flex w-full items-center justify-between rounded-lg px-4 py-3 text-sm font-medium text-gray-600 transition-all duration-200 hover:bg-gray-100 hover:text-orange-500"
-      >
-        <span className="flex items-center gap-3 whitespace-nowrap">
-          <FolderKanban size={20} />
+    <section>
+      {/* Section Header */}
+      <div className="mb-2 flex items-center justify-between px-2">
+        <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-gray-400">
           Workspaces
         </span>
 
-        <ChevronRight
-          size={16}
-          className={`shrink-0 transition-transform duration-200 ${
-            isWorkspacesOpen ? "rotate-90" : ""
-          }`}
-        />
-      </button>
+        <button
+          type="button"
+          onClick={() => {
+            if (!currentOrganization) {
+              return;
+            }
 
-      {isWorkspacesOpen && (
-        <div className="mt-1 flex flex-col gap-1">
-          {/* Create Workspace */}
-          <button
-            type="button"
-            onClick={() => {
-              if (!currentOrganization) {
-                return;
-              }
-
-              navigate(
-                `/organizations/${currentOrganization.slug}/workspaces/create`,
-              );
-            }}
-            className="flex items-center gap-2 rounded-lg py-2 pl-10 pr-4 text-sm text-orange-500 transition hover:bg-orange-50"
-          >
-            <Plus size={15} />
-            <span>Create Workspace</span>
-          </button>
-
-          {/* Workspaces */}
-          {workspaces.map((workspace) => {
-            const isWorkspaceOpen = openWorkspaces.has(workspace.slug);
-
-            return (
-              <div key={workspace.id}>
-                {/* Workspace */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (!currentOrganization) {
-                      return;
-                    }
-
-                    toggleWorkspace(workspace.slug);
-
-                    navigate(
-                      `/organizations/${currentOrganization.slug}/workspaces/${workspace.slug}`,
-                    );
-                  }}
-                  className="flex w-full items-center justify-between rounded-lg py-2 pl-10 pr-4 text-sm text-gray-600 transition-all duration-200 hover:bg-gray-100 hover:text-orange-500"
-                >
-                  <div className="flex min-w-0 items-center gap-2">
-                    <Folder size={15} className="shrink-0" />
-
-                    <span className="truncate">{workspace.name}</span>
-                  </div>
-
-                  <ChevronRight
-                    size={14}
-                    className={`shrink-0 transition-transform duration-200 ${
-                      isWorkspaceOpen ? "rotate-90" : ""
-                    }`}
-                  />
-                </button>
-
-                {/* Projects */}
-                {isWorkspaceOpen && (
-                  <div className="ml-6 flex flex-col gap-1 border-l border-gray-200 pl-2">
-                    {projectsByWorkspace[workspace.slug]?.map((project) => (
-                      <button
-                        key={project.id}
-                        type="button"
-                        onClick={() => {
-                          if (!currentOrganization) {
-                            return;
-                          }
-
-                          navigate(
-                            `/organizations/${currentOrganization.slug}/workspaces/${workspace.slug}/projects/${project.slug}`,
-                          );
-                        }}
-                        className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-gray-500 transition hover:bg-gray-100 hover:text-orange-500"
-                      >
-                        <FolderKanban size={14} className="shrink-0" />
-
-                        <span className="truncate">{project.name}</span>
-                      </button>
-                    ))}
-
-                    {projectsByWorkspace[workspace.slug]?.length === 0 && (
-                      <span className="px-3 py-2 text-xs text-gray-400">
-                        No projects
-                      </span>
-                    )}
-                  </div>
-                )}
-              </div>
+            navigate(
+              `/organizations/${currentOrganization.slug}/workspaces/create`,
             );
-          })}
-        </div>
-      )}
-    </div>
+          }}
+          aria-label="Create workspace"
+          title="Create workspace"
+          className="flex h-7 w-7 items-center justify-center rounded-md text-gray-400 transition-all duration-200 hover:bg-orange-50 hover:text-orange-500"
+        >
+          <Plus size={16} />
+        </button>
+      </div>
+
+      {/* Workspace List */}
+      <div className="flex flex-col gap-1">
+        {workspaces.map((workspace, index) => {
+          const isOpen =
+            openWorkspaces.has(workspace.slug);
+
+          const workspaceColor =
+            workspaceColors[
+            index % workspaceColors.length
+            ];
+
+          const projects =
+            projectsByWorkspace[
+            workspace.slug
+            ] ?? [];
+
+          return (
+            <div key={workspace.id}>
+              {/* Workspace */}
+              <button
+                type="button"
+                onClick={() =>
+                  toggleWorkspace(
+                    workspace.slug,
+                  )
+                }
+                className={`group flex w-full items-center gap-3 rounded-lg px-2 py-2.5 text-left transition-all duration-200 ${isOpen
+                  ? "bg-gray-50"
+                  : "hover:bg-gray-50"
+                  }`}
+              >
+                {/* Workspace Avatar */}
+                <span
+                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-[10px] font-bold tracking-wide text-white shadow-sm ${workspaceColor}`}
+                >
+                  {getWorkspaceInitials(
+                    workspace.name,
+                  )}
+                </span>
+
+                {/* Workspace Name */}
+                <span className="min-w-0 flex-1 truncate text-sm font-medium text-gray-700 group-hover:text-gray-900">
+                  {workspace.name}
+                </span>
+
+                {/* Arrow */}
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-gray-400">
+                  {isOpen ? (
+                    <ChevronDown size={15} />
+                  ) : (
+                    <ChevronRight size={15} />
+                  )}
+                </span>
+              </button>
+
+              {/* Projects */}
+              {isOpen && (
+                <div className="ml-[18px] mt-1 border-l border-gray-200 pl-4">
+                  {projects.map(
+                    (
+                      project,
+                      projectIndex,
+                    ) => {
+                      const dotColor =
+                        projectDotColors[
+                        projectIndex %
+                        projectDotColors.length
+                        ];
+
+                      return (
+                        <button
+                          key={project.id}
+                          type="button"
+                          onClick={() => {
+                            if (
+                              !currentOrganization
+                            ) {
+                              return;
+                            }
+
+                            navigate(
+                              `/organizations/${currentOrganization.slug}/workspaces/${workspace.slug}/projects/${project.slug}`,
+                            );
+                          }}
+                          className="group flex w-full items-center gap-3 rounded-md px-2 py-2 text-left transition-all duration-200 hover:bg-gray-50"
+                        >
+                          <span
+                            className={`h-2 w-2 shrink-0 rounded-full ${dotColor}`}
+                          />
+
+                          <span className="min-w-0 truncate text-[13px] text-gray-500 transition-colors group-hover:text-gray-900">
+                            {project.name}
+                          </span>
+                        </button>
+                      );
+                    },
+                  )}
+
+                  {projects.length === 0 && (
+                    <div className="px-2 py-2 text-xs text-gray-400">
+                      No projects
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
+
+        {workspaces.length === 0 && (
+          <div className="rounded-lg px-2 py-3 text-sm text-gray-400">
+            No workspaces yet
+          </div>
+        )}
+      </div>
+    </section>
   );
 };
 
