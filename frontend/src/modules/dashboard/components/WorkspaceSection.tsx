@@ -159,11 +159,12 @@ const WorkspaceSection = () => {
               {/* Workspace */}
               <button
                 type="button"
-                onClick={() =>
+                onClick={() => {
                   toggleWorkspace(
                     workspace.slug,
                   )
-                }
+                  navigate(`/organizations/${currentOrganization?.slug}/workspaces/${workspace.slug}`)
+                }}
                 className={`group flex w-full items-center gap-3 rounded-lg px-2 py-2.5 text-left transition-all duration-200 ${isOpen
                   ? "bg-gray-50"
                   : "hover:bg-gray-50"

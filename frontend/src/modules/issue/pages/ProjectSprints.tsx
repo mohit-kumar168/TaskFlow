@@ -1,19 +1,18 @@
 import { useEffect, useState } from "react";
 import { Plus } from "lucide-react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 import FeedbackModal from "@/modules/common/components/ui/FeedBackModal";
 
 import CreateSprintModal from "../components/CreateSprintModal";
 import SprintSidebar from "../components/SprintSidebar";
 import SprintIssuePanel from "../components/SprintIssuePanel";
-import IssueDetailsModal from "../../issue/components/IssueDetailsModal";
 
-import { type IssueProps, type UpdateIssueProps } from "@/api/issue.api";
-import { useIssueStore } from "@/store/issue.store";
 import { useSprintStore } from "@/store/sprint.store";
 
 const ProjectSprints = () => {
+  const navigate = useNavigate();
+
   const {
     organizationSlug,
     workspaceSlug,
@@ -39,22 +38,7 @@ const ProjectSprints = () => {
     setCurrentSprint,
   } = useSprintStore();
 
-  const {
-    updateIssue,
-    archiveIssue,
-    isArchiving,
-  } = useIssueStore();
-
   const [isCreateModalOpen, setIsCreateModalOpen] =
-    useState(false);
-
-  const [selectedIssue, setSelectedIssue] =
-    useState<IssueProps | null>(null);
-
-  const [isIssueModalOpen, setIsIssueModalOpen] =
-    useState(false);
-
-  const [isUpdatingIssue, setIsUpdatingIssue] =
     useState(false);
 
   const [feedback, setFeedback] = useState<{
@@ -233,97 +217,18 @@ const ProjectSprints = () => {
     );
   };
 
-  const handleUpdateIssue = async (
-    data: UpdateIssueProps,
-  ) => {
+  const handleIssueClick = (issueId: string) => {
     if (
       !organizationSlug ||
       !workspaceSlug ||
-      !projectSlug ||
-      !selectedIssue
+      !projectSlug
     ) {
       return;
     }
 
-    try {
-      setIsUpdatingIssue(true);
-
-      const updatedIssue = await updateIssue(
-        organizationSlug,
-        workspaceSlug,
-        projectSlug,
-        selectedIssue.id,
-        data,
-      );
-
-      if (!updatedIssue) {
-        showError(
-          "Unable to update issue",
-          "Something went wrong while updating the issue.",
-        );
-        return;
-      }
-
-      setIsIssueModalOpen(false);
-      setSelectedIssue(null);
-
-      if (currentSprint) {
-        await fetchSprintIssues(
-          organizationSlug,
-          workspaceSlug,
-          projectSlug,
-          currentSprint.id,
-        );
-      }
-    } finally {
-      setIsUpdatingIssue(false);
-    }
-  };
-
-  const handleRemoveIssue = async () => {
-    if (
-      !organizationSlug ||
-      !workspaceSlug ||
-      !projectSlug ||
-      !selectedIssue
-    ) {
-      return;
-    }
-
-    const confirmed = window.confirm(
-      "Are you sure you want to remove this issue?",
+    navigate(
+      `/organizations/${organizationSlug}/workspaces/${workspaceSlug}/projects/${projectSlug}/issues/${issueId}`,
     );
-
-    if (!confirmed) {
-      return;
-    }
-
-    const success = await archiveIssue(
-      organizationSlug,
-      workspaceSlug,
-      projectSlug,
-      selectedIssue.id,
-    );
-
-    if (!success) {
-      showError(
-        "Unable to remove issue",
-        "Something went wrong while removing the issue.",
-      );
-      return;
-    }
-
-    setIsIssueModalOpen(false);
-    setSelectedIssue(null);
-
-    if (currentSprint) {
-      await fetchSprintIssues(
-        organizationSlug,
-        workspaceSlug,
-        projectSlug,
-        currentSprint.id,
-      );
-    }
   };
 
   if (isLoading) {
@@ -338,6 +243,7 @@ const ProjectSprints = () => {
 
   return (
     <div className="p-6">
+      {/* Header */}
       <div className="mb-6 flex items-center justify-between gap-4">
         <div>
           <h2 className="text-lg font-semibold text-gray-900">
@@ -351,7 +257,9 @@ const ProjectSprints = () => {
 
         <button
           type="button"
-          onClick={() => setIsCreateModalOpen(true)}
+          onClick={() =>
+            setIsCreateModalOpen(true)
+          }
           className="flex items-center gap-2 rounded-lg bg-orange-500 px-3 py-2 text-sm font-medium text-white transition hover:bg-orange-600"
         >
           <Plus size={16} />
@@ -359,13 +267,20 @@ const ProjectSprints = () => {
         </button>
       </div>
 
+      {/* Sprint Content */}
       <div className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
         <div>
           <SprintSidebar
             sprints={sprints}
-            currentSprintId={currentSprint?.id ?? null}
-            onSelectSprint={(sprint) => setCurrentSprint(sprint)}
-            onCreateSprint={() => setIsCreateModalOpen(true)}
+            currentSprintId={
+              currentSprint?.id ?? null
+            }
+            onSelectSprint={(sprint) => {
+              setCurrentSprint(sprint);
+            }}
+            onCreateSprint={() =>
+              setIsCreateModalOpen(true)
+            }
           />
         </div>
 
@@ -378,14 +293,14 @@ const ProjectSprints = () => {
             isCompleting={isCompleting}
             onStartSprint={handleStartSprint}
             onCompleteSprint={handleCompleteSprint}
-            onIssueClick={(issue) => {
-              setSelectedIssue(issue);
-              setIsIssueModalOpen(true);
-            }}
+            onIssueClick={(issue) =>
+              handleIssueClick(issue.id)
+            }
           />
         </div>
       </div>
 
+      {/* Create Sprint */}
       {organizationSlug &&
         workspaceSlug &&
         projectSlug && (
@@ -394,16 +309,25 @@ const ProjectSprints = () => {
             organizationSlug={organizationSlug}
             workspaceSlug={workspaceSlug}
             projectSlug={projectSlug}
-            onClose={() => setIsCreateModalOpen(false)}
+            onClose={() =>
+              setIsCreateModalOpen(false)
+            }
             onSuccess={(message) =>
-              showSuccess("Sprint created", message)
+              showSuccess(
+                "Sprint created",
+                message,
+              )
             }
             onError={(message) =>
-              showError("Unable to create sprint", message)
+              showError(
+                "Unable to create sprint",
+                message,
+              )
             }
           />
         )}
 
+      {/* Feedback */}
       <FeedbackModal
         isOpen={feedback.isOpen}
         type={feedback.type}
@@ -415,19 +339,6 @@ const ProjectSprints = () => {
             isOpen: false,
           }))
         }
-      />
-
-      <IssueDetailsModal
-        isOpen={isIssueModalOpen}
-        issue={selectedIssue}
-        isSubmitting={isUpdatingIssue}
-        isArchiving={isArchiving}
-        onClose={() => {
-          setIsIssueModalOpen(false);
-          setSelectedIssue(null);
-        }}
-        onSubmit={handleUpdateIssue}
-        onRemove={handleRemoveIssue}
       />
     </div>
   );

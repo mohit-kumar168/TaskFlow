@@ -21,6 +21,7 @@ import OrganizationSetting from "@/modules/organization/pages/OrganizationSettin
 import AcceptInvitation from "@/modules/organization/components/AcceptInvitation";
 import DashboardSearchPage from "@/modules/dashboard/pages/DashboardSearchPage";
 import ProjectSprints from "@/modules/issue/pages/ProjectSprints";
+import IssueDetailsModal from "@/modules/issue/pages/IssueDetails";
 
 export const DashboardRoutes = [
   {
@@ -109,6 +110,11 @@ export const DashboardRoutes = [
               {
                 path: "members",
                 element: <ProjectMembers />,
+              },
+
+              {
+                path: "issues/:issueId",
+                element: <IssueDetailsModal />,
               },
             ],
           },
