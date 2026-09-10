@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 import SidebarNav from "./SidebarNav";
 import WorkspaceSection from "./WorkspaceSection";
 
-import Button from "@/components/ui/Button";
+import Button from "@/modules/common/components/ui/Button";
 import { logoutUser } from "@/api/auth.api";
 
 type SidebarProps = {

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Bell, ChevronRight, Lock, Settings, User } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 
 import ProfileSettings from "../../../modules/dashboard/components/ProfileSettings";
 import PasswordSettings from "@/modules/dashboard/components/PasswordSettings";
@@ -19,10 +19,6 @@ const UserSetting = () => {
       title: "Security",
     },
   ];
-
-  const activeSetting = settings.find(
-    (setting) => setting.id === activeSection,
-  );
 
   return (
     <div className="mx-auto w-full max-w-6xl">
@@ -45,18 +41,16 @@ const UserSetting = () => {
                   key={setting.id}
                   type="button"
                   onClick={() => setActiveSection(setting.id)}
-                  className={`group flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left transition-colors ${
-                    isActive
-                      ? "bg-orange-50 text-orange-600"
-                      : "text-gray-600 hover:bg-gray-50"
-                  }`}
+                  className={`group flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left transition-colors ${isActive
+                    ? "bg-orange-50 text-orange-600"
+                    : "text-gray-600 hover:bg-gray-50"
+                    }`}
                 >
 
                   <div className="min-w-0 flex-1">
                     <p
-                      className={`text-sm font-medium ${
-                        isActive ? "text-orange-600" : "text-gray-800"
-                      }`}
+                      className={`text-sm font-medium ${isActive ? "text-orange-600" : "text-gray-800"
+                        }`}
                     >
                       {setting.title}
                     </p>

@@ -33,8 +33,8 @@ const SidebarNav = ({ items }: SidebarNavProps) => {
               <>
                 <span
                   className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md transition-colors ${isActive
-                      ? "bg-orange-100 text-orange-600"
-                      : "text-gray-500 group-hover:text-gray-800"
+                    ? "bg-orange-100 text-orange-600"
+                    : "text-gray-500 group-hover:text-gray-800"
                     }`}
                 >
                   <Icon size={18} strokeWidth={2} />

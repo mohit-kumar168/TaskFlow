@@ -1,13 +1,11 @@
-import { createWorkspace } from "@/api/workspace.api";
-import Button from "@/components/ui/Button";
-import Input from "@/components/ui/Input";
-import { useOrganizationStore } from "@/store/organization.store";
+import Button from "@/modules/common/components/ui/Button";
+import Input from "@/modules/common/components/ui/Input";
 import { useWorkspaceStore } from "@/store/workspace.store";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate, useParams } from "react-router-dom";
-import FeedbackModal from "@/components/ui/FeedBackModal";
+import FeedbackModal from "@/modules/common/components/ui/FeedBackModal";
 
 interface CreateWorkspaceForm {
   name: string;
@@ -30,19 +28,19 @@ const CreateWorkspace = () => {
   const onSubmit = async (data: CreateWorkspaceForm) => {
     try {
       if (!organizationSlug) {
-				setFeedback({ isOpen: true, type: "error", title: "Workspace Creation Failed", message: "Please select an organization first." });
+        setFeedback({ isOpen: true, type: "error", title: "Workspace Creation Failed", message: "Please select an organization first." });
         return;
       }
 
       const response = await createWorkspace(organizationSlug, data);
 
       if (!response) {
-      setFeedback({ isOpen: true, type: "error", title: "Workspace Creation Failed", message: "Unable to create the workspace. Please try again." });
-      return;
-    }
-    setCreatedWorkspaceSlug(response.slug);
-    setFeedback({ isOpen: true, type: "success", title: "Workspace Created", message: "Your workspace was created successfully." });
-      } catch (error) {
+        setFeedback({ isOpen: true, type: "error", title: "Workspace Creation Failed", message: "Unable to create the workspace. Please try again." });
+        return;
+      }
+      setCreatedWorkspaceSlug(response.slug);
+      setFeedback({ isOpen: true, type: "success", title: "Workspace Created", message: "Your workspace was created successfully." });
+    } catch (error) {
       setFeedback({ isOpen: true, type: "error", title: "Workspace Creation Failed", message: "Unable to create the workspace. Please try again." });
     }
   };
@@ -129,7 +127,7 @@ const CreateWorkspace = () => {
           </div>
         </form>
       </div>
-    <FeedbackModal {...feedback} onClose={() => { setFeedback((current) => ({ ...current, isOpen: false })); if (feedback.type === "success" && createdWorkspaceSlug && organizationSlug) navigate(`/organizations/${organizationSlug}/workspaces/${createdWorkspaceSlug}`); }} />
+      <FeedbackModal {...feedback} onClose={() => { setFeedback((current) => ({ ...current, isOpen: false })); if (feedback.type === "success" && createdWorkspaceSlug && organizationSlug) navigate(`/organizations/${organizationSlug}/workspaces/${createdWorkspaceSlug}`); }} />
     </div>
   );
 };

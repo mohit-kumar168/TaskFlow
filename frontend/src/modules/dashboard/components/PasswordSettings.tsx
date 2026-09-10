@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
-import Button from "@/components/ui/Button";
-import Input from "@/components/ui/Input";
+import Button from "@/modules/common/components/ui/Button";
+import Input from "@/modules/common/components/ui/Input";
 
 import {
   changeUserPassword,

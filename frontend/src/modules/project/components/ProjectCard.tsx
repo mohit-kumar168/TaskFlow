@@ -1,4 +1,4 @@
-import { CalendarDays, FolderKanban, MoreVertical, Users } from "lucide-react";
+import { CalendarDays, FolderKanban, Users } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 
 interface ProjectCardProps {

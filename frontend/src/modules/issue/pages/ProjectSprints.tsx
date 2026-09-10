@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Plus } from "lucide-react";
 import { useParams } from "react-router-dom";
 
-import FeedbackModal from "@/components/ui/FeedBackModal";
+import FeedbackModal from "@/modules/common/components/ui/FeedBackModal";
 
 import CreateSprintModal from "../components/CreateSprintModal";
 import SprintSidebar from "../components/SprintSidebar";
@@ -11,7 +11,7 @@ import IssueDetailsModal from "../../issue/components/IssueDetailsModal";
 
 import { type IssueProps, type UpdateIssueProps } from "@/api/issue.api";
 import { useIssueStore } from "@/store/issue.store";
-import { useSprintStore } from "../../../store/sprint.store";
+import { useSprintStore } from "@/store/sprint.store";
 
 const ProjectSprints = () => {
   const {
