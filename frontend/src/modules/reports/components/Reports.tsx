@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 
-import { useReportStore } from "../../../store/report.store";
+import { useReportStore } from "@/store/report.store";
 import IssuePriorityChart from "./IssuePriorityChart";
 import IssueStatusChart from "./IssueStatusChart";
 import IssueTrendChart from "./IssueTrendChart";

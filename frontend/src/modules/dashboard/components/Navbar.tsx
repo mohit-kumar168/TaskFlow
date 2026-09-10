@@ -7,13 +7,13 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 
 import TFlogo from "@/assets/taskflow-logo.png";
-import SearchInput from "@/components/ui/SearchInput";
+import SearchInput from "@/modules/common/components/ui/SearchInput";
 import OrganizationSelector from "@/modules/organization/components/OrganizationSelector";
 import SettingsMenu from "../components/SettingsMenu";
 import NotificationDropdown from "./NotificationDropdown";
 
 import { useAuthStore } from "@/store/auth.store";
-import Button from "@/components/ui/Button";
+import Button from "@/modules/common/components/ui/Button";
 
 type NavbarProps = {
   isSidebarOpen: boolean;

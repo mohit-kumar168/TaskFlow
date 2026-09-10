@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { X } from "lucide-react";
-import Button from "@/components/ui/Button";
+import Button from "@/modules/common/components/ui/Button";
 
 interface AddMemberModalProps {
   isOpen: boolean;
@@ -106,8 +106,8 @@ const AddMemberModal = ({
               onChange={(event) =>
                 setRole(
                   event.target.value as
-                    | "MEMBER"
-                    | "ADMIN",
+                  | "MEMBER"
+                  | "ADMIN",
                 )
               }
               className="w-full rounded-lg border border-gray-300 px-3 py-2.5 outline-none focus:border-orange-500"

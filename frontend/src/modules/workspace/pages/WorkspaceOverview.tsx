@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
-import WorkspacePageSkeleton from "@/components/skeleton/WorkspacePage";
+import WorkspacePageSkeleton from "@/modules/common/components/skeleton/WorkspacePage";
 import ProjectGrid from "@/modules/project/components/ProjectGrid";
 import WorkspaceToolbar from "@/modules/workspace/components/WorkspaceToolbar";
-import ProjectList from "../../../modules/project/components/ProjectList";
+import ProjectList from "@/modules/project/components/ProjectList";
 import { useProjectStore } from "@/store/project.store";
 import { useWorkspaceStore } from "@/store/workspace.store";
 

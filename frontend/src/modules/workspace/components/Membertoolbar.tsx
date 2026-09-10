@@ -1,4 +1,4 @@
-import Button from "@/components/ui/Button";
+import Button from "@/modules/common/components/ui/Button";
 import { Plus, Search } from "lucide-react";
 
 interface MembersToolbarProps {

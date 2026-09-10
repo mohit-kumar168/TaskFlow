@@ -14,13 +14,13 @@ import WorkspaceSettings from "@/modules/workspace/pages/WorkspaceSettings";
 import CreateProject from "@/modules/project/pages/CreateProject";
 import ProjectLayout from "@/layouts/ProjectLayout";
 import ProjectBoard from "@/modules/project/pages/ProjectBoard";
-import ProjectMembers from "../modules/project/components/ProjectMembers";
+import ProjectMembers from "@/modules/project/components/ProjectMembers";
 import ProjectPage from "@/modules/project/pages/ProjectPage";
 import UserSetting from "@/modules/dashboard/pages/UserSetting";
 import OrganizationSetting from "@/modules/organization/pages/OrganizationSetting";
 import AcceptInvitation from "@/modules/organization/components/AcceptInvitation";
-import DashboardSearchPage from "../modules/dashboard/pages/DashboardSearchPage";
-import ProjectSprints from "../modules/issue/pages/ProjectSprints";
+import DashboardSearchPage from "@/modules/dashboard/pages/DashboardSearchPage";
+import ProjectSprints from "@/modules/issue/pages/ProjectSprints";
 
 export const DashboardRoutes = [
   {

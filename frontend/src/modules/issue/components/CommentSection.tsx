@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { useParams } from "react-router-dom";
 
-import Button from "@/components/ui/Button";
+import Button from "@/modules/common/components/ui/Button";
 
 import {
   type CommentProps,

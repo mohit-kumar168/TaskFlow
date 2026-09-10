@@ -7,9 +7,9 @@ import { type OrganizationMemberProps } from "@/api/organization.api";
 import InviteMemberModal from "./InviteMemberModal";
 import ChangeOrganizationMemberRoleModal from "./ChangeOrganizationMemberRoleModal";
 import RemoveOrganizationMemberModal from "./RemoveOrganizationMemberModal";
-import MemberToolbar from "@/components/members/MemberToolbar";
-import MemberTable, { type CommonMemberProps } from "@/components/members/MemberTable";
-import FeedbackModal from "@/components/ui/FeedBackModal";
+import MemberToolbar from "@/modules/member/components/MemberToolbar";
+import MemberTable, { type CommonMemberProps } from "@/modules/member/components/MemberTable";
+import FeedbackModal from "@/modules/common/components/ui/FeedBackModal";
 
 const OrganizationMembers = () => {
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
@@ -126,7 +126,7 @@ const OrganizationMembers = () => {
 
       setInvitationUrl(inviteUrl);
       setIsInviteModalOpen(false);
-		  setFeedback({ isOpen: true, type: "success", title: "Invitation Sent", message: "The organization invitation was created successfully." });
+      setFeedback({ isOpen: true, type: "success", title: "Invitation Sent", message: "The organization invitation was created successfully." });
     } finally {
       setIsInviting(false);
     }
@@ -152,7 +152,7 @@ const OrganizationMembers = () => {
 
       setIsRoleModalOpen(false);
       setSelectedMember(null);
-		  setFeedback({ isOpen: true, type: "success", title: "Role Updated", message: "The organization member role was updated." });
+      setFeedback({ isOpen: true, type: "success", title: "Role Updated", message: "The organization member role was updated." });
     } finally {
       setIsUpdatingRole(false);
     }
@@ -165,22 +165,22 @@ const OrganizationMembers = () => {
   return (
     <>
       <div className="space-y-6">
-		<MemberToolbar search={search} onSearchChange={setSearch} onAddMember={() => setIsInviteModalOpen(true)} addLabel="Invite Member" />
+        <MemberToolbar search={search} onSearchChange={setSearch} onAddMember={() => setIsInviteModalOpen(true)} addLabel="Invite Member" />
 
-		<div className="relative">
-		  <MemberTable
-		    members={commonMembers}
-		    showStatus
-		    onChangeRole={(member) => {
-		      setSelectedMember(organizationMembers.find((item) => item.id === member.id) ?? null);
-		      setIsRoleModalOpen(true);
-		    }}
-		    onRemove={(member) => {
-		      const original = organizationMembers.find((item) => item.id === member.id);
-		      if (original) handleRemoveMember(original);
-		    }}
-		    canManage={(member) => member.role !== "OWNER"}
-		  />
+        <div className="relative">
+          <MemberTable
+            members={commonMembers}
+            showStatus
+            onChangeRole={(member) => {
+              setSelectedMember(organizationMembers.find((item) => item.id === member.id) ?? null);
+              setIsRoleModalOpen(true);
+            }}
+            onRemove={(member) => {
+              const original = organizationMembers.find((item) => item.id === member.id);
+              if (original) handleRemoveMember(original);
+            }}
+            canManage={(member) => member.role !== "OWNER"}
+          />
           <InviteMemberModal
             isOpen={isInviteModalOpen}
             isSubmitting={isInviting}
@@ -330,7 +330,7 @@ const OrganizationMembers = () => {
         }}
         onConfirm={handleConfirmRemove}
       />
-  		<FeedbackModal {...feedback} onClose={() => setFeedback((current) => ({ ...current, isOpen: false }))} />
+      <FeedbackModal {...feedback} onClose={() => setFeedback((current) => ({ ...current, isOpen: false }))} />
     </>
   );
 };

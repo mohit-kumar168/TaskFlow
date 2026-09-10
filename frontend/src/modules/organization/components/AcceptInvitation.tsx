@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
-import Button from "@/components/ui/Button";
+import Button from "@/modules/common/components/ui/Button";
 
 import { acceptOrganizationInvite } from "@/api/organization.api";
 
@@ -74,11 +74,10 @@ const AcceptInvitation = () => {
 
         {message && (
           <p
-            className={`mt-5 text-sm ${
-              message.type === "success"
+            className={`mt-5 text-sm ${message.type === "success"
                 ? "text-green-600"
                 : "text-red-500"
-            }`}
+              }`}
           >
             {message.text}
           </p>
