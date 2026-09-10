@@ -1,29 +1,17 @@
 import { useEffect, useState } from "react";
 import { Plus } from "lucide-react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 import { useProjectStore } from "@/store/project.store";
-import {
-  type IssueProps,
-  type UpdateIssueProps,
-} from "@/api/issue.api";
 import { useIssueStore } from "@/store/issue.store";
 
 import IssueCard from "@/modules/issue/components/IssueCard";
-import IssueDetailsModal from "@/modules/issue/components/IssueDetailsModal";
 import CreateIssueModal from "@/modules/issue/components/CreateIssueModal";
 
 const ProjectBoard = () => {
-  const [selectedIssue, setSelectedIssue] =
-    useState<IssueProps | null>(null);
-
-  const [isIssueModalOpen, setIsIssueModalOpen] =
-    useState(false);
+  const navigate = useNavigate();
 
   const [isCreateIssueModalOpen, setIsCreateIssueModalOpen] =
-    useState(false);
-
-  const [isUpdatingIssue, setIsUpdatingIssue] =
     useState(false);
 
   const [dragOverColumnId, setDragOverColumnId] =
@@ -50,10 +38,7 @@ const ProjectBoard = () => {
   const {
     issues,
     fetchIssues,
-    updateIssue,
     moveIssue,
-    archiveIssue,
-    isArchiving,
   } = useIssueStore();
 
   useEffect(() => {
@@ -91,38 +76,18 @@ const ProjectBoard = () => {
     fetchIssues,
   ]);
 
-  const handleUpdateIssue = async (
-    data: UpdateIssueProps,
-  ) => {
+  const handleIssueClick = (issueId: string) => {
     if (
       !organizationSlug ||
       !workspaceSlug ||
-      !projectSlug ||
-      !selectedIssue
+      !projectSlug
     ) {
       return;
     }
 
-    try {
-      setIsUpdatingIssue(true);
-
-      const updatedIssue = await updateIssue(
-        organizationSlug,
-        workspaceSlug,
-        projectSlug,
-        selectedIssue.id,
-        data,
-      );
-
-      if (!updatedIssue) {
-        return;
-      }
-
-      setIsIssueModalOpen(false);
-      setSelectedIssue(null);
-    } finally {
-      setIsUpdatingIssue(false);
-    }
+    navigate(
+      `/organizations/${organizationSlug}/workspaces/${workspaceSlug}/projects/${projectSlug}/issues/${issueId}`,
+    );
   };
 
   const handleDragOver = (
@@ -178,39 +143,6 @@ const ProjectBoard = () => {
     );
   };
 
-  const handleRemoveIssue = async () => {
-    if (
-      !organizationSlug ||
-      !workspaceSlug ||
-      !projectSlug ||
-      !selectedIssue
-    ) {
-      return;
-    }
-
-    const confirmed = window.confirm(
-      "Are you sure you want to remove this issue?",
-    );
-
-    if (!confirmed) {
-      return;
-    }
-
-    const success = await archiveIssue(
-      organizationSlug,
-      workspaceSlug,
-      projectSlug,
-      selectedIssue.id,
-    );
-
-    if (!success) {
-      return;
-    }
-
-    setIsIssueModalOpen(false);
-    setSelectedIssue(null);
-  };
-
   if (isBoardLoading && !currentBoard) {
     return (
       <div className="flex min-h-100 items-center justify-center">
@@ -240,7 +172,6 @@ const ProjectBoard = () => {
         <h2 className="text-base font-semibold text-gray-900">
           {currentBoard.name}
         </h2>
-
 
         <button
           type="button"
@@ -279,8 +210,8 @@ const ProjectBoard = () => {
                 )
               }
               className={`w-70 min-w-70 rounded-xl border bg-gray-100 ${dragOverColumnId === column.id
-                ? "border-orange-400"
-                : "border-gray-200"
+                  ? "border-orange-400"
+                  : "border-gray-200"
                 }`}
             >
               <div className="flex items-center justify-between px-4 py-3">
@@ -289,8 +220,7 @@ const ProjectBoard = () => {
                     className="h-2.5 w-2.5 shrink-0 rounded-full"
                     style={{
                       backgroundColor:
-                        column.color ||
-                        "#9ca3af",
+                        column.color || "#9ca3af",
                     }}
                   />
 
@@ -312,23 +242,15 @@ const ProjectBoard = () => {
                     </p>
                   </div>
                 ) : (
-                  columnIssues.map(
-                    (issue) => (
-                      <IssueCard
-                        key={issue.id}
-                        issue={issue}
-                        onClick={() => {
-                          setSelectedIssue(
-                            issue,
-                          );
-
-                          setIsIssueModalOpen(
-                            true,
-                          );
-                        }}
-                      />
-                    ),
-                  )
+                  columnIssues.map((issue) => (
+                    <IssueCard
+                      key={issue.id}
+                      issue={issue}
+                      onClick={() =>
+                        handleIssueClick(issue.id)
+                      }
+                    />
+                  ))
                 )}
               </div>
             </div>
@@ -365,20 +287,6 @@ const ProjectBoard = () => {
             }
           />
         )}
-
-      {/* Edit Issue Modal */}
-      <IssueDetailsModal
-        isOpen={isIssueModalOpen}
-        issue={selectedIssue}
-        isSubmitting={isUpdatingIssue}
-        isArchiving={isArchiving}
-        onClose={() => {
-          setIsIssueModalOpen(false);
-          setSelectedIssue(null);
-        }}
-        onSubmit={handleUpdateIssue}
-        onRemove={handleRemoveIssue}
-      />
     </div>
   );
 };
