@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Camera } from "lucide-react";
 import { useForm } from "react-hook-form";
 
 import Button from "@/modules/common/components/ui/Button";
@@ -14,18 +15,13 @@ import { useAuthStore } from "@/store/auth.store";
 const ProfileSettings = () => {
   const { user, setUser } = useAuthStore();
 
-  const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-
   const [selectedAvatar, setSelectedAvatar] =
     useState<File | null>(null);
-
   const [avatarPreview, setAvatarPreview] =
     useState<string | null>(null);
 
-  const fileInputRef = useRef<HTMLInputElement | null>(
-    null,
-  );
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const [message, setMessage] = useState<{
     type: "success" | "error";
@@ -35,7 +31,6 @@ const ProfileSettings = () => {
   const {
     register,
     handleSubmit,
-    reset,
     formState: { errors, isDirty },
   } = useForm<UpdateUserProfileProps>({
     defaultValues: {
@@ -45,14 +40,9 @@ const ProfileSettings = () => {
   });
 
   useEffect(() => {
-    reset({
-      name: user?.name ?? "",
-      bio: user?.bio ?? "",
-    });
-
     setSelectedAvatar(null);
     setAvatarPreview(null);
-  }, [user, reset]);
+  }, [user]);
 
   const handleAvatarChange = (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -77,9 +67,7 @@ const ProfileSettings = () => {
       return;
     }
 
-    const maxFileSize = 5 * 1024 * 1024;
-
-    if (file.size > maxFileSize) {
+    if (file.size > 5 * 1024 * 1024) {
       setMessage({
         type: "error",
         text: "Image size cannot exceed 5MB.",
@@ -118,17 +106,12 @@ const ProfileSettings = () => {
         fileInputRef.current.value = "";
       }
 
-      setIsEditing(false);
-
       setMessage({
         type: "success",
         text: "Profile updated successfully.",
       });
     } catch (error) {
-      console.error(
-        "Failed to update profile:",
-        error,
-      );
+      console.error("Failed to update profile:", error);
 
       setMessage({
         type: "error",
@@ -137,23 +120,6 @@ const ProfileSettings = () => {
     } finally {
       setIsSaving(false);
     }
-  };
-
-  const handleCancelEdit = () => {
-    reset({
-      name: user?.name ?? "",
-      bio: user?.bio ?? "",
-    });
-
-    setSelectedAvatar(null);
-    setAvatarPreview(null);
-
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-
-    setIsEditing(false);
-    setMessage(null);
   };
 
   if (!user) {
@@ -168,217 +134,165 @@ const ProfileSettings = () => {
     avatarPreview ?? user.avatarUrl;
 
   return (
-    <div className="max-w-3xl">
-      <div className="flex items-start justify-between">
+    <div className="py-4 max-w-3xl">
+      {/* Form */}
+      <form
+        onSubmit={handleSubmit(handleProfileUpdate)}
+        className="space-y-2 px-6"
+      >
+        {/* Profile Picture */}
         <div>
-          <h3 className="text-base font-semibold text-gray-900">
-            Profile
-          </h3>
+          <label className="text-xs font-medium text-gray-700">
+            Profile picture
+          </label>
 
-          <p className="mt-1 text-sm text-gray-500">
-            Manage your personal information.
-          </p>
-        </div>
-
-        {!isEditing && (
-          <button
-            type="button"
-            onClick={() => {
-              setIsEditing(true);
-              setMessage(null);
-            }}
-            className="text-sm font-medium text-orange-500 transition-colors hover:text-orange-600"
-          >
-            Edit
-          </button>
-        )}
-      </div>
-
-      <div className="mt-6">
-        {isEditing ? (
-          <form
-            onSubmit={handleSubmit(handleProfileUpdate)}
-            className="space-y-6"
-          >
-            {/* Avatar */}
-            <div>
-              <label className="text-sm font-medium text-gray-700">
-                Profile picture
-              </label>
-
-              <div className="mt-3 flex items-center gap-4">
-                {currentAvatar ? (
-                  <img
-                    src={currentAvatar}
-                    alt="Profile"
-                    className="h-16 w-16 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 text-lg font-semibold text-gray-500">
-                    {user.name.charAt(0).toUpperCase()}
-                  </div>
-                )}
-
-                <div>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    onChange={handleAvatarChange}
-                    className="block text-sm text-gray-600"
-                  />
-
-                  <p className="mt-1 text-xs text-gray-500">
-                    JPG, PNG or WEBP. Maximum 5MB.
-                  </p>
+          <div className="mt-3 flex items-center justify-between">
+            <div className="relative">
+              {currentAvatar ? (
+                <img
+                  src={currentAvatar}
+                  alt="Profile"
+                  className="h-20 w-20 rounded-full object-cover ring-1 ring-gray-200"
+                />
+              ) : (
+                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gray-100 text-xl font-semibold text-gray-500">
+                  {user.name.charAt(0).toUpperCase()}
                 </div>
-              </div>
-            </div>
-
-            <Input
-              id="name"
-              label="Name"
-              placeholder="Enter your name"
-              error={errors.name?.message}
-              {...register("name", {
-                required: "Name is required.",
-                minLength: {
-                  value: 3,
-                  message:
-                    "Name must be at least 3 characters.",
-                },
-                maxLength: {
-                  value: 30,
-                  message:
-                    "Name cannot exceed 30 characters.",
-                },
-              })}
-            />
-
-            <Input
-              id="email"
-              label="Email"
-              type="email"
-              value={user.email}
-              disabled
-            />
-
-            <div className="flex flex-col gap-2">
-              <label
-                htmlFor="bio"
-                className="text-sm font-medium text-gray-700"
-              >
-                Bio
-              </label>
-
-              <textarea
-                id="bio"
-                rows={5}
-                placeholder="Tell us a little about yourself..."
-                {...register("bio", {
-                  maxLength: {
-                    value: 250,
-                    message:
-                      "Bio cannot exceed 250 characters.",
-                  },
-                })}
-                className="w-full resize-none rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none transition-all focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
-              />
-
-              {errors.bio && (
-                <p className="text-sm text-red-500">
-                  {errors.bio.message}
-                </p>
               )}
+
+              {/* Camera button */}
+              <button
+                type="button"
+                onClick={() =>
+                  fileInputRef.current?.click()
+                }
+                className="absolute bottom-0 right-0 flex h-7 w-7 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 shadow-sm transition hover:bg-gray-50 hover:text-gray-900"
+                aria-label="Change profile picture"
+              >
+                <Camera size={14} />
+              </button>
             </div>
 
-            <div className="flex gap-3">
-              <Button
-                type="submit"
-                disabled={isSaving || (!isDirty && !selectedAvatar)}
-                className=""
-              >
-                {isSaving
-                  ? "Saving..."
-                  : "Save Changes"}
-              </Button>
+            <div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={handleAvatarChange}
+                className="hidden"
+              />
 
               <button
                 type="button"
-                onClick={handleCancelEdit}
-                disabled={isSaving}
-                className="rounded-lg px-4 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100 disabled:opacity-50"
+                onClick={() =>
+                  fileInputRef.current?.click()
+                }
+                className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-xs font-medium text-gray-700 transition hover:bg-gray-50"
               >
-                Cancel
+                Change Photo
               </button>
             </div>
-          </form>
-        ) : (
-          <div className="space-y-6">
-            {/* Avatar */}
-            <div>
-              <p className="text-xs font-medium text-gray-500">
-                Profile picture
-              </p>
-
-              <div className="mt-2">
-                {user.avatarUrl ? (
-                  <img
-                    src={user.avatarUrl}
-                    alt="Profile"
-                    className="h-16 w-16 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 text-lg font-semibold text-gray-500">
-                    {user.name.charAt(0).toUpperCase()}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div>
-              <p className="text-xs font-medium text-gray-500">
-                Name
-              </p>
-
-              <p className="mt-1 text-sm text-gray-900">
-                {user.name}
-              </p>
-            </div>
-
-            <div>
-              <p className="text-xs font-medium text-gray-500">
-                Email
-              </p>
-
-              <p className="mt-1 text-sm text-gray-900">
-                {user.email}
-              </p>
-            </div>
-
-            <div>
-              <p className="text-xs font-medium text-gray-500">
-                Bio
-              </p>
-
-              <p className="mt-1 whitespace-pre-wrap text-sm text-gray-900">
-                {user.bio || "No bio provided."}
-              </p>
-            </div>
           </div>
-        )}
-      </div>
 
-      {message && (
-        <p
-          className={`mt-6 text-sm ${message.type === "success"
-            ? "text-green-600"
-            : "text-red-500"
+          <p className="mt-2 text-[11px] text-gray-400">
+            JPG, PNG or WEBP. Maximum 5MB.
+          </p>
+        </div>
+
+        {/* Name */}
+        <Input
+          id="name"
+          label="Full Name"
+          placeholder="Enter your name"
+          error={errors.name?.message}
+          {...register("name", {
+            required: "Name is required.",
+            minLength: {
+              value: 3,
+              message:
+                "Name must be at least 3 characters.",
+            },
+            maxLength: {
+              value: 30,
+              message:
+                "Name cannot exceed 30 characters.",
+            },
+          })}
+        />
+
+        {/* Email */}
+        <Input
+          id="email"
+          label="Email Address"
+          type="email"
+          value={user.email}
+          disabled
+        />
+
+        {/* Bio */}
+        <div className="flex flex-col gap-2">
+          <label
+            htmlFor="bio"
+            className="text-xs font-medium text-gray-700"
+          >
+            Bio
+          </label>
+
+          <div className="relative">
+            <textarea
+              id="bio"
+              rows={4}
+              maxLength={250}
+              placeholder="Tell us a little about yourself..."
+              {...register("bio", {
+                maxLength: {
+                  value: 250,
+                  message:
+                    "Bio cannot exceed 250 characters.",
+                },
+              })}
+              className="w-full resize-none rounded-md border border-gray-200 bg-white px-3 py-2.5 text-xs text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-orange-400 focus:ring-1 focus:ring-orange-100"
+            />
+
+            <span className="absolute bottom-2 right-3 text-[10px] text-gray-400">
+              {user.bio?.length ?? 0}/250
+            </span>
+          </div>
+
+          {errors.bio && (
+            <p className="text-xs text-red-500">
+              {errors.bio.message}
+            </p>
+          )}
+        </div>
+
+        {/* Message */}
+        {message && (
+          <p
+            className={`text-xs ${
+              message.type === "success"
+                ? "text-green-600"
+                : "text-red-500"
             }`}
-        >
-          {message.text}
-        </p>
-      )}
+          >
+            {message.text}
+          </p>
+        )}
+
+        {/* Save */}
+        <div className="flex justify-end pt-1">
+          <Button
+            type="submit"
+            disabled={
+              isSaving ||
+              (!isDirty && !selectedAvatar)
+            }
+            className="rounded-lg px-5 py-2 text-xs font-medium"
+          >
+            {isSaving ? "Saving..." : "Save Changes"}
+          </Button>
+        </div>
+      </form>
     </div>
   );
 };
