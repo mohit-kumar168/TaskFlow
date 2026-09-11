@@ -39,12 +39,25 @@ export const DashboardRoutes = [
             element: <Dashboard />,
           },
           {
-            path: "/dashboard/search",
-            element: <DashboardSearchPage />,
+            path: "/settings",
+            children: [
+              {
+                index: true,
+                element: <UserSetting />,
+              },
+              {
+                path: "profile",
+                element: <UserSetting />,
+              },
+              {
+                path: "security",
+                element: <UserSetting />,
+              },
+            ],
           },
           {
-            path: "/settings",
-            element: <UserSetting />,
+            path: "/dashboard/search",
+            element: <DashboardSearchPage />,
           },
           {
             path: "/organizations/create",
@@ -52,7 +65,20 @@ export const DashboardRoutes = [
           },
           {
             path: "/organizations/:organizationSlug/settings",
-            element: <OrganizationSetting />,
+            children: [
+              {
+                index: true,
+                element: <OrganizationSetting />,
+              },
+              {
+                path: "general",
+                element: <OrganizationSetting />,
+              },
+              {
+                path: "members",
+                element: <OrganizationSetting />,
+              },
+            ],
           },
           {
             path: "/organizations/:organizationSlug/workspaces",

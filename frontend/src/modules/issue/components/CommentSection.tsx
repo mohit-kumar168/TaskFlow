@@ -402,44 +402,33 @@ const CommentSection = ({
 
       {/* Composer */}
       <div className="shrink-0 border-t border-gray-200 pt-3">
-        <div className="flex items-end gap-2">
+        <div className="relative">
           <textarea
             value={content}
-            onChange={(event) =>
-              setContent(event.target.value)
-            }
+            onChange={(event) => setContent(event.target.value)}
             maxLength={1000}
-            rows={2}
+            rows={1}
             placeholder="Write a comment..."
             disabled={isCreating}
-            className="min-h-12 max-h-32 flex-1 resize-none rounded-lg border border-gray-300 px-3 py-2.5 text-sm outline-none transition focus:border-orange-500 focus:ring-2 focus:ring-orange-200 disabled:bg-gray-50"
+            className="min-h-12 max-h-24 w-full resize-none rounded-lg border border-gray-300 py-3 pl-3 pr-12 text-sm outline-none transition focus:border-orange-500 focus:ring-2 focus:ring-orange-200 disabled:bg-gray-50"
           />
 
-          <Button
+          <button
             type="button"
-            variant="outline"
             onClick={handleCreateComment}
-            disabled={
-              isCreating ||
-              !content.trim()
-            }
-            className="flex h-11 shrink-0 items-center gap-1.5 px-3"
+            disabled={isCreating || !content.trim()}
+            className="absolute bottom-2.5 right-2 flex h-8 w-8 items-center justify-center rounded-md text-gray-400 transition hover:bg-orange-50 hover:text-orange-500 disabled:cursor-not-allowed disabled:opacity-40"
+            title={isCreating ? "Sending..." : "Send comment"}
           >
-            <Send size={14} />
-
-            <span className="hidden sm:inline">
-              {isCreating
-                ? "Sending..."
-                : "Send"}
-            </span>
-          </Button>
+            <Send size={16} />
+          </button>
         </div>
 
         <p className="mt-1 text-right text-[11px] text-gray-400">
           {content.length}/1000
         </p>
       </div>
-    </div>
+    </div >
   );
 };
 

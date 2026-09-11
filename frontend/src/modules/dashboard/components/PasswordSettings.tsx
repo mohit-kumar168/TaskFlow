@@ -71,7 +71,7 @@ const PasswordSettings = () => {
   return (
     <form
       onSubmit={handleSubmit(handleChangePassword)}
-      className="max-w-2xl space-y-6"
+      className="max-w-2xl space-y-6 px-6 py-4"
     >
       <Input
         id="currentPassword"

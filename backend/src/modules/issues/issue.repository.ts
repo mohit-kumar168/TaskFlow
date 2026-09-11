@@ -61,6 +61,14 @@ export const fetchAllIssues = async (
           avatarUrl: true,
         },
       },
+      reporter: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          avatarUrl: true,
+        },
+      },
     },
   });
 };

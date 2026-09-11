@@ -40,6 +40,13 @@ export interface IssueProps {
     email: string;
     avatarUrl: string | null;
   } | null;
+
+  reporter: {
+    id: string;
+    name: string;
+    email: string;
+    avatarUrl: string | null;
+  };
 }
 
 export interface CreateIssueProps {

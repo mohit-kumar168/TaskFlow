@@ -4,29 +4,27 @@ import {
   Settings,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
 
 import TFlogo from "@/assets/taskflow-logo.png";
 import SearchInput from "@/modules/common/components/ui/SearchInput";
 import OrganizationSelector from "@/modules/organization/components/OrganizationSelector";
-import SettingsMenu from "../components/SettingsMenu";
 import NotificationDropdown from "./NotificationDropdown";
 
 import { useAuthStore } from "@/store/auth.store";
 import Button from "@/modules/common/components/ui/Button";
+import { useState } from "react";
 
 type NavbarProps = {
   isSidebarOpen: boolean;
   onToggleSidebar: () => void;
+  onOpenSettings: () => void;
 };
 
 const Navbar = ({
   isSidebarOpen,
   onToggleSidebar,
+  onOpenSettings,
 }: NavbarProps) => {
-  const [isSettingsMenuOpen, setIsSettingsMenuOpen] =
-    useState(false);
-
   const [searchQuery, setSearchQuery] = useState("");
 
   const navigate = useNavigate();
@@ -64,9 +62,7 @@ const Navbar = ({
           className="flex h-9 w-9 items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-800"
         >
           <PanelRightOpen
-            className={`h-5 w-5 transition-transform duration-300 ${isSidebarOpen
-              ? ""
-              : "rotate-180"
+            className={`h-5 w-5 transition-transform duration-300 ${isSidebarOpen ? "" : "rotate-180"
               }`}
           />
         </button>
@@ -121,33 +117,18 @@ const Navbar = ({
         <NotificationDropdown />
 
         {/* Settings */}
-        <div className="relative">
-          <button
-            type="button"
-            onClick={() =>
-              setIsSettingsMenuOpen(
-                (prev) => !prev,
-              )
-            }
-            aria-label="Settings"
-            className={`flex h-9 w-9 items-center justify-center rounded-lg text-gray-500 transition-colors sm:h-10 sm:w-10 ${isSettingsMenuOpen
-              ? "bg-gray-100 text-gray-800"
-              : "hover:bg-gray-100 hover:text-gray-800"
-              }`}
-          >
-            <Settings className="h-5 w-5" />
-          </button>
-
-          {isSettingsMenuOpen && (
-            <SettingsMenu
-              onClose={() =>
-                setIsSettingsMenuOpen(
-                  false,
-                )
-              }
-            />
-          )}
-        </div>
+        <button
+          type="button"
+          onClick={() => {
+            navigate("/settings/profile");
+            onOpenSettings();
+          }}
+          aria-label="Settings"
+          title="Settings"
+          className="flex h-9 w-9 items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-800 sm:h-10 sm:w-10"
+        >
+          <Settings className="h-5 w-5" />
+        </button>
 
         {/* User */}
         <button

@@ -1,24 +1,13 @@
-import { Pencil } from "lucide-react";
-
 import type { IssueProps } from "@/api/issue.api";
 import type { SprintProps } from "@/api/sprint.api";
-
-import Button from "@/modules/common/components/ui/Button";
-
 interface IssueHeaderProps {
   issue: IssueProps;
   selectedSprint?: SprintProps;
-  isEditing: boolean;
-  isDisabled: boolean;
-  onEdit: () => void;
 }
 
 const IssueHeader = ({
   issue,
   selectedSprint,
-  isEditing,
-  isDisabled,
-  onEdit,
 }: IssueHeaderProps) => {
   return (
     <div className="flex flex-col gap-4 border-b border-gray-200 px-5 py-5 sm:px-6">
@@ -53,18 +42,6 @@ const IssueHeader = ({
           </div>
         </div>
 
-        {!isEditing && (
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onEdit}
-            disabled={isDisabled}
-            className="flex shrink-0 items-center gap-2"
-          >
-            <Pencil size={14} />
-            Edit
-          </Button>
-        )}
       </div>
     </div>
   );

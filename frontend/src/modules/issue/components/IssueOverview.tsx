@@ -4,42 +4,63 @@ import type { SprintProps } from "@/api/sprint.api";
 import Button from "@/modules/common/components/ui/Button";
 
 import AttachmentSection from "./AttachmentSection";
+import { Pencil } from "lucide-react";
 
 interface IssueOverviewProps {
   issue: IssueProps;
   selectedSprint?: SprintProps;
+  isEditing: boolean;
   isDisabled: boolean;
   isArchiving: boolean;
+  onEdit: () => void;
   onRemove: () => void;
 }
 
 const IssueOverview = ({
   issue,
   selectedSprint,
+  isEditing,
   isDisabled,
   isArchiving,
+  onEdit,
   onRemove,
 }: IssueOverviewProps) => {
   return (
-    <div className="space-y-6">
-      <section>
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
-          Description
-        </p>
+    <div className="space-y-2">
+      <section className="flex items-center justify-between">
+        <div>
+          <p className="text-sm font-semibold uppercase tracking-wider text-gray-400">
+            Description
+          </p>
 
-        {issue.description ? (
-          <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-gray-700">
-            {issue.description}
-          </p>
-        ) : (
-          <p className="mt-2 text-sm italic text-gray-400">
-            No description provided.
-          </p>
+          {issue.description ? (
+            <p className="mt-1 whitespace-pre-wrap break-words text-xs leading-6 text-gray-700">
+              {issue.description}
+            </p>
+          ) : (
+            <p className="mt-2 text-xs italic text-gray-400">
+              No description provided.
+            </p>
+          )}
+
+        </div>
+        {!isEditing && (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onEdit}
+            disabled={isDisabled}
+            className="flex shrink-0 items-center gap-2"
+          >
+            <Pencil size={14} />
+            Edit
+          </Button>
         )}
+
       </section>
 
       <section className="rounded-xl border border-gray-200 bg-gray-50/50 p-4">
-        <div className="grid grid-cols-2 gap-x-5 gap-y-5">
+        <div className="grid grid-cols-1 gap-x-2 gap-y-2">
           <Detail label="Type" value={issue.type} />
           <Detail label="Priority" value={issue.priority} />
           <Detail label="Status" value={issue.status} />
@@ -86,8 +107,8 @@ interface DetailProps {
 
 const Detail = ({ label, value }: DetailProps) => {
   return (
-    <div>
-      <p className="text-[11px] font-medium uppercase tracking-wide text-gray-400">
+    <div className="grid grid-cols-2">
+      <p className="text-sm font-medium uppercase tracking-wide text-gray-400">
         {label}
       </p>
       <p className="mt-1 truncate text-sm font-medium text-gray-800">
