@@ -58,47 +58,29 @@ const WorkspaceHeader = () => {
 
   return (
     <header className="border-b border-gray-200 bg-white">
-      <div className="px-6 pt-5">
-        <div className="flex items-center gap-2 text-sm">
-          <button
-            type="button"
-            onClick={() =>
-              navigate("/dashboard")
-            }
-            className="text-gray-500 transition hover:text-gray-900"
-          >
-            Workspaces
-          </button>
-
-          <span className="text-gray-300">›</span>
-
-          <span className="font-medium text-gray-900">
-            {currentWorkspace.name}
-          </span>
-        </div>
-
+      <div className="">
         {/* Main workspace information */}
-        <div className="mt-5 flex items-start justify-between gap-6">
+        <div className="pt-4 flex items-start justify-between gap-6">
           <div className="flex min-w-0 items-start gap-4">
             {/* Workspace icon - currently it is only showing the initial letter of the workspace after giving the upload image option to the user i have to change this */}
-            <div className="flex h-10 w-10 md:h-14 md:w-14 shrink-0 items-center justify-center rounded-sm md:rounded-xl bg-orange-500 text-xl font-semibold text-white shadow-sm">
+            <div className="flex h-8 w-8 md:h-10 md:w-10 shrink-0 items-center justify-center rounded-sm md:rounded-xl bg-orange-500 text-sm md:text-xl font-semibold text-white shadow-sm">
               {workspaceInitial}
             </div>
 
-            <div className="min-w-0">
+            <div className="min-w-0 flex flex-col items-start justify-center">
               <div className="flex items-center gap-2">
-                <h1 className="truncate text-sm md:text-2xl font-semibold tracking-tight text-gray-900">
+                <h1 className="truncate text-xs md:text-sm font-semibold tracking-tight text-gray-900">
                   {currentWorkspace.name}
                 </h1>
-              </div>
 
-              <div className="md:mt-2 flex flex-wrap items-center gap-3">
                 <span className="rounded-md md:bg-orange-50 md:px-2 md:py-1 text-xs font-medium text-orange-600">
                   WORKSPACE
                 </span>
+              </div>
 
+              <div className="flex flex-wrap items-center">
                 {currentWorkspace.description && (
-                  <p className="text-xs md:text-sm text-gray-500">
+                  <p className="truncate text-xs md:text-xs text-gray-500">
                     {currentWorkspace.description}
                   </p>
                 )}
@@ -114,9 +96,9 @@ const WorkspaceHeader = () => {
                   `${workspaceBasePath}/members`,
                 )
               }
-              className="hidden items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:border-gray-300 hover:bg-gray-50 sm:flex"
+              className="hidden items-center gap-2 rounded-lg border border-gray-200 bg-white px-2 py-2 text-xs font-medium text-gray-700 transition hover:border-gray-300 hover:bg-gray-50 sm:flex"
             >
-              <UserPlus size={16} />
+              <UserPlus size={12} />
               Members
             </button>
 
@@ -127,9 +109,9 @@ const WorkspaceHeader = () => {
                   `${workspaceBasePath}/projects/create`,
                 )
               }
-              className="hidden items-center gap-2 rounded-lg bg-orange-500 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-orange-600 sm:flex"
+              className="hidden items-center gap-2 rounded-lg bg-orange-500 px-2 py-2 text-xs font-medium text-white shadow-sm transition hover:bg-orange-600 sm:flex"
             >
-              <FolderPlus size={16} />
+              <FolderPlus size={12} />
               Create Project
             </button>
 
@@ -140,26 +122,25 @@ const WorkspaceHeader = () => {
                 onClick={() =>
                   setIsMenuOpen((open) => !open)
                 }
-                className={`flex h-6 w-6 md:h-10 md:w-10 items-center justify-center rounded-full md:rounded-lg border transition ${isMenuOpen
+                className={`flex h-6 w-6 md:h-8 md:w-8 items-center justify-center rounded-lg border transition ${isMenuOpen
                   ? "border-gray-300 bg-gray-100 text-gray-900"
                   : "border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-900"
                   }`}
               >
-                <Ellipsis size={19} />
+                <Ellipsis className="w-4 h-4" />
               </button>
 
               {isMenuOpen && (
                 <>
                   <button
                     type="button"
-                    aria-label="Close menu"
                     className="fixed inset-0 z-10 cursor-default"
                     onClick={() =>
                       setIsMenuOpen(false)
                     }
                   />
 
-                  <div className="absolute right-0 top-12 z-20 w-52 overflow-hidden rounded-xl border border-gray-200 bg-white py-1.5 shadow-lg">
+                  <div className="absolute right-0 top-12 z-20 w-52 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg">
                     <button
                       type="button"
                       onClick={() => {
@@ -168,7 +149,7 @@ const WorkspaceHeader = () => {
                           `${workspaceBasePath}/projects/create`,
                         );
                       }}
-                      className="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm text-gray-700 transition hover:bg-gray-50"
+                      className="flex w-full items-center gap-3 px-3 py-2 text-left text-sm text-gray-700 transition hover:bg-gray-100"
                     >
                       <FolderPlus
                         size={17}
@@ -185,7 +166,7 @@ const WorkspaceHeader = () => {
                           `${workspaceBasePath}/members`,
                         );
                       }}
-                      className="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm text-gray-700 transition hover:bg-gray-50"
+                      className="flex w-full items-center gap-3 px-3 py-2 text-left text-sm text-gray-700 transition hover:bg-gray-100"
                     >
                       <Users
                         size={17}
@@ -194,15 +175,13 @@ const WorkspaceHeader = () => {
                       Members
                     </button>
 
-                    <div className="my-1 border-t border-gray-100" />
-
                     <button
                       type="button"
                       onClick={() => {
                         setIsMenuOpen(false);
                         setIsSettingsOpen(true);
                       }}
-                      className="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm text-gray-700 transition hover:bg-gray-50"
+                      className="flex w-full items-center gap-3 px-3 py-2 text-left text-sm text-gray-700 transition hover:bg-gray-100"
                     >
                       <Settings
                         size={17}
@@ -218,7 +197,7 @@ const WorkspaceHeader = () => {
         </div>
 
         {/* Navigation */}
-        <nav className="mt-6 flex items-center gap-7">
+        <nav className="mt-4 flex items-center gap-7">
           <NavLink
             end
             to={workspaceBasePath}

@@ -20,16 +20,16 @@ const DashboardLayout = () => {
       <Navbar
         isSidebarOpen={isSidebarOpen}
         onToggleSidebar={() => {
-          console.log("Create workspace modal is working...");
           setIsSidebarOpen((open) => !open);
         }}
+        onOpenSettings={() => setIsSidebarOpen(true)}
       />
       <div className="flex flex-1 overflow-hidden">
         <Sidebar
           isOpen={isSidebarOpen}
           onClose={() => setIsSidebarOpen(false)}
         />
-        <main className="flex-1 overflow-y-auto p-6">
+        <main className="flex-1 overflow-y-auto px-4 md:px-6">
           <Outlet />
         </main>
       </div>

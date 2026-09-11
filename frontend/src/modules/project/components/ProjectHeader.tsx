@@ -39,59 +39,40 @@ const ProjectHeader = ({ project }: ProjectHeaderProps) => {
 
   return (
     <header className="border-b border-gray-200 bg-white">
-      <div className="px-5 pt-5 sm:px-6">
-        {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-sm">
-          <NavLink
-            to={`/organizations/${organizationSlug}/workspaces/${workspaceSlug}`}
-            className="text-gray-500 transition hover:text-gray-900"
-          >
-            Workspace
-          </NavLink>
-
-          <span className="text-gray-300">›</span>
-
-          <span className="font-medium text-gray-900">
-            {project.name}
-          </span>
-        </div>
-
+      <div className="">
         {/* Project information */}
-        <div className="mt-5 flex items-start justify-between gap-4 sm:gap-6">
+        <div className="pt-4 flex items-start justify-between gap-4 sm:gap-6">
           <div className="flex min-w-0 items-start gap-3 sm:gap-4">
             {/* Project icon - Change it when image upload option is provided to the user */}
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-orange-500 text-base font-semibold text-white shadow-sm sm:h-14 sm:w-14 sm:rounded-xl sm:text-xl">
+            <div className="flex h-8 w-8 md:h-10 md:w-10 shrink-0 items-center justify-center rounded-lg md:rounded-xl bg-orange-500 text-base font-semibold text-white shadow-sm">
               {projectInitial}
             </div>
 
-            <div className="min-w-0">
-              <h1 className="truncate text-sm md:text-lg font-semibold tracking-tight text-gray-900 sm:text-2xl">
-                {project.name}
-              </h1>
-
-              <div className="mt-1.5 flex flex-wrap items-center gap-2 sm:mt-2 sm:gap-3">
-                <span className="rounded-md md:bg-orange-50 md:px-2 md:py-1 text-xs font-semibold tracking-wide text-orange-600">
-                  PROJECT
-                </span>
+            <div className="min-w-0 flex flex-col items-start justify-center">
+              <div className="flex items-center gap-2">
+                <h1 className="truncate text-sm font-semibold tracking-tight text-gray-900">
+                  {project.name}
+                </h1>
 
                 {project.key && (
-                  <span className="text-xs font-medium uppercase tracking-wide text-gray-400 sm:text-sm">
+                  <span className="text-xs font-medium uppercase tracking-wide text-gray-400">
                     {project.key}
                   </span>
                 )}
 
+                <span className="rounded-md md:bg-orange-50 text-xs font-semibold tracking-wide text-orange-600">
+                  PROJECT
+                </span>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
                 {project.description && (
-                  <p className="hidden max-w-2xl truncate text-sm text-gray-500 md:block">
+                  <p className="max-w-2xl pt-1 truncate text-xs text-gray-500">
                     {project.description}
                   </p>
                 )}
               </div>
 
-              {project.description && (
-                <p className="mt-1.5 line-clamp-2 text-xs text-gray-500 md:hidden">
-                  {project.description}
-                </p>
-              )}
             </div>
           </div>
 
