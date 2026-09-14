@@ -19,12 +19,14 @@ import * as workspaceRepository from "@/modules/workspaces/workspace.repository"
 import * as organizationRepository from "@/modules/organization/organization.repository";
 import * as authRepository from "@/modules/auth/auth.repository";
 import * as notificationService from "@/modules/notifications/notification.service";
+import { getProjectFolder, uploadToCloudinary } from "@/utils/cloudinary";
 
 export const createProject = async (
   organizationSlug: string,
   workspaceSlug: string,
   userId: string,
   data: CreateProjectInput,
+  file?: Express.Multer.File,
 ) => {
   const organization = await organizationRepository.findOrganizationBySlug(
     organizationSlug,
@@ -63,13 +65,26 @@ export const createProject = async (
 
   const slug = createSlug(data.name);
   const key = data.key.trim().toUpperCase();
+  let iconUrl: string | undefined;
+
+  if (file) {
+    const uploadResult = await uploadToCloudinary(file.buffer, {
+      folder: getProjectFolder(slug),
+      resourceType: "image",
+    });
+
+    iconUrl = uploadResult.url;
+  }
 
   return await projectRepository.createProject(
     workspace.id,
     userId,
     slug,
     key,
-    data,
+    {
+      ...data,
+      iconUrl,
+    },
   );
 };
 
@@ -144,6 +159,7 @@ export const updateProject = async (
   projectSlug: string,
   userId: string,
   data: UpdateProjectInput,
+  file?: Express.Multer.File,
 ) => {
   const organization = await organizationRepository.findOrganizationBySlug(
     organizationSlug,
@@ -189,7 +205,24 @@ export const updateProject = async (
     throw new apiError(404, "Project not found.");
   }
 
-  return await projectRepository.updateProject(project.id, data);
+  let iconUrl: string | undefined;
+
+  if (file) {
+    const uploadResult = await uploadToCloudinary(file.buffer, {
+      folder: getProjectFolder(projectSlug),
+      resourceType: "image",
+    });
+
+    iconUrl = uploadResult.url;
+  }
+
+  return await projectRepository.updateProject(
+    project.id,
+    {
+      ...data,
+      ...(iconUrl && { iconUrl }),
+    },
+  );
 };
 
 export const archiveProject = async (

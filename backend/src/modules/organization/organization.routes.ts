@@ -3,69 +3,72 @@ import validateRequest from "@/middleware/validateRequest.middleware";
 import { Router } from "express";
 import { createOrganizationInviteSchema, createOrganizationSchema, updateOrganizationMemberRoleSchema, updateOrganizationSchema } from "./organization.validator";
 import { acceptInvite, archiveOrganization, createOrganization, fetchAllOrganizationMembers, fetchAllOrganizations, fetchOrganization, fetchOrganizationMember, inviteMember, removeOrganizationMember, updateOrganization, updateOrganizationMemberRole } from "./organization.controller";
+import upload from "@/middleware/upload.middleware";
 
-const router = Router({mergeParams: true});
+const router = Router({ mergeParams: true });
 
 router.use(protect);
 
 router.post(
-	"/",
-	validateRequest(createOrganizationSchema),
-	createOrganization,
+  "/",
+  upload.single("logo"),
+  validateRequest(createOrganizationSchema),
+  createOrganization,
 );
 
 router.get(
-	"/",
-	fetchAllOrganizations,
+  "/",
+  fetchAllOrganizations,
 );
 
 router.get(
-	"/:slug",
-	fetchOrganization,
+  "/:slug",
+  fetchOrganization,
 );
 
 router.patch(
-	"/:slug",
-	validateRequest(updateOrganizationSchema),
-	updateOrganization,
+  "/:slug",
+  upload.single("logo"),
+  validateRequest(updateOrganizationSchema),
+  updateOrganization,
 );
 
 router.delete(
-	"/:slug",
-	archiveOrganization,
+  "/:slug",
+  archiveOrganization,
 );
 
 
 router.post(
-	"/:slug/invites",
-	validateRequest(createOrganizationInviteSchema),
-	inviteMember,
+  "/:slug/invites",
+  validateRequest(createOrganizationInviteSchema),
+  inviteMember,
 );
 
 router.post(
-	"/invites/:token/accept",
-	acceptInvite,
+  "/invites/:token/accept",
+  acceptInvite,
 );
 
 router.get(
-	"/:slug/members",
-	fetchAllOrganizationMembers,
+  "/:slug/members",
+  fetchAllOrganizationMembers,
 );
 
 router.get(
-	"/:slug/members/:memberId",
-	fetchOrganizationMember,
+  "/:slug/members/:memberId",
+  fetchOrganizationMember,
 );
 
 router.patch(
-	"/:slug/members/:memberId",
-	validateRequest(updateOrganizationMemberRoleSchema),
-	updateOrganizationMemberRole,
+  "/:slug/members/:memberId",
+  validateRequest(updateOrganizationMemberRoleSchema),
+  updateOrganizationMemberRole,
 );
 
 router.delete(
-	"/:slug/members/:memberId",
-	removeOrganizationMember,
+  "/:slug/members/:memberId",
+  removeOrganizationMember,
 );
 
 export default router;

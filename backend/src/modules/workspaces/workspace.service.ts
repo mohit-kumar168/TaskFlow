@@ -17,9 +17,10 @@ import * as workspaceRepository from "./workspace.repository";
 import * as organizationRepository from "@/modules/organization/organization.repository";
 import * as authRepository from "@/modules/auth/auth.repository";
 import * as notificationService from "@/modules/notifications/notification.service";
+import { getWorkspaceFolder, uploadToCloudinary } from "@/utils/cloudinary";
 
 
-export const createWorkspace = async (organizationSlug: string, ownerId: string, data: CreateWorkspaceInput) => {
+export const createWorkspace = async (organizationSlug: string, ownerId: string, data: CreateWorkspaceInput, file?: Express.Multer.File) => {
   const organization = await organizationRepository.findOrganizationBySlug(organizationSlug, ownerId);
 
   if (!organization) {
@@ -38,10 +39,29 @@ export const createWorkspace = async (organizationSlug: string, ownerId: string,
 
   const slug = createSlug(data.name);
 
-  return workspaceRepository.createWorkspace(organization.id, ownerId, slug, data);
+  let logoUrl: string | undefined;
+
+  if (file) {
+    const uploadResult = await uploadToCloudinary(file.buffer, {
+      folder: getWorkspaceFolder(slug),
+      resourceType: "image",
+    });
+
+    logoUrl = uploadResult.url;
+  }
+
+  return workspaceRepository.createWorkspace(
+    organization.id,
+    ownerId,
+    slug,
+    {
+      ...data,
+      logoUrl,
+    },
+  );
 };
 
-export const updateWorkspace = async (organizationSlug: string, workspaceSlug: string, userId: string, data: UpdateWorkspaceInput) => {
+export const updateWorkspace = async (organizationSlug: string, workspaceSlug: string, userId: string, data: UpdateWorkspaceInput, file?: Express.Multer.File) => {
   const organization = await organizationRepository.findOrganizationBySlug(organizationSlug, userId);
 
   if (!organization) {
@@ -63,9 +83,25 @@ export const updateWorkspace = async (organizationSlug: string, workspaceSlug: s
     throw new apiError(403, "You don't have permission to update this workspace.");
   }
 
-  return await workspaceRepository.updateWorkspace(workspace.id, data);
-};
+  let logoUrl: string | undefined;
 
+  if (file) {
+    const uploadResult = await uploadToCloudinary(file.buffer, {
+      folder: getWorkspaceFolder(workspaceSlug),
+      resourceType: "image",
+    });
+
+    logoUrl = uploadResult.url;
+  }
+
+  return await workspaceRepository.updateWorkspace(
+    workspace.id,
+    {
+      ...data,
+      ...(logoUrl && { logoUrl }),
+    },
+  );
+};
 
 export const archiveWorkspace = async (organizationSlug: string, workspaceSlug: string, userId: string) => {
   const organization = await organizationRepository.findOrganizationBySlug(organizationSlug, userId);
