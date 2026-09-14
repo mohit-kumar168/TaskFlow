@@ -11,6 +11,10 @@ export interface LoginUserProps {
   password: string;
 }
 
+export interface GoogleLoginProps {
+  credential: string;
+}
+
 export interface UserProps {
   id: string;
   name: string;
@@ -36,6 +40,10 @@ export const registerUser = (data: RegisterUserProps) => {
 
 export const loginUser = (data: LoginUserProps) => {
   return api.post("/auth/login", data);
+};
+
+export const loginWithGoogle = (data: GoogleLoginProps) => {
+  return api.post("/auth/google", data);
 };
 
 export const refreshAccessToken = () => {
@@ -64,6 +72,7 @@ export const updateUserProfile = (data: UpdateUserProfileProps) => {
   if (data.avatar) {
     formData.append("avatar", data.avatar);
   }
+
   return api.patch("/auth/update-profile", formData);
 };
 
