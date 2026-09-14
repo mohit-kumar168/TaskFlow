@@ -10,6 +10,17 @@ export interface LoginWithCredentialsInput {
   password: string;
 }
 
+export interface GoogleLoginInput {
+  credential: string;
+}
+
+export interface CreateGoogleUserInput {
+  name: string;
+  email: string;
+  avatarUrl?: string;
+  providerAccountId: string;
+}
+
 export interface ChangePasswordInput {
   currentPassword: string;
   newPassword: string;

@@ -1,8 +1,8 @@
-import { getMe, loginUser, logoutUser, refreshAccessToken, registerUser, changeUserPassword, updateUserProfile, removeUser } from "./auth.controller";
+import { getMe, loginUser, logoutUser, refreshAccessToken, registerUser, changeUserPassword, updateUserProfile, removeUser, googleLogin } from "./auth.controller";
 import { protect } from "@/middleware/auth.middleware";
 import validateRequest from "@/middleware/validateRequest.middleware";
 import { Router } from "express";
-import { changePasswordSchema, loginUserSchema, registerUserSchema, updateProfileSchema } from "./auth.validator";
+import { changePasswordSchema, googleLoginSchema, loginUserSchema, registerUserSchema, updateProfileSchema } from "./auth.validator";
 import upload from "@/middleware/upload.middleware";
 
 const router = Router();
@@ -17,6 +17,12 @@ router.post(
   "/login",
   validateRequest(loginUserSchema),
   loginUser
+);
+
+router.post(
+  "/google",
+  validateRequest(googleLoginSchema),
+  googleLogin
 );
 
 router.post(

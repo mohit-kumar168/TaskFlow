@@ -51,6 +51,31 @@ export const logoutUser = asyncHandler(async (req: Request, res: Response) => {
   );
 });
 
+export const googleLogin = asyncHandler(
+  async (req: Request, res: Response) => {
+    const result = await authService.loginWithGoogle(req.body);
+
+    res.cookie(
+      "accessToken",
+      result.accessToken,
+      ACCESS_TOKEN_COOKIE_OPTIONS
+    );
+
+    res.cookie(
+      "refreshToken",
+      result.refreshToken,
+      REFRESH_TOKEN_COOKIE_OPTIONS
+    );
+
+    return res.status(200).json(
+      new apiResponse(
+        "Google login successful.",
+        result,
+      ),
+    );
+  },
+);
+
 export const refreshAccessToken = asyncHandler(async (req: Request, res: Response) => {
   const refreshToken = req.cookies.refreshToken;
 

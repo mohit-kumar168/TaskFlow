@@ -1,11 +1,13 @@
 import apiError from "@/utils/apiError";
 import * as authRepository from "./auth.repository";
+import { OAuth2Client } from "google-auth-library";
 
 import type {
   RegisterWithCredentialsInput,
   LoginWithCredentialsInput,
+  GoogleLoginInput,
   ChangePasswordInput,
-  UpdateProfileInput
+  UpdateProfileInput,
 } from "./auth.types";
 
 import {
@@ -19,6 +21,9 @@ import {
   verifyRefreshToken
 } from "@/utils/jwt";
 import { getUserFolder, uploadToCloudinary } from "@/utils/cloudinary";
+import env from "@/config/env";
+
+const googleClient = new OAuth2Client(env.GOOGLE_CLIENT_ID);
 
 export const registerWithCredentials = async (data: RegisterWithCredentialsInput) => {
   const existingUser = await authRepository.findUserByEmail(data.email);
@@ -75,12 +80,116 @@ export const loginWithCredentials = async (data: LoginWithCredentialsInput) => {
 };
 
 export const logout = async (userId: string) => {
-  const account = await authRepository.findCredentialsAccount(userId);
-  if (!account) {
-    throw new apiError(404, "Account not found.");
+  await authRepository.clearUserRefreshTokens(userId);
+};
+
+export const loginWithGoogle = async (data: GoogleLoginInput) => {
+  let payload;
+
+  try {
+    const ticket = await googleClient.verifyIdToken({
+      idToken: data.credential,
+      audience: env.GOOGLE_CLIENT_ID,
+    });
+
+    payload = ticket.getPayload();
+  } catch {
+    throw new apiError(
+      401,
+      "Invalid Google credential."
+    );
   }
 
-  await authRepository.updateRefreshToken(userId, null);
+  if (
+    !payload ||
+    !payload.sub ||
+    !payload.email ||
+    !payload.email_verified
+  ) {
+    throw new apiError(
+      401,
+      "Unable to verify Google account."
+    );
+  }
+
+  const googleId = payload.sub;
+  const email = payload.email.toLowerCase();
+
+  let googleAccount =
+    await authRepository.findGoogleAccount(googleId);
+
+  let user;
+
+  if (googleAccount) {
+    user = googleAccount.user;
+
+    if (!user.isActive) {
+      throw new apiError(
+        401,
+        "This account has been deactivated."
+      );
+    }
+  } else {
+    const existingUser = await authRepository.findUserByEmail(email);
+
+    if (existingUser) {
+      if (!existingUser.isActive) {
+        throw new apiError(
+          401,
+          "This account has been deactivated."
+        );
+      }
+
+      googleAccount =
+        await authRepository.createGoogleAccount(
+          existingUser.id,
+          googleId
+        );
+
+      user = existingUser;
+    } else {
+      if (!payload.name) {
+        throw new apiError(
+          400,
+          "Google account name is required."
+        );
+      }
+      user = await authRepository.createGoogleUser({
+        name: payload.name,
+        email,
+        avatarUrl: payload.picture,
+        providerAccountId: googleId,
+      });
+
+      googleAccount = await authRepository.findGoogleAccount(
+        googleId
+      );
+    }
+  }
+
+  if (!googleAccount) {
+    throw new apiError(
+      500,
+      "Google account could not be created."
+    );
+  }
+
+  const accessToken = generateAccessToken(user.id);
+
+  const refreshToken = generateRefreshToken(user.id);
+
+  const hashedRefreshToken = await generateHash(refreshToken);
+
+  await authRepository.updateAccountRefreshToken(
+    googleAccount.id,
+    hashedRefreshToken
+  );
+
+  return {
+    user,
+    accessToken,
+    refreshToken,
+  };
 };
 
 export const changePassword = async (userId: string, data: ChangePasswordInput) => {
@@ -102,28 +211,60 @@ export const refreshAccessToken = async (refreshToken: string) => {
 
   try {
     payload = verifyRefreshToken(refreshToken);
-  } catch (error) {
-    throw new apiError(401, "Invalid or expired refreshToken.");
+  } catch {
+    throw new apiError(
+      401,
+      "Invalid or expired refreshToken."
+    );
   }
 
-  const account = await authRepository.findCredentialsAccount(payload.id);
-  if (!account || !account.hashedRefreshToken) {
-    throw new apiError(401, "Unauthorized request.");
+  const accounts =
+    await authRepository.findAccountByUserId(payload.id);
+
+  let validAccount = null;
+
+  for (const account of accounts) {
+    if (!account.hashedRefreshToken) {
+      continue;
+    }
+
+    const isValid = await compareHash(
+      refreshToken,
+      account.hashedRefreshToken
+    );
+
+    if (isValid) {
+      validAccount = account;
+      break;
+    }
   }
 
-  const isValid = await compareHash(refreshToken, account.hashedRefreshToken);
-  if (!isValid) {
-    throw new apiError(401, "Unauthorized request.");
+  if (!validAccount) {
+    throw new apiError(
+      401,
+      "Unauthorized request."
+    );
   }
 
-  const newAccessToken = generateAccessToken(account.userId);
-  const newRefreshToken = generateRefreshToken(account.userId);
+  const newAccessToken =
+    generateAccessToken(validAccount.userId);
 
-  const hashRefreshToken = await generateHash(newRefreshToken);
+  const newRefreshToken =
+    generateRefreshToken(validAccount.userId);
 
-  await authRepository.updateRefreshToken(account.userId, hashRefreshToken);
+  const hashedRefreshToken =
+    await generateHash(newRefreshToken);
 
-  return { accessToken: newAccessToken, refreshToken: newRefreshToken, user: account.user };
+  await authRepository.updateAccountRefreshToken(
+    validAccount.id,
+    hashedRefreshToken
+  );
+
+  return {
+    accessToken: newAccessToken,
+    refreshToken: newRefreshToken,
+    user: validAccount.user,
+  };
 };
 
 export const getCurrentUser = async (userId: string) => {
