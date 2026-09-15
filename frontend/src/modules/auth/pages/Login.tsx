@@ -125,10 +125,11 @@ const Login = () => {
                   required: "Password is required",
                 })}
               />
-
-              <Button type="submit">
-                Sign In
-              </Button>
+              <div className="flex items-center justify-center">
+                <Button type="submit" className="w-42">
+                  Sign In
+                </Button>
+              </div>
             </form>
 
             <div className="flex items-center gap-3 my-6">
