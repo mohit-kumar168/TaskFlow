@@ -115,7 +115,7 @@ const WorkspaceSection = () => {
     <section>
       {/* Section Header */}
       <div className="mb-2 flex items-center justify-between px-2">
-        <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-gray-400">
+        <span className="text-xs font-semibold uppercase tracking-[0.08em] text-gray-400">
           Workspaces
         </span>
 
@@ -172,10 +172,16 @@ const WorkspaceSection = () => {
               >
                 {/* Workspace Avatar */}
                 <span
-                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-[10px] font-bold tracking-wide text-white shadow-sm ${workspaceColor}`}
+                  className={`flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-md text-[10px] font-bold tracking-wide text-white shadow-sm ${workspaceColor}`}
                 >
-                  {getWorkspaceInitials(
-                    workspace.name,
+                  {workspace.logoUrl ? (
+                    <img
+                      src={workspace.logoUrl}
+                      alt={`${workspace.name} logo`}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    getWorkspaceInitials(workspace.name)
                   )}
                 </span>
 

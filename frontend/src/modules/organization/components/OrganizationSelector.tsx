@@ -25,10 +25,17 @@ const OrganizationSelector = () => {
         onClick={() => setIsOpen((open) => !open)}
         className="flex min-w-0 max-w-44 items-center gap-2 rounded-lg text-sm font-medium text-gray-700 transition sm:max-w-56 sm:px-3"
       >
-        <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-orange-500 text-sm font-semibold text-white">
-          {currentOrganization?.name?.charAt(0).toUpperCase() ?? "O"}
+        <div className="flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-md bg-orange-500 text-sm font-semibold text-white">
+          {currentOrganization?.logoUrl ? (
+            <img
+              src={currentOrganization.logoUrl}
+              alt={`${currentOrganization.name} logo`}
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            currentOrganization?.name?.charAt(0).toUpperCase() ?? "O"
+          )}
         </div>
-
         <span className="hidden max-w-32 truncate sm:block">
           {currentOrganization?.name ?? "Select organization"}
         </span>
@@ -65,7 +72,16 @@ const OrganizationSelector = () => {
             >
               <div className="flex min-w-0 items-center gap-2">
                 <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-gray-100 text-xs font-semibold text-gray-600">
-                  {organization.name.charAt(0).toUpperCase()}
+                  {organization?.logoUrl ? (
+                    <img
+                      src={organization.logoUrl}
+                      alt={`${organization.name} logo`}
+                      className="h-full w-full object-cover rounded-lg"
+                    />
+
+                  ) : (
+                    organization.name.charAt(0).toUpperCase()
+                  )}
                 </div>
 
                 <span className="truncate">{organization.name}</span>

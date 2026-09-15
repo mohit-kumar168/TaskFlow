@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate, useParams } from "react-router-dom";
+import { Pencil } from "lucide-react";
 
 import Button from "@/modules/common/components/ui/Button";
 import Input from "@/modules/common/components/ui/Input";
@@ -11,6 +12,7 @@ import FeedbackModal from "@/modules/common/components/ui/FeedBackModal";
 type WorkspaceFormData = {
   name: string;
   description: string;
+  logo: FileList;
 };
 
 const WorkspaceSettings = () => {
@@ -33,17 +35,20 @@ const WorkspaceSettings = () => {
 
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
 
-  const [message, setMessage] = useState<{
-    type: "success" | "error";
-    text: string;
-  } | null>(null);
-  const [feedback, setFeedback] = useState({ isOpen: false, type: "success" as "success" | "error", title: "", message: "" });
+  const [feedback, setFeedback] = useState({
+    isOpen: false,
+    type: "success" as "success" | "error",
+    title: "",
+    message: "",
+  });
 
   const {
     register,
     handleSubmit,
     reset,
+    watch,
     formState: { errors, isDirty },
   } = useForm<WorkspaceFormData>({
     defaultValues: {
@@ -52,36 +57,64 @@ const WorkspaceSettings = () => {
     },
   });
 
+  const selectedLogo = watch("logo");
+
   useEffect(() => {
     reset({
       name: currentWorkspace?.name ?? "",
       description: currentWorkspace?.description ?? "",
     });
+
+    setLogoPreview(null);
   }, [currentWorkspace, reset]);
 
-  const handleUpdate = async (
-    data: WorkspaceFormData,
-  ) => {
+  useEffect(() => {
+    if (!selectedLogo?.[0]) {
+      setLogoPreview(null);
+      return;
+    }
+
+    const file = selectedLogo[0];
+
+    if (!file.type.startsWith("image/")) {
+      setLogoPreview(null);
+      return;
+    }
+
+    const previewUrl = URL.createObjectURL(file);
+    setLogoPreview(previewUrl);
+
+    return () => {
+      URL.revokeObjectURL(previewUrl);
+    };
+  }, [selectedLogo]);
+
+  const handleUpdate = async (data: WorkspaceFormData) => {
     if (!organizationSlug || !workspaceSlug) {
       return;
     }
 
-    setMessage(null);
+    const formData = new FormData();
+
+    formData.append("name", data.name.trim());
+    formData.append("description", data.description.trim());
+
+    if (data.logo?.[0]) {
+      formData.append("logo", data.logo[0]);
+    }
 
     const updatedWorkspace = await updateWorkspace(
       organizationSlug,
       workspaceSlug,
-      {
-        name: data.name.trim(),
-        description: data.description.trim(),
-      },
+      formData,
     );
 
     if (!updatedWorkspace) {
-      setFeedback({ isOpen: true, type: "error", title: "Update Failed", message: "Unable to update the workspace." });
-      setMessage({
+      setFeedback({
+        isOpen: true,
         type: "error",
-        text: "Failed to update workspace.",
+        title: "Update Failed",
+        message: "Unable to update the workspace.",
       });
 
       return;
@@ -92,13 +125,15 @@ const WorkspaceSettings = () => {
       description: updatedWorkspace.description ?? "",
     });
 
+    setLogoPreview(null);
     setIsEditing(false);
 
-    setMessage({
+    setFeedback({
+      isOpen: true,
       type: "success",
-      text: "Workspace updated successfully.",
+      title: "Workspace Updated",
+      message: "Workspace updated successfully.",
     });
-    setFeedback({ isOpen: true, type: "success", title: "Workspace Updated", message: "Workspace updated successfully." });
   };
 
   const handleCancelEdit = () => {
@@ -107,8 +142,8 @@ const WorkspaceSettings = () => {
       description: currentWorkspace?.description ?? "",
     });
 
+    setLogoPreview(null);
     setIsEditing(false);
-    setMessage(null);
   };
 
   const handleDeleteWorkspace = async () => {
@@ -130,7 +165,6 @@ const WorkspaceSettings = () => {
 
     try {
       setIsDeleting(true);
-      setMessage(null);
 
       const deleted = await archiveWorkspace(
         organizationSlug,
@@ -138,19 +172,17 @@ const WorkspaceSettings = () => {
       );
 
       if (!deleted) {
-        setFeedback({ isOpen: true, type: "error", title: "Deletion Failed", message: "Unable to delete the workspace." });
-        setMessage({
+        setFeedback({
+          isOpen: true,
           type: "error",
-          text: "Failed to delete workspace.",
+          title: "Deletion Failed",
+          message: "Unable to delete the workspace.",
         });
 
         return;
       }
-      setFeedback({ isOpen: true, type: "success", title: "Workspace Deleted", message: "Workspace deleted successfully." });
 
-      navigate(
-        `/organizations/${organizationSlug}`,
-      );
+      navigate(`/organizations/${organizationSlug}`);
     } finally {
       setIsDeleting(false);
     }
@@ -163,6 +195,9 @@ const WorkspaceSettings = () => {
       </div>
     );
   }
+
+  const currentLogo =
+    logoPreview ?? currentWorkspace.logoUrl;
 
   return (
     <div className="max-w-3xl">
@@ -180,12 +215,10 @@ const WorkspaceSettings = () => {
         {!isEditing && (
           <button
             type="button"
-            onClick={() => {
-              setIsEditing(true);
-              setMessage(null);
-            }}
-            className="rounded-full p-2 text-sm font-medium text-orange-500 hover:bg-gray-100 hover:text-orange-600"
+            onClick={() => setIsEditing(true)}
+            className="flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-medium text-orange-500 hover:bg-gray-100 hover:text-orange-600"
           >
+            <Pencil size={15} />
             Edit
           </button>
         )}
@@ -197,10 +230,47 @@ const WorkspaceSettings = () => {
             onSubmit={handleSubmit(handleUpdate)}
             className="space-y-6"
           >
+            {/* Workspace Logo */}
+            <div>
+              <label className="text-sm font-medium text-gray-700">
+                Workspace Logo
+              </label>
+
+              <div className="mt-3 flex items-center gap-4">
+                {currentLogo ? (
+                  <img
+                    src={currentLogo}
+                    alt={`${currentWorkspace.name} logo`}
+                    className="h-16 w-16 rounded-xl object-cover"
+                  />
+                ) : (
+                  <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-orange-500 text-xl font-semibold text-white">
+                    {currentWorkspace.name
+                      .charAt(0)
+                      .toUpperCase()}
+                  </div>
+                )}
+
+                <div>
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    {...register("logo")}
+                    className="block text-sm text-gray-600 file:mr-3 file:rounded-lg file:border-0 file:bg-orange-50 file:px-3 file:py-2 file:text-sm file:font-medium file:text-orange-600 hover:file:bg-orange-100"
+                  />
+
+                  <p className="mt-1 text-xs text-gray-500">
+                    JPG, PNG or WEBP. Maximum 10MB.
+                  </p>
+                </div>
+              </div>
+            </div>
+
             <Input
               id="name"
               label="Workspace Name"
               error={errors.name?.message}
+              disabled={isLoading || isDeleting}
               {...register("name", {
                 required:
                   "Workspace name is required.",
@@ -228,6 +298,7 @@ const WorkspaceSettings = () => {
               <textarea
                 id="description"
                 rows={4}
+                disabled={isLoading || isDeleting}
                 {...register("description", {
                   maxLength: {
                     value: 250,
@@ -235,7 +306,7 @@ const WorkspaceSettings = () => {
                       "Description cannot exceed 250 characters.",
                   },
                 })}
-                className="w-full resize-none rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
+                className="w-full resize-none rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200 disabled:cursor-not-allowed disabled:bg-gray-50"
               />
 
               {errors.description && (
@@ -262,34 +333,50 @@ const WorkspaceSettings = () => {
 
               <button
                 type="button"
+                onClick={handleCancelEdit}
+                disabled={isLoading || isDeleting}
+                className="rounded-lg px-4 py-2.5 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
                 onClick={handleDeleteWorkspace}
-                disabled={
-                  isLoading ||
-                  isDeleting
-                }
+                disabled={isLoading || isDeleting}
                 className="rounded-lg border border-red-200 px-4 py-2.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isDeleting
                   ? "Deleting..."
                   : "Delete Workspace"}
               </button>
-
-              <button
-                type="button"
-                onClick={handleCancelEdit}
-                disabled={
-                  isLoading ||
-                  isDeleting
-                }
-                className="rounded-lg px-4 py-2.5 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                Cancel
-              </button>
             </div>
           </form>
         ) : (
-          /* View Mode */
           <div className="space-y-6">
+            {/* Workspace Logo */}
+            <div>
+              <p className="text-xs font-medium text-gray-500">
+                Workspace Logo
+              </p>
+
+              <div className="mt-2">
+                {currentWorkspace.logoUrl ? (
+                  <img
+                    src={currentWorkspace.logoUrl}
+                    alt={`${currentWorkspace.name} logo`}
+                    className="h-16 w-16 rounded-xl object-cover"
+                  />
+                ) : (
+                  <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-orange-500 text-xl font-semibold text-white">
+                    {currentWorkspace.name
+                      .charAt(0)
+                      .toUpperCase()}
+                  </div>
+                )}
+              </div>
+            </div>
+
             <div>
               <p className="text-xs font-medium text-gray-500">
                 Workspace Name
@@ -314,17 +401,15 @@ const WorkspaceSettings = () => {
         )}
       </div>
 
-      {message && (
-        <p
-          className={`mt-6 text-sm ${message.type === "success"
-            ? "text-green-600"
-            : "text-red-500"
-            }`}
-        >
-          {message.text}
-        </p>
-      )}
-      <FeedbackModal {...feedback} onClose={() => { setFeedback((current) => ({ ...current, isOpen: false })); if (feedback.type === "success" && feedback.title === "Workspace Deleted") navigate(`/organizations/${organizationSlug}`); }} />
+      <FeedbackModal
+        {...feedback}
+        onClose={() =>
+          setFeedback((current) => ({
+            ...current,
+            isOpen: false,
+          }))
+        }
+      />
     </div>
   );
 };
