@@ -64,7 +64,17 @@ const WorkspaceHeader = () => {
           <div className="flex min-w-0 items-start gap-4">
             {/* Workspace icon - currently it is only showing the initial letter of the workspace after giving the upload image option to the user i have to change this */}
             <div className="flex h-8 w-8 md:h-10 md:w-10 shrink-0 items-center justify-center rounded-sm md:rounded-xl bg-orange-500 text-sm md:text-xl font-semibold text-white shadow-sm">
-              {workspaceInitial}
+              <div className="flex h-8 w-8 md:h-10 md:w-10 shrink-0 items-center justify-center overflow-hidden rounded-sm md:rounded-xl bg-orange-500 text-sm md:text-xl font-semibold text-white shadow-sm">
+                {currentWorkspace.logoUrl ? (
+                  <img
+                    src={currentWorkspace.logoUrl}
+                    alt={`${currentWorkspace.name} logo`}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  workspaceInitial
+                )}
+              </div>
             </div>
 
             <div className="min-w-0 flex flex-col items-start justify-center">

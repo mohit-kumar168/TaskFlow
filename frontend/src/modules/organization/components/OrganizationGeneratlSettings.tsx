@@ -1,4 +1,4 @@
-import { Building2, Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
@@ -11,6 +11,7 @@ import { useOrganizationStore } from "@/store/organization.store";
 type OrganizationFormData = {
   name: string;
   description?: string;
+  logo: FileList;
 };
 
 const OrganizationGeneralSettings = () => {
@@ -26,6 +27,8 @@ const OrganizationGeneralSettings = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+
   const [feedback, setFeedback] = useState({
     isOpen: false,
     type: "success" as "success" | "error",
@@ -38,6 +41,7 @@ const OrganizationGeneralSettings = () => {
     register,
     handleSubmit,
     reset,
+    watch,
     formState: { errors, isDirty },
   } = useForm<OrganizationFormData>({
     defaultValues: {
@@ -46,24 +50,58 @@ const OrganizationGeneralSettings = () => {
     },
   });
 
+  const selectedLogo = watch("logo");
+
   useEffect(() => {
     reset({
       name: currentOrganization?.name ?? "",
       description: currentOrganization?.description ?? "",
     });
+
+    setLogoPreview(null);
   }, [currentOrganization, reset]);
+
+  useEffect(() => {
+    if (!selectedLogo?.[0]) {
+      setLogoPreview(null);
+      return;
+    }
+
+    const file = selectedLogo[0];
+
+    if (!file.type.startsWith("image/")) {
+      setLogoPreview(null);
+      return;
+    }
+
+    const previewUrl = URL.createObjectURL(file);
+    setLogoPreview(previewUrl);
+
+    return () => {
+      URL.revokeObjectURL(previewUrl);
+    };
+  }, [selectedLogo]);
 
   const handleUpdate = async (data: OrganizationFormData) => {
     if (!currentOrganization) {
       return;
     }
 
+    const formData = new FormData();
+
+    formData.append("name", data.name.trim());
+    formData.append(
+      "description",
+      data.description?.trim() ?? "",
+    );
+
+    if (data.logo?.[0]) {
+      formData.append("logo", data.logo[0]);
+    }
+
     const updatedOrganization = await updateOrganization(
       currentOrganization.slug,
-      {
-        name: data.name.trim(),
-        description: data.description?.trim() ?? "",
-      },
+      formData,
     );
 
     if (!updatedOrganization) {
@@ -79,6 +117,7 @@ const OrganizationGeneralSettings = () => {
     }
 
     setIsEditing(false);
+    setLogoPreview(null);
 
     setFeedback({
       isOpen: true,
@@ -95,6 +134,7 @@ const OrganizationGeneralSettings = () => {
       description: currentOrganization?.description ?? "",
     });
 
+    setLogoPreview(null);
     setIsEditing(false);
   };
 
@@ -152,22 +192,23 @@ const OrganizationGeneralSettings = () => {
     );
   }
 
+  const currentLogo =
+    logoPreview ?? currentOrganization.logoUrl;
+
   return (
     <>
       <div className="space-y-8">
         {/* Organization Information */}
         <section>
           <div className="flex items-start justify-between border-b border-gray-100 pb-5">
-            <div className="flex items-center gap-3">
-              <div>
-                <h3 className="text-base font-semibold text-gray-900">
-                  Organization Information
-                </h3>
+            <div>
+              <h3 className="text-base font-semibold text-gray-900">
+                Organization Information
+              </h3>
 
-                <p className="mt-0.5 text-sm text-gray-500">
-                  Manage your organization's basic information.
-                </p>
-              </div>
+              <p className="mt-0.5 text-sm text-gray-500">
+                Manage your organization's basic information.
+              </p>
             </div>
 
             {!isEditing && (
@@ -186,14 +227,52 @@ const OrganizationGeneralSettings = () => {
             {isEditing ? (
               <form
                 onSubmit={handleSubmit(handleUpdate)}
-                className="space-y-5"
+                className="space-y-6"
               >
+                {/* Organization Logo */}
+                <div>
+                  <label className="text-sm font-medium text-gray-700">
+                    Organization Logo
+                  </label>
+
+                  <div className="mt-3 flex items-center gap-4">
+                    {currentLogo ? (
+                      <img
+                        src={currentLogo}
+                        alt={`${currentOrganization.name} logo`}
+                        className="h-16 w-16 rounded-xl object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-orange-500 text-xl font-semibold text-white">
+                        {currentOrganization.name
+                          .charAt(0)
+                          .toUpperCase()}
+                      </div>
+                    )}
+
+                    <div>
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        {...register("logo")}
+                        className="block text-sm text-gray-600 file:mr-3 file:rounded-lg file:border-0 file:bg-orange-50 file:px-3 file:py-2 file:text-sm file:font-medium file:text-orange-600 hover:file:bg-orange-100"
+                      />
+
+                      <p className="mt-1 text-xs text-gray-500">
+                        JPG, PNG or WEBP. Maximum 10MB.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Organization Name */}
                 <Input
                   id="name"
                   label="Organization Name"
                   error={errors.name?.message}
                   {...register("name", {
-                    required: "Organization name is required.",
+                    required:
+                      "Organization name is required.",
                     minLength: {
                       value: 2,
                       message:
@@ -207,6 +286,7 @@ const OrganizationGeneralSettings = () => {
                   })}
                 />
 
+                {/* Description */}
                 <div className="flex flex-col gap-2">
                   <label
                     htmlFor="description"
@@ -217,7 +297,7 @@ const OrganizationGeneralSettings = () => {
 
                   <textarea
                     id="description"
-                    rows={5}
+                    rows={4}
                     placeholder="Describe your organization..."
                     {...register("description", {
                       maxLength: {
@@ -226,30 +306,33 @@ const OrganizationGeneralSettings = () => {
                           "Description cannot exceed 500 characters.",
                       },
                     })}
-                    className="w-full resize-none rounded-lg border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none transition-all placeholder:text-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-100"
+                    className="w-full resize-none rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none transition-all focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
                   />
 
                   {errors.description && (
-                    <p className="text-xs text-red-500">
+                    <p className="text-sm text-red-500">
                       {errors.description.message}
                     </p>
                   )}
                 </div>
 
-                <div className="flex items-center gap-3 pt-2">
+                {/* Actions */}
+                <div className="flex gap-3">
                   <Button
                     type="submit"
                     disabled={isLoading || !isDirty}
                     className="w-auto"
                   >
-                    {isLoading ? "Saving..." : "Save Changes"}
+                    {isLoading
+                      ? "Saving..."
+                      : "Save Changes"}
                   </Button>
 
                   <button
                     type="button"
                     onClick={handleCancelEdit}
                     disabled={isLoading}
-                    className="rounded-lg px-4 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100 disabled:opacity-50"
+                    className="rounded-lg px-4 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100"
                   >
                     Cancel
                   </button>
@@ -257,22 +340,45 @@ const OrganizationGeneralSettings = () => {
               </form>
             ) : (
               <div className="space-y-6">
+                {/* Logo */}
                 <div>
-                  <p className="mb-1.5 text-xs font-medium text-gray-500">
+                  <p className="mb-2 text-xs font-medium text-gray-500">
+                    Organization Logo
+                  </p>
+
+                  {currentOrganization.logoUrl ? (
+                    <img
+                      src={currentOrganization.logoUrl}
+                      alt={`${currentOrganization.name} logo`}
+                      className="h-12 w-12 rounded-xl object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-500 text-xl font-semibold text-white">
+                      {currentOrganization.name
+                        .charAt(0)
+                        .toUpperCase()}
+                    </div>
+                  )}
+                </div>
+
+                {/* Name */}
+                <div>
+                  <p className="text-xs font-medium text-gray-500">
                     Organization Name
                   </p>
 
-                  <p className="text-sm font-medium text-gray-900">
+                  <p className="mt-1 text-sm text-gray-900">
                     {currentOrganization.name}
                   </p>
                 </div>
 
+                {/* Description */}
                 <div>
-                  <p className="mb-1.5 text-xs font-medium text-gray-500">
+                  <p className="text-xs font-medium text-gray-500">
                     Description
                   </p>
 
-                  <p className="max-w-2xl text-sm leading-6 text-gray-700">
+                  <p className="mt-1 max-w-2xl text-sm leading-6 text-gray-700">
                     {currentOrganization.description ||
                       "No description provided."}
                   </p>
@@ -303,11 +409,11 @@ const OrganizationGeneralSettings = () => {
 
             <div className="mt-5 flex items-center justify-between gap-6 border-t border-red-100 pt-5">
               <div>
-                <p className="text-xs md:text-sm font-medium text-gray-900">
+                <p className="text-xs font-medium text-gray-900 md:text-sm">
                   Delete Organization
                 </p>
 
-                <p className="hidden md:block mt-1 text-xs text-gray-500">
+                <p className="mt-1 hidden text-xs text-gray-500 md:block">
                   Permanently delete this organization and all
                   associated data.
                 </p>
@@ -317,7 +423,7 @@ const OrganizationGeneralSettings = () => {
                 type="button"
                 onClick={handleDeleteOrganization}
                 disabled={isDeleting || isLoading}
-                className="shrink-0 rounded-lg border border-red-300 bg-white px-2 py-1 md:px-4 md:py-2 text-xs md:text-sm font-medium text-red-600 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                className="shrink-0 rounded-lg border border-red-300 bg-white px-2 py-1 text-xs font-medium text-red-600 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 md:px-4 md:py-2 md:text-sm"
               >
                 {isDeleting
                   ? "Deleting..."

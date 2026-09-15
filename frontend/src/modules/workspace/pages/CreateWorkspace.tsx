@@ -10,6 +10,7 @@ import FeedbackModal from "@/modules/common/components/ui/FeedBackModal";
 interface CreateWorkspaceForm {
   name: string;
   description: string;
+  logo: FileList;
 }
 
 const CreateWorkspace = () => {
@@ -28,20 +29,56 @@ const CreateWorkspace = () => {
   const onSubmit = async (data: CreateWorkspaceForm) => {
     try {
       if (!organizationSlug) {
-        setFeedback({ isOpen: true, type: "error", title: "Workspace Creation Failed", message: "Please select an organization first." });
+        setFeedback({
+          isOpen: true,
+          type: "error",
+          title: "Workspace Creation Failed",
+          message: "Please select an organization first.",
+        });
         return;
       }
 
-      const response = await createWorkspace(organizationSlug, data);
+      const formData = new FormData();
+
+      formData.append("name", data.name.trim());
+      formData.append("description", data.description.trim());
+
+      if (data.logo?.[0]) {
+        formData.append("logo", data.logo[0]);
+      }
+
+      const response = await createWorkspace(
+        organizationSlug,
+        formData,
+      );
 
       if (!response) {
-        setFeedback({ isOpen: true, type: "error", title: "Workspace Creation Failed", message: "Unable to create the workspace. Please try again." });
+        setFeedback({
+          isOpen: true,
+          type: "error",
+          title: "Workspace Creation Failed",
+          message:
+            "Unable to create the workspace. Please try again.",
+        });
         return;
       }
+
       setCreatedWorkspaceSlug(response.slug);
-      setFeedback({ isOpen: true, type: "success", title: "Workspace Created", message: "Your workspace was created successfully." });
+
+      setFeedback({
+        isOpen: true,
+        type: "success",
+        title: "Workspace Created",
+        message: "Your workspace was created successfully.",
+      });
     } catch (error) {
-      setFeedback({ isOpen: true, type: "error", title: "Workspace Creation Failed", message: "Unable to create the workspace. Please try again." });
+      setFeedback({
+        isOpen: true,
+        type: "error",
+        title: "Workspace Creation Failed",
+        message:
+          "Unable to create the workspace. Please try again.",
+      });
     }
   };
 
@@ -105,10 +142,31 @@ const CreateWorkspace = () => {
             )}
           </div>
 
+          <div className="flex flex-col gap-2">
+            <label
+              htmlFor="logo"
+              className="text-sm font-medium text-gray-700"
+            >
+              Workspace Logo
+            </label>
+
+            <input
+              id="logo"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              {...register("logo")}
+              className="block text-sm text-gray-600 file:mr-3 file:rounded-lg file:border-0 file:bg-orange-50 file:px-3 file:py-2 file:text-sm file:font-medium file:text-orange-600 hover:file:bg-orange-100"
+            />
+
+            <p className="text-xs text-gray-500">
+              JPG, PNG or WEBP. Maximum 10MB.
+            </p>
+          </div>
+
           <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-end">
             <Button
               type="button"
-              variant="outline_light"
+              variant="outline"
               onClick={() => navigate(-1)}
               className="w-full sm:w-auto"
             >

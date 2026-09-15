@@ -3,6 +3,7 @@ import { api } from "./axios";
 export interface OrganizationProps {
   id: string;
   name: string;
+  logoUrl: string | null;
   description?: string;
   slug: string;
   ownerId: string;
@@ -13,7 +14,7 @@ export interface OrganizationProps {
 export interface CreateOrganizationData {
   name: string;
   description?: string;
-  logoUrl?: string;
+  logo?: File;
 }
 
 export interface OrganizationMemberProps {
@@ -44,13 +45,13 @@ export const getOrganization = (organizationSlug: string) => {
   return api.get(`/organizations/${organizationSlug}`);
 };
 
-export const createOrganization = (data: CreateOrganizationData) => {
+export const createOrganization = (data: FormData) => {
   return api.post("/organizations", data);
 };
 
 export const updateOrganization = (
   organizationSlug: string,
-  data: { name?: string; description?: string; logoUrl?: string },
+  data: FormData,
 ) => {
   return api.patch(`/organizations/${organizationSlug}`, data);
 };

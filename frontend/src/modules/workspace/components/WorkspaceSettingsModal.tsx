@@ -19,6 +19,7 @@ interface WorkspaceSettingsModalProps {
 type WorkspaceFormData = {
   name: string;
   description: string;
+  logo: FileList;
 };
 
 const WorkspaceSettingsModal = ({
@@ -38,6 +39,7 @@ const WorkspaceSettingsModal = ({
   } = useWorkspaceStore();
 
   const [isDeleting, setIsDeleting] = useState(false);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
 
   const [message, setMessage] = useState<{
     type: "success" | "error";
@@ -48,6 +50,7 @@ const WorkspaceSettingsModal = ({
     register,
     handleSubmit,
     reset,
+    watch,
     formState: { errors, isDirty },
   } = useForm<WorkspaceFormData>({
     defaultValues: {
@@ -55,6 +58,8 @@ const WorkspaceSettingsModal = ({
       description: "",
     },
   });
+
+  const selectedLogo = watch("logo");
 
   useEffect(() => {
     if (!isOpen || !currentWorkspace) {
@@ -66,12 +71,38 @@ const WorkspaceSettingsModal = ({
       description: currentWorkspace.description ?? "",
     });
 
+    setLogoPreview(null);
     setMessage(null);
   }, [isOpen, currentWorkspace, reset]);
+
+  useEffect(() => {
+    if (!selectedLogo?.[0]) {
+      setLogoPreview(null);
+      return;
+    }
+
+    const file = selectedLogo[0];
+
+    if (!file.type.startsWith("image/")) {
+      setLogoPreview(null);
+      return;
+    }
+
+    const previewUrl = URL.createObjectURL(file);
+
+    setLogoPreview(previewUrl);
+
+    return () => {
+      URL.revokeObjectURL(previewUrl);
+    };
+  }, [selectedLogo]);
 
   if (!isOpen || !currentWorkspace) {
     return null;
   }
+
+  const currentLogo =
+    logoPreview ?? currentWorkspace.logoUrl;
 
   const handleUpdate = async (data: WorkspaceFormData) => {
     if (isDeleting) {
@@ -80,13 +111,19 @@ const WorkspaceSettingsModal = ({
 
     setMessage(null);
 
+    const formData = new FormData();
+
+    formData.append("name", data.name.trim());
+    formData.append("description", data.description.trim());
+
+    if (data.logo?.[0]) {
+      formData.append("logo", data.logo[0]);
+    }
+
     const updatedWorkspace = await updateWorkspace(
       organizationSlug,
       workspaceSlug,
-      {
-        name: data.name.trim(),
-        description: data.description.trim(),
-      },
+      formData,
     );
 
     if (!updatedWorkspace) {
@@ -102,6 +139,8 @@ const WorkspaceSettingsModal = ({
       name: updatedWorkspace.name,
       description: updatedWorkspace.description ?? "",
     });
+
+    setLogoPreview(null);
 
     setMessage({
       type: "success",
@@ -181,6 +220,44 @@ const WorkspaceSettingsModal = ({
             onSubmit={handleSubmit(handleUpdate)}
             className="space-y-5"
           >
+            {/* Workspace Logo */}
+            <div>
+              <label className="text-sm font-medium text-gray-700">
+                Workspace Logo
+              </label>
+
+              <div className="mt-3 flex items-center gap-4">
+                {currentLogo ? (
+                  <img
+                    src={currentLogo}
+                    alt={`${currentWorkspace.name} logo`}
+                    className="h-12 w-12 rounded-xl object-cover"
+                  />
+                ) : (
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-500 text-xl font-semibold text-white">
+                    {currentWorkspace.name
+                      .charAt(0)
+                      .toUpperCase()}
+                  </div>
+                )}
+
+                <div className="min-w-0 flex-1">
+                  <input
+                    id="workspace-logo"
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    disabled={isLoading || isDeleting}
+                    {...register("logo")}
+                    className="block w-full text-sm text-gray-600 file:mr-3 file:rounded-lg file:border-0 file:bg-orange-50 file:px-3 file:py-2 file:text-sm file:font-medium file:text-orange-600 hover:file:bg-orange-100"
+                  />
+
+                  <p className="mt-1 text-xs text-gray-500">
+                    JPG, PNG or WEBP. Maximum 10MB.
+                  </p>
+                </div>
+              </div>
+            </div>
+
             <Input
               id="workspace-name"
               label="Workspace Name"
@@ -213,9 +290,7 @@ const WorkspaceSettingsModal = ({
               <textarea
                 id="workspace-description"
                 rows={4}
-                disabled={
-                  isLoading || isDeleting
-                }
+                disabled={isLoading || isDeleting}
                 {...register("description", {
                   maxLength: {
                     value: 250,
@@ -241,7 +316,7 @@ const WorkspaceSettingsModal = ({
                   isDeleting ||
                   !isDirty
                 }
-                className="flex-1"
+                className="flex-1 h-10"
               >
                 {isLoading
                   ? "Saving..."
