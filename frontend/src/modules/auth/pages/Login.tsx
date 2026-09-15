@@ -1,53 +1,119 @@
-import { loginUser, type LoginUserProps } from "@/api/auth.api"
-import OrangePanel from "@/modules/auth/components/OrangePanel"
-import Button from "@/modules/common/components/ui/Button"
-import Input from "@/modules/common/components/ui/Input"
-import { useAuthStore } from "@/store/auth.store"
-import { useForm } from "react-hook-form"
-import { useNavigate } from "react-router-dom"
-import { useState } from "react"
-import FeedbackModal from "@/modules/common/components/ui/FeedBackModal"
+import {
+  GoogleLogin,
+  type CredentialResponse,
+} from "@react-oauth/google";
+import {
+  loginUser,
+  loginWithGoogle,
+  type LoginUserProps,
+} from "@/api/auth.api";
+import OrangePanel from "@/modules/auth/components/OrangePanel";
+import Button from "@/modules/common/components/ui/Button";
+import Input from "@/modules/common/components/ui/Input";
+import { useAuthStore } from "@/store/auth.store";
+import { useForm } from "react-hook-form";
+import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import FeedbackModal from "@/modules/common/components/ui/FeedBackModal";
 
 const Login = () => {
-  const { register, handleSubmit, formState: { errors } } = useForm<LoginUserProps>();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginUserProps>();
+
   const navigate = useNavigate();
   const { setUser } = useAuthStore();
-  const [feedback, setFeedback] = useState<{ isOpen: boolean; type: "success" | "error"; title: string; message: string }>({ isOpen: false, type: "success", title: "", message: "" });
+
+  const [feedback, setFeedback] = useState<{
+    isOpen: boolean;
+    type: "success" | "error";
+    title: string;
+    message: string;
+  }>({
+    isOpen: false,
+    type: "success",
+    title: "",
+    message: "",
+  });
 
   const onSubmit = async (data: LoginUserProps) => {
     try {
       const response = await loginUser(data);
+
       setUser(response.data.data.user);
-      navigate(`/dashboard`);
-
+      navigate("/dashboard");
     } catch (error) {
-      setFeedback({ isOpen: true, type: "error", title: "Login Failed", message: "Unable to sign in. Please check your credentials and try again." });
+      setFeedback({
+        isOpen: true,
+        type: "error",
+        title: "Login Failed",
+        message:
+          "Unable to sign in. Please check your credentials and try again.",
+      });
     }
-  }
+  };
 
+  const handleGoogleLogin = async (
+    credentialResponse: CredentialResponse,
+  ) => {
+    if (!credentialResponse.credential) {
+      setFeedback({
+        isOpen: true,
+        type: "error",
+        title: "Google Login Failed",
+        message: "Unable to get Google authentication credential.",
+      });
+
+      return;
+    }
+
+    try {
+      const response = await loginWithGoogle({
+        credential: credentialResponse.credential,
+      });
+
+      setUser(response.data.data.user);
+      navigate("/dashboard");
+    } catch (error) {
+      setFeedback({
+        isOpen: true,
+        type: "error",
+        title: "Google Login Failed",
+        message: "Unable to sign in with Google. Please try again.",
+      });
+    }
+  };
 
   return (
     <div>
-
       <main className="min-h-screen bg-linear-to-br from-slate-200 to-slate-300 flex items-center justify-center p-4">
         <div className="min-h-5xl lg:h-[60vh] lg:w-[70vw] md:grid md:grid-cols-2 bg-white rounded-3xl shadow-md overflow-hidden">
 
           <section className="flex flex-col justify-center p-8">
             <div>
-              <h1 className="text-2xl md:text-4xl font-bold">Sign In</h1>
+              <h1 className="text-2xl md:text-4xl font-bold">
+                Sign In
+              </h1>
 
               <p className="text-lg md:text-2xl mt-2 text-gray-500">
                 Welcome back! Please login to continue.
               </p>
-
             </div>
-            <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-5">
+
+            <form
+              onSubmit={handleSubmit(onSubmit)}
+              className="mt-8 space-y-5"
+            >
               <Input
                 label="Email"
                 type="email"
                 placeholder="Enter your email"
                 error={errors.email?.message?.toString()}
-                {...register("email", { required: "Email is required" })}
+                {...register("email", {
+                  required: "Email is required",
+                })}
               />
 
               <Input
@@ -55,20 +121,62 @@ const Login = () => {
                 type="password"
                 placeholder="Enter your password"
                 error={errors.password?.message?.toString()}
-                {...register("password", { required: "Password is required" })}
+                {...register("password", {
+                  required: "Password is required",
+                })}
               />
-
-              <Button>
-                Sign In
-              </Button>
+              <div className="flex items-center justify-center">
+                <Button type="submit" className="w-42">
+                  Sign In
+                </Button>
+              </div>
             </form>
+
+            <div className="flex items-center gap-3 my-6">
+              <div className="h-px flex-1 bg-gray-300" />
+              <span className="text-sm text-gray-500">
+                OR
+              </span>
+              <div className="h-px flex-1 bg-gray-300" />
+            </div>
+
+            <div className="flex justify-center">
+              <GoogleLogin
+                onSuccess={handleGoogleLogin}
+                onError={() => {
+                  setFeedback({
+                    isOpen: true,
+                    type: "error",
+                    title: "Google Login Failed",
+                    message:
+                      "Google sign in was unsuccessful. Please try again.",
+                  });
+                }}
+              />
+            </div>
           </section>
-          <OrangePanel title="Welcome to TaskFlow!" subtitle="Create an account and start managing your projects with your team." navigateTo="/register" buttonText="Create Account" />
+
+          <OrangePanel
+            title="Welcome to TaskFlow!"
+            subtitle="Create an account and start managing your projects with your team."
+            navigateTo="/register"
+            buttonText="Create Account"
+          />
+
         </div>
       </main>
-      <FeedbackModal {...feedback} onClose={() => setFeedback((current) => ({ ...current, isOpen: false }))} />
-    </div>
-  )
-}
 
-export default Login
+      <FeedbackModal
+        {...feedback}
+        onClose={() =>
+          setFeedback((current) => ({
+            ...current,
+            isOpen: false,
+          }))
+        }
+      />
+    </div>
+  );
+};
+
+export default Login;

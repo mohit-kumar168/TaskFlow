@@ -3,83 +3,86 @@ import { protect } from "@/middleware/auth.middleware";
 import validateRequest from "@/middleware/validateRequest.middleware";
 
 import {
-	createWorkspace,
-	fetchAllWorkspaces,
-	fetchWorkspace,
-	updateWorkspace,
-	archiveWorkspace,
-	addWorkspaceMember,
-	fetchAllWorkspaceMembers,
-	fetchWorkspaceMember,
-	updateWorkspaceMemberRole,
-	removeWorkspaceMember,
+  createWorkspace,
+  fetchAllWorkspaces,
+  fetchWorkspace,
+  updateWorkspace,
+  archiveWorkspace,
+  addWorkspaceMember,
+  fetchAllWorkspaceMembers,
+  fetchWorkspaceMember,
+  updateWorkspaceMemberRole,
+  removeWorkspaceMember,
 } from "./workspace.controller";
 
 import {
-	createWorkspaceSchema,
-	updateWorkspaceSchema,
-	addWorkspaceMemberSchema,
-	updateWorkspaceMemberRoleSchema,
+  createWorkspaceSchema,
+  updateWorkspaceSchema,
+  addWorkspaceMemberSchema,
+  updateWorkspaceMemberRoleSchema,
 } from "./workspace.validator";
+import upload from "@/middleware/upload.middleware";
 
-const router = Router({mergeParams: true});
+const router = Router({ mergeParams: true });
 
 
 router.use(protect);
 
 router.post(
-	"/",
-	validateRequest(createWorkspaceSchema),
-	createWorkspace,
+  "/",
+  upload.single("logo"),
+  validateRequest(createWorkspaceSchema),
+  createWorkspace,
 );
 
 router.get(
-	"/",
-	fetchAllWorkspaces,
+  "/",
+  fetchAllWorkspaces,
 );
 
 router.get(
-	"/:workspaceSlug",
-	fetchWorkspace,
+  "/:workspaceSlug",
+  fetchWorkspace,
 );
 
 router.patch(
-	"/:workspaceSlug",
-	validateRequest(updateWorkspaceSchema),
-	updateWorkspace,
+  "/:workspaceSlug",
+  upload.single("logo"),
+  validateRequest(updateWorkspaceSchema),
+  updateWorkspace,
 );
 
 router.delete(
-	"/:workspaceSlug",
-	archiveWorkspace,
+  "/:workspaceSlug",
+  archiveWorkspace,
 );
 
 
 router.post(
-	"/:workspaceSlug/members",
-	validateRequest(addWorkspaceMemberSchema),
-	addWorkspaceMember,
+  "/:workspaceSlug/members",
+  validateRequest(addWorkspaceMemberSchema),
+  addWorkspaceMember,
 );
 
 router.get(
-	"/:workspaceSlug/members",
-	fetchAllWorkspaceMembers,
+  "/:workspaceSlug/members",
+  fetchAllWorkspaceMembers,
 );
 
 router.get(
-	"/:workspaceSlug/members/:memberId",
-	fetchWorkspaceMember,
+  "/:workspaceSlug/members/:memberId",
+  fetchWorkspaceMember,
 );
 
 router.patch(
-	"/:workspaceSlug/members/:memberId",
-	validateRequest(updateWorkspaceMemberRoleSchema),
-	updateWorkspaceMemberRole,
+  "/:workspaceSlug/members/:memberId",
+  validateRequest(updateWorkspaceMemberRoleSchema),
+  updateWorkspaceMemberRole,
 );
 
 router.delete(
-	"/:workspaceSlug/members/:memberId",
-	removeWorkspaceMember,
+  "/:workspaceSlug/members/:memberId",
+  removeWorkspaceMember,
 );
 
 export default router;

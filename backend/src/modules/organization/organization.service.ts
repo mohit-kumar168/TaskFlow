@@ -5,14 +5,33 @@ import * as organizationRepository from "./organization.repository";
 import { OrganizationRole } from "@/generated/prisma/enums";
 import { generateInviteToken } from "@/utils/token";
 import * as notificationService from "@/modules/notifications/notification.service";
+import { getOrganizationFolder, uploadToCloudinary } from "@/utils/cloudinary";
 
-export const createOrganization = async (ownerId: string, data: CreateOrganizationInput) => {
+export const createOrganization = async (ownerId: string, data: CreateOrganizationInput, file?: Express.Multer.File) => {
   const slug = generateSlug(data.name);
 
-  return await organizationRepository.createOrganization(ownerId, slug, data);
+  let logoUrl: string | undefined;
+
+  if (file) {
+    const uploadResult = await uploadToCloudinary(file.buffer, {
+      folder: getOrganizationFolder(slug),
+      resourceType: "image",
+    });
+
+    logoUrl = uploadResult.url;
+  }
+
+  return await organizationRepository.createOrganization(
+    ownerId,
+    slug,
+    {
+      ...data,
+      logoUrl,
+    },
+  );
 };
 
-export const updateOrganization = async (slug: string, userId: string, data: UpdateOrganizationInput) => {
+export const updateOrganization = async (slug: string, userId: string, data: UpdateOrganizationInput, file?: Express.Multer.File) => {
   const organization = await organizationRepository.findOrganizationBySlug(slug, userId);
   if (!organization) {
     throw new apiError(404, "Organization not found.");
@@ -22,7 +41,24 @@ export const updateOrganization = async (slug: string, userId: string, data: Upd
     throw new apiError(403, "You don't have permission to update this organization.");
   }
 
-  return await organizationRepository.updateOrganization(organization.id, data);
+  let logoUrl: string | undefined;
+
+  if (file) {
+    const uploadResult = await uploadToCloudinary(file.buffer, {
+      folder: getOrganizationFolder(slug),
+      resourceType: "image",
+    });
+
+    logoUrl = uploadResult.url;
+  }
+
+  return await organizationRepository.updateOrganization(
+    organization.id,
+    {
+      ...data,
+      ...(logoUrl && { logoUrl }),
+    },
+  );
 };
 
 export const archiveOrganization = async (slug: string, userId: string) => {

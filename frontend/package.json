@@ -9,6 +9,7 @@
     "build": "bun run build.ts"
   },
   "dependencies": {
+    "@react-oauth/google": "^0.13.5",
     "axios": "^1.19.0",
     "bun-plugin-tailwind": "^0.1.2",
     "lucide-react": "^1.28.0",

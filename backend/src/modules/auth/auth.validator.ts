@@ -68,3 +68,11 @@ export const updateProfileSchema = z.object({
       .optional(),
   })
 });
+
+export const googleLoginSchema = z.object({
+  body: z.object({
+    credential: z
+      .string()
+      .min(1, "Google credential is required."),
+  }),
+});
