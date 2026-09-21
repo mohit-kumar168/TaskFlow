@@ -14,7 +14,7 @@ const SearchInput = ({
 		<div className="w-full flex items-center gap-3 rounded-lg border border-gray-300 bg-white px-4 py-2 transition-all duration-100 focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-200">
 			<Search
 				size={18}
-				className="text-gray-400 flex-shrink-0"
+				className="text-gray-400 shrink-0"
 			/>
 
 			<input

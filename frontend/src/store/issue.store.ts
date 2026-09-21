@@ -1,327 +1,402 @@
 import { create } from "zustand";
 
 import {
-	archiveIssue,
-	createIssue,
-	getIssue,
-	getIssues,
-	moveIssue,
-	updateIssue,
-	type CreateIssueProps,
-	type IssueProps,
-	type MoveIssueProps,
-	type UpdateIssueProps,
+  archiveIssue,
+  createIssue,
+  getIssue,
+  getIssues,
+  moveIssue,
+  updateIssue,
+  type CreateIssueProps,
+  type IssuePagination,
+  type IssueProps,
+  type MoveIssueProps,
+  type UpdateIssueProps,
 } from "@/api/issue.api";
 
 interface IssueStore {
-	issues: IssueProps[];
-	currentIssue: IssueProps | null;
+  issues: IssueProps[];
+  currentIssue: IssueProps | null;
 
-	isLoading: boolean;
-	isCreating: boolean;
-	isUpdating: boolean;
-	isMoving: boolean;
-	isArchiving: boolean;
+  pagination: IssuePagination;
 
-	fetchIssues: (
-		organizationSlug: string,
-		workspaceSlug: string,
-		projectSlug: string,
-	) => Promise<void>;
+  isLoading: boolean;
+  isCreating: boolean;
+  isUpdating: boolean;
+  isMoving: boolean;
+  isArchiving: boolean;
 
-	fetchIssue: (
-		organizationSlug: string,
-		workspaceSlug: string,
-		projectSlug: string,
-		issueId: string,
-	) => Promise<IssueProps | null>;
+  fetchIssues: (
+    organizationSlug: string,
+    workspaceSlug: string,
+    projectSlug: string,
+    page?: number,
+    limit?: number,
+    append?: boolean,
+  ) => Promise<void>;
 
-	createIssue: (
-		organizationSlug: string,
-		workspaceSlug: string,
-		projectSlug: string,
-		data: CreateIssueProps,
-	) => Promise<IssueProps | null>;
+  fetchIssue: (
+    organizationSlug: string,
+    workspaceSlug: string,
+    projectSlug: string,
+    issueId: string,
+  ) => Promise<IssueProps | null>;
 
-	updateIssue: (
-		organizationSlug: string,
-		workspaceSlug: string,
-		projectSlug: string,
-		issueId: string,
-		data: UpdateIssueProps,
-	) => Promise<IssueProps | null>;
+  createIssue: (
+    organizationSlug: string,
+    workspaceSlug: string,
+    projectSlug: string,
+    data: CreateIssueProps,
+  ) => Promise<IssueProps | null>;
 
-	moveIssue: (
-		organizationSlug: string,
-		workspaceSlug: string,
-		projectSlug: string,
-		issueId: string,
-		data: MoveIssueProps,
-	) => Promise<IssueProps | null>;
+  updateIssue: (
+    organizationSlug: string,
+    workspaceSlug: string,
+    projectSlug: string,
+    issueId: string,
+    data: UpdateIssueProps,
+  ) => Promise<IssueProps | null>;
 
-	archiveIssue: (
-		organizationSlug: string,
-		workspaceSlug: string,
-		projectSlug: string,
-		issueId: string,
-	) => Promise<boolean>;
+  moveIssue: (
+    organizationSlug: string,
+    workspaceSlug: string,
+    projectSlug: string,
+    issueId: string,
+    data: MoveIssueProps,
+  ) => Promise<IssueProps | null>;
 
-	setCurrentIssue: (issue: IssueProps | null) => void;
+  archiveIssue: (
+    organizationSlug: string,
+    workspaceSlug: string,
+    projectSlug: string,
+    issueId: string,
+  ) => Promise<boolean>;
+
+  setCurrentIssue: (
+    issue: IssueProps | null,
+  ) => void;
 }
 
-export const useIssueStore = create<IssueStore>((set) => ({
-	issues: [],
-	currentIssue: null,
+const defaultPagination: IssuePagination = {
+  page: 1,
+  limit: 20,
+  total: 0,
+  totalPages: 0,
+  hasNextPage: false,
+  hasPreviousPage: false,
+};
 
-	isLoading: false,
-	isCreating: false,
-	isUpdating: false,
-	isMoving: false,
-	isArchiving: false,
+export const useIssueStore = create<IssueStore>(
+  (set) => ({
+    issues: [],
+    currentIssue: null,
 
-	fetchIssues: async (
-		organizationSlug,
-		workspaceSlug,
-		projectSlug,
-	) => {
-		try {
-			set({
-				isLoading: true,
-			});
+    pagination: defaultPagination,
 
-			const response = await getIssues(
-				organizationSlug,
-				workspaceSlug,
-				projectSlug,
-			);
+    isLoading: false,
+    isCreating: false,
+    isUpdating: false,
+    isMoving: false,
+    isArchiving: false,
 
-			set({
-				issues: response.data.data,
-				isLoading: false,
-			});
-		} catch (error) {
-			console.error("Failed to fetch issues:", error);
+    fetchIssues: async (
+      organizationSlug,
+      workspaceSlug,
+      projectSlug,
+      page = 1,
+      limit = 20,
+      append = false,
+    ) => {
+      try {
+        set({
+          isLoading: true,
+        });
 
-			set({
-				issues: [],
-				isLoading: false,
-			});
-		}
-	},
+        const firstResponse = await getIssues(
+          organizationSlug,
+          workspaceSlug,
+          projectSlug,
+          page,
+          limit,
+        );
 
-	fetchIssue: async (
-		organizationSlug,
-		workspaceSlug,
-		projectSlug,
-		issueId,
-	) => {
-		try {
-			const response = await getIssue(
-				organizationSlug,
-				workspaceSlug,
-				projectSlug,
-				issueId,
-			);
+        const result = firstResponse.data.data;
 
-			const issue = response.data.data;
+        set((state) => ({
+          issues: append
+            ? [...state.issues, ...result.data]
+            : result.data,
+          pagination: result.pagination,
+          isLoading: false,
+        }));
+      } catch (error) {
+        console.error(
+          "Failed to fetch issues:",
+          error,
+        );
 
-			set({
-				currentIssue: issue,
-			});
+        set({
+          issues: [],
+          isLoading: false,
+        });
+      }
+    },
 
-			return issue;
-		} catch (error) {
-			console.error("Failed to fetch issue:", error);
+    fetchIssue: async (
+      organizationSlug,
+      workspaceSlug,
+      projectSlug,
+      issueId,
+    ) => {
+      try {
+        const response = await getIssue(
+          organizationSlug,
+          workspaceSlug,
+          projectSlug,
+          issueId,
+        );
 
-			set({
-				currentIssue: null,
-			});
+        const issue = response.data.data;
 
-			return null;
-		}
-	},
+        set({
+          currentIssue: issue,
+        });
 
-	createIssue: async (
-		organizationSlug,
-		workspaceSlug,
-		projectSlug,
-		data,
-	) => {
-		try {
-			set({
-				isCreating: true,
-			});
+        return issue;
+      } catch (error) {
+        console.error(
+          "Failed to fetch issue:",
+          error,
+        );
 
-			const response = await createIssue(
-				organizationSlug,
-				workspaceSlug,
-				projectSlug,
-				data,
-			);
+        set({
+          currentIssue: null,
+        });
 
-			const issue = response.data.data;
+        return null;
+      }
+    },
 
-			set((state) => ({
-				issues: [...state.issues, issue],
-				isCreating: false,
-			}));
+    createIssue: async (
+      organizationSlug,
+      workspaceSlug,
+      projectSlug,
+      data,
+    ) => {
+      try {
+        set({
+          isCreating: true,
+        });
 
-			return issue;
-		} catch (error) {
-			console.error("Failed to create issue:", error);
+        const response = await createIssue(
+          organizationSlug,
+          workspaceSlug,
+          projectSlug,
+          data,
+        );
 
-			set({
-				isCreating: false,
-			});
+        const issue = response.data.data;
 
-			return null;
-		}
-	},
+        set((state) => ({
+          issues: [
+            issue,
+            ...state.issues,
+          ],
 
-	updateIssue: async (
-		organizationSlug,
-		workspaceSlug,
-		projectSlug,
-		issueId,
-		data,
-	) => {
-		try {
-			set({
-				isUpdating: true,
-			});
+          pagination: {
+            ...state.pagination,
+            total:
+              state.pagination.total + 1,
+          },
 
-			const response = await updateIssue(
-				organizationSlug,
-				workspaceSlug,
-				projectSlug,
-				issueId,
-				data,
-			);
+          isCreating: false,
+        }));
 
-			const updatedIssue = response.data.data;
+        return issue;
+      } catch (error) {
+        console.error(
+          "Failed to create issue:",
+          error,
+        );
 
-			set((state) => ({
-				issues: state.issues.map((issue) =>
-					issue.id === updatedIssue.id
-						? updatedIssue
-						: issue,
-				),
+        set({
+          isCreating: false,
+        });
 
-				currentIssue:
-					state.currentIssue?.id === updatedIssue.id
-						? updatedIssue
-						: state.currentIssue,
+        return null;
+      }
+    },
 
-				isUpdating: false,
-			}));
+    updateIssue: async (
+      organizationSlug,
+      workspaceSlug,
+      projectSlug,
+      issueId,
+      data,
+    ) => {
+      try {
+        set({
+          isUpdating: true,
+        });
 
-			return updatedIssue;
-		} catch (error) {
-			console.error("Failed to update issue:", error);
+        const response = await updateIssue(
+          organizationSlug,
+          workspaceSlug,
+          projectSlug,
+          issueId,
+          data,
+        );
 
-			set({
-				isUpdating: false,
-			});
+        const updatedIssue =
+          response.data.data;
 
-			return null;
-		}
-	},
+        set((state) => ({
+          issues: state.issues.map(
+            (issue) =>
+              issue.id === updatedIssue.id
+                ? updatedIssue
+                : issue,
+          ),
 
-	moveIssue: async (
-		organizationSlug,
-		workspaceSlug,
-		projectSlug,
-		issueId,
-		data,
-	) => {
-		try {
-			set({
-				isMoving: true,
-			});
+          currentIssue:
+            state.currentIssue?.id ===
+              updatedIssue.id
+              ? updatedIssue
+              : state.currentIssue,
 
-			const response = await moveIssue(
-				organizationSlug,
-				workspaceSlug,
-				projectSlug,
-				issueId,
-				data,
-			);
+          isUpdating: false,
+        }));
 
-			const movedIssue = response.data.data;
+        return updatedIssue;
+      } catch (error) {
+        console.error(
+          "Failed to update issue:",
+          error,
+        );
 
-			set((state) => ({
-				issues: state.issues.map((issue) =>
-					issue.id === movedIssue.id
-						? movedIssue
-						: issue,
-				),
+        set({
+          isUpdating: false,
+        });
 
-				currentIssue:
-					state.currentIssue?.id === movedIssue.id
-						? movedIssue
-						: state.currentIssue,
+        return null;
+      }
+    },
 
-				isMoving: false,
-			}));
+    moveIssue: async (
+      organizationSlug,
+      workspaceSlug,
+      projectSlug,
+      issueId,
+      data,
+    ) => {
+      try {
+        set({
+          isMoving: true,
+        });
 
-			return movedIssue;
-		} catch (error) {
-			console.error("Failed to move issue:", error);
+        const response = await moveIssue(
+          organizationSlug,
+          workspaceSlug,
+          projectSlug,
+          issueId,
+          data,
+        );
 
-			set({
-				isMoving: false,
-			});
+        const movedIssue =
+          response.data.data;
 
-			return null;
-		}
-	},
+        set((state) => ({
+          issues: state.issues.map(
+            (issue) =>
+              issue.id === movedIssue.id
+                ? movedIssue
+                : issue,
+          ),
 
-	archiveIssue: async (
-		organizationSlug,
-		workspaceSlug,
-		projectSlug,
-		issueId,
-	) => {
-		try {
-			set({
-				isArchiving: true,
-			});
+          currentIssue:
+            state.currentIssue?.id ===
+              movedIssue.id
+              ? movedIssue
+              : state.currentIssue,
 
-			await archiveIssue(
-				organizationSlug,
-				workspaceSlug,
-				projectSlug,
-				issueId,
-			);
+          isMoving: false,
+        }));
 
-			set((state) => ({
-				issues: state.issues.filter(
-					(issue) => issue.id !== issueId,
-				),
+        return movedIssue;
+      } catch (error) {
+        console.error(
+          "Failed to move issue:",
+          error,
+        );
 
-				currentIssue:
-					state.currentIssue?.id === issueId
-						? null
-						: state.currentIssue,
+        set({
+          isMoving: false,
+        });
 
-				isArchiving: false,
-			}));
+        return null;
+      }
+    },
 
-			return true;
-		} catch (error) {
-			console.error("Failed to archive issue:", error);
+    archiveIssue: async (
+      organizationSlug,
+      workspaceSlug,
+      projectSlug,
+      issueId,
+    ) => {
+      try {
+        set({
+          isArchiving: true,
+        });
 
-			set({
-				isArchiving: false,
-			});
+        await archiveIssue(
+          organizationSlug,
+          workspaceSlug,
+          projectSlug,
+          issueId,
+        );
 
-			return false;
-		}
-	},
+        set((state) => ({
+          issues: state.issues.filter(
+            (issue) =>
+              issue.id !== issueId,
+          ),
 
-	setCurrentIssue: (issue) => {
-		set({
-			currentIssue: issue,
-		});
-	},
-}));
+          pagination: {
+            ...state.pagination,
+            total: Math.max(
+              0,
+              state.pagination.total - 1,
+            ),
+          },
+
+          currentIssue:
+            state.currentIssue?.id ===
+              issueId
+              ? null
+              : state.currentIssue,
+
+          isArchiving: false,
+        }));
+
+        return true;
+      } catch (error) {
+        console.error(
+          "Failed to archive issue:",
+          error,
+        );
+
+        set({
+          isArchiving: false,
+        });
+
+        return false;
+      }
+    },
+
+    setCurrentIssue: (issue) => {
+      set({
+        currentIssue: issue,
+      });
+    },
+  }),
+);

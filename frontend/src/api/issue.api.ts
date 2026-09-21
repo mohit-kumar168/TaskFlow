@@ -4,7 +4,8 @@ export type IssueType =
   | "TASK"
   | "BUG"
   | "STORY"
-  | "EPIC";
+  | "EPIC"
+  | "SUBTASK";
 
 export type IssuePriority =
   | "LOW"
@@ -26,7 +27,12 @@ export interface IssueProps {
   type: IssueType;
   priority: IssuePriority;
 
-  status: "TODO" | "IN_PROGRESS" | "IN_REVIEW" | "DONE";
+  status:
+  | "TODO"
+  | "IN_PROGRESS"
+  | "IN_REVIEW"
+  | "DONE";
+
   dueDate: string | null;
   position: number;
   isArchived: boolean;
@@ -74,6 +80,26 @@ export interface MoveIssueProps {
   columnId: string;
 }
 
+export interface IssuePagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+}
+
+export interface GetIssuesResponse {
+  data: IssueProps[];
+  pagination: IssuePagination;
+}
+
+interface ApiResponse<T> {
+  success: boolean;
+  message: string;
+  data: T;
+}
+
 const getIssueBasePath = (
   organizationSlug: string,
   workspaceSlug: string,
@@ -89,7 +115,11 @@ export const createIssue = (
   data: CreateIssueProps,
 ) => {
   return api.post(
-    getIssueBasePath(organizationSlug, workspaceSlug, projectSlug),
+    getIssueBasePath(
+      organizationSlug,
+      workspaceSlug,
+      projectSlug,
+    ),
     data,
   );
 };
@@ -98,56 +128,84 @@ export const getIssues = (
   organizationSlug: string,
   workspaceSlug: string,
   projectSlug: string,
+  page = 1,
+  limit = 20,
 ) => {
-  return api.get(
-    getIssueBasePath(organizationSlug, workspaceSlug, projectSlug)
+  return api.get<ApiResponse<GetIssuesResponse>>(
+    getIssueBasePath(
+      organizationSlug,
+      workspaceSlug,
+      projectSlug,
+    ),
+    {
+      params: {
+        page,
+        limit,
+      },
+    },
   );
 };
 
 export const getIssue = (
   organizationSlug: string,
-  worksapceSlug: string,
+  workspaceSlug: string,
   projectSlug: string,
   issueId: string,
 ) => {
   return api.get(
-    `${getIssueBasePath(organizationSlug, worksapceSlug, projectSlug)}/${issueId}`,
+    `${getIssueBasePath(
+      organizationSlug,
+      workspaceSlug,
+      projectSlug,
+    )}/${issueId}`,
   );
 };
 
 export const updateIssue = (
   organizationSlug: string,
-  worksapceSlug: string,
+  workspaceSlug: string,
   projectSlug: string,
   issueId: string,
   data: UpdateIssueProps,
 ) => {
   return api.patch(
-    `${getIssueBasePath(organizationSlug, worksapceSlug, projectSlug)}/${issueId}`,
+    `${getIssueBasePath(
+      organizationSlug,
+      workspaceSlug,
+      projectSlug,
+    )}/${issueId}`,
     data,
   );
 };
 
 export const moveIssue = (
   organizationSlug: string,
-  worksapceSlug: string,
+  workspaceSlug: string,
   projectSlug: string,
   issueId: string,
   data: MoveIssueProps,
 ) => {
   return api.patch(
-    `${getIssueBasePath(organizationSlug, worksapceSlug, projectSlug)}/${issueId}/move`,
+    `${getIssueBasePath(
+      organizationSlug,
+      workspaceSlug,
+      projectSlug,
+    )}/${issueId}/move`,
     data,
   );
 };
 
 export const archiveIssue = (
   organizationSlug: string,
-  worksapceSlug: string,
+  workspaceSlug: string,
   projectSlug: string,
   issueId: string,
 ) => {
   return api.delete(
-    `${getIssueBasePath(organizationSlug, worksapceSlug, projectSlug)}/${issueId}`,
+    `${getIssueBasePath(
+      organizationSlug,
+      workspaceSlug,
+      projectSlug,
+    )}/${issueId}`,
   );
 };

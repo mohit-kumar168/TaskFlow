@@ -34,7 +34,7 @@ const IssueOverview = ({
           </p>
 
           {issue.description ? (
-            <p className="mt-1 whitespace-pre-wrap break-words text-xs leading-6 text-gray-700">
+            <p className="mt-1 whitespace-pre-wrap wrap-break-word text-xs leading-6 text-gray-700">
               {issue.description}
             </p>
           ) : (

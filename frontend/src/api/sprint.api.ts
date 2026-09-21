@@ -12,21 +12,7 @@ export interface SprintProps {
   updatedAt: string;
 }
 
-export interface SprintIssueProps {
-  id: string;
-  issueKey: string;
-  title: string;
-  description?: string | null;
-  status: string;
-  priority: string;
-  type: string;
-  position: string;
-  sprintId?: string | null;
-  columnId?: string | null;
-  assigneeId?: string | null;
-  dueDate?: string | null;
-  isArchived: boolean;
-}
+export type SprintIssueProps = import("./issue.api").IssueProps;
 
 export interface CreateSprintProps {
   name: string;
@@ -65,7 +51,11 @@ export const getAllSprints = (
   workspaceSlug: string,
   projectSlug: string,
 ) => {
-  return api.get(getSprintBaseUrl(organizationSlug, workspaceSlug, projectSlug));
+  return api.get<{
+    success: boolean;
+    message: string;
+    data: SprintProps[];
+  }>(getSprintBaseUrl(organizationSlug, workspaceSlug, projectSlug));
 };
 
 export const getSprint = (
@@ -74,7 +64,11 @@ export const getSprint = (
   projectSlug: string,
   sprintId: string,
 ) => {
-  return api.get(
+  return api.get<{
+    success: boolean;
+    message: string;
+    data: SprintProps;
+  }>(
     `${getSprintBaseUrl(organizationSlug, workspaceSlug, projectSlug)}/${sprintId}`
   );
 };
@@ -85,7 +79,11 @@ export const startSprint = (
   projectSlug: string,
   sprintId: string,
 ) => {
-  return api.post(
+  return api.post<{
+    success: boolean;
+    message: string;
+    data: SprintProps;
+  }>(
     `${getSprintBaseUrl(organizationSlug, workspaceSlug, projectSlug)}/${sprintId}/start`
   );
 };
@@ -97,7 +95,11 @@ export const completeSprint = (
   sprintId: string,
   data: CompleteSprintProps,
 ) => {
-  return api.post(
+  return api.post<{
+    success: boolean;
+    message: string;
+    data: SprintProps;
+  }>(
     `${getSprintBaseUrl(organizationSlug, workspaceSlug, projectSlug)}/${sprintId}/complete`,
     data,
   );
@@ -109,7 +111,11 @@ export const getSprintIssues = (
   projectSlug: string,
   sprintId: string,
 ) => {
-  return api.get(
+  return api.get<{
+    success: boolean;
+    message: string;
+    data: SprintIssueProps[];
+  }>(
     `${getSprintBaseUrl(organizationSlug, workspaceSlug, projectSlug)}/${sprintId}/issues`
   );
 };

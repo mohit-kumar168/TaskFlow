@@ -328,7 +328,7 @@ const Dashboard = () => {
                       </div>
 
                       {/* Description */}
-                      <p className="mt-5 line-clamp-2 min-h-[40px] text-sm leading-5 text-gray-500">
+                      <p className="mt-5 line-clamp-2 min-h-10 text-sm leading-5 text-gray-500">
                         {project.description ||
                           "No description provided."}
                       </p>
