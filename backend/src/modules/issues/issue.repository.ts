@@ -46,31 +46,64 @@ export const createIssue = async (
 
 export const fetchAllIssues = async (
   projectId: string,
+  page: number,
+  limit: number,
 ) => {
-  return await prisma.issue.findMany({
-    where: {
-      projectId,
-      isArchived: false,
-    },
-    include: {
-      assignee: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          avatarUrl: true,
+  const skip = (page - 1) * limit;
+  const [issues, total] = await prisma.$transaction([
+    prisma.issue.findMany({
+      where: {
+        projectId,
+        isArchived: false,
+      },
+      include: {
+        assignee: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            avatarUrl: true,
+          },
+        },
+        reporter: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            avatarUrl: true,
+          },
         },
       },
-      reporter: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          avatarUrl: true,
-        },
+      orderBy: {
+        createdAt: "desc",
       },
+
+      skip,
+      take: limit,
+    }),
+
+    prisma.issue.count({
+      where: {
+        projectId,
+        isArchived: false,
+      },
+    }),
+  ]);
+
+  const totalPages = Math.ceil(total / limit);
+
+  return {
+    data: issues,
+
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages,
+      hasNextPage: page < totalPages,
+      hasPreviousPage: page > 1,
     },
-  });
+  };
 };
 
 export const fetchIssueById = async (
@@ -210,6 +243,19 @@ export const fetchAllIssuesForKeyGeneration = async (
       issueKey: true,
       columnId: true,
       isArchived: true,
+    },
+  });
+};
+
+export const countActiveIssuesInColumn = async (
+  projectId: string,
+  columnId: string,
+) => {
+  return await prisma.issue.count({
+    where: {
+      projectId,
+      columnId,
+      isArchived: false,
     },
   });
 };
