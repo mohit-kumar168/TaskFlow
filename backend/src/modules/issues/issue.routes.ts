@@ -5,6 +5,7 @@ import {
   createIssueSchema,
   updateIssueSchema,
   moveIssueSchema,
+  fetchAllIssuesSchema,
 } from "./issue.validator";
 
 import {
@@ -28,6 +29,7 @@ router.post(
 
 router.get(
   "/",
+  validateRequest(fetchAllIssuesSchema),
   fetchAllIssues,
 );
 

@@ -1,7 +1,8 @@
 import apiError from "@/utils/apiError";
+import logger from "@/config/logger";
 
-import * as issueRepository from "@/modules/issues/issue.repository";
 import * as sprintRepository from "@/modules/sprints/sprint.repository";
+import * as reportRepository from "./report.repository";
 
 import * as organizationRepository from "@/modules/organization/organization.repository";
 import * as workspaceRepository from "@/modules/workspaces/workspace.repository";
@@ -74,8 +75,7 @@ export const fetchIssueStatusReport = async (
     userId,
   );
 
-  const issues =
-    await issueRepository.fetchAllIssues(project.id);
+  const issues = await reportRepository.fetchProjectIssues(project.id);
 
   const statusMap = new Map<string, number>();
 
@@ -88,12 +88,15 @@ export const fetchIssueStatusReport = async (
     );
   }
 
-  return Array.from(statusMap.entries()).map(
+  const report = Array.from(statusMap.entries()).map(
     ([status, count]) => ({
       status,
       count,
     }),
   );
+
+  logger.debug({ projectId: project.id, rows: report.length }, "Issue status report generated");
+  return report;
 };
 
 export const fetchIssuePriorityReport = async (
@@ -109,8 +112,7 @@ export const fetchIssuePriorityReport = async (
     userId,
   );
 
-  const issues =
-    await issueRepository.fetchAllIssues(project.id);
+  const issues = await reportRepository.fetchProjectIssues(project.id);
 
   const priorityMap = new Map<string, number>();
 
@@ -121,12 +123,15 @@ export const fetchIssuePriorityReport = async (
     );
   }
 
-  return Array.from(priorityMap.entries()).map(
+  const report = Array.from(priorityMap.entries()).map(
     ([priority, count]) => ({
       priority,
       count,
     }),
   );
+
+  logger.debug({ projectId: project.id, rows: report.length }, "Issue priority report generated");
+  return report;
 };
 
 export const fetchIssueTrendReport = async (
@@ -142,8 +147,7 @@ export const fetchIssueTrendReport = async (
     userId,
   );
 
-  const issues =
-    await issueRepository.fetchAllIssues(project.id);
+  const issues = await reportRepository.fetchProjectIssues(project.id);
 
   const trendMap = new Map<string, number>();
 
@@ -158,12 +162,15 @@ export const fetchIssueTrendReport = async (
     );
   }
 
-  return Array.from(trendMap.entries())
+  const report = Array.from(trendMap.entries())
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([date, count]) => ({
       date,
       count,
     }));
+
+  logger.debug({ projectId: project.id, rows: report.length }, "Issue trend report generated");
+  return report;
 };
 
 export const fetchSprintProgressReport = async (

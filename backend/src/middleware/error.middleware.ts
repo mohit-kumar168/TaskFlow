@@ -8,7 +8,15 @@ export default function errorMiddleware(
 	res: Response,
 	next: NextFunction
 ) {
-	logger.warn(err.message);
+	logger.error(
+		{
+			err,
+			method: req.method,
+			path: req.originalUrl,
+			userId: req.user?.id,
+		},
+		"Request failed",
+	);
 
 	if (err instanceof apiError) {
 		return res.status(err.statusCode).json({

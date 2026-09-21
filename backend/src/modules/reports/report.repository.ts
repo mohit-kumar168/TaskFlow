@@ -12,6 +12,7 @@ export const fetchProjectIssues = async (
       id: true,
       columnId: true,
       priority: true,
+      status: true,
       createdAt: true,
     },
     orderBy: {
