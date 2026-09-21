@@ -201,6 +201,8 @@ model Project {
   slug String
   key  String
 
+  issueCounter Int @default(0)
+
   description String?
   iconUrl     String?
 
